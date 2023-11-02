@@ -50,7 +50,7 @@
     c: byte;
     isRequired: bool;
     name: string;
-    message: byte[];
+    message: byte[]; <-- tablice to listy dynamiczne
 
     number: variant<int, float, string> = "6";
     const value: float = number.value; 	<-- Error, variant holds type "string"!

@@ -15,7 +15,7 @@ identifier = letter, {letter | digit};
 integer = [sign], "0" | nonZeroDigit, {digit};
 float = [sign], integer, ".", digit+;
 string = '"', {character}, '"';
-literal = "integer" | "float" | "string" | "true" | "false" | "null";
+literal = integer | float | string | "true" | "false" | "null";
 
 
 # ----------------------------------- TYPES ---------------------------------- #
@@ -26,7 +26,7 @@ type = primitiveType
      | typeIdentifier;
 
 primitiveType = "int" | "float" | "byte" | "bool" | "string";
-arrayType = primitiveType, "[", integer, "]";
+arrayType = primitiveType, "[", "]";
 variantType = "variant", "<", type, {",", type}, ">";
 typeIdentifier = identifier;
 
