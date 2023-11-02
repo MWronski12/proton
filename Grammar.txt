@@ -1,0 +1,96 @@
+# ---------------------------- LEXICAL CONVENTIONS --------------------------- #
+
+nonZeroDigit = "1" |  "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+digit = "0" | nonZeroDigit;
+letter = [a-zA-Z];
+sign = "+" | "-";
+positiveInteger = nonZeroDigit, digit*;
+comment = "$", (character except newline)*, newline
+        | "$$", character*, "$$";
+identifier = letter, (letter | digit)*;
+
+
+# --------------------------------- LITERALS --------------------------------- #
+
+integer = [sign], "0" | nonZeroDigit, digit*;
+float = [sign], integer, ".", digit+;
+string = '"', character*, '"';
+literal = integer | float | string | "true" | "false" | "null";
+
+
+# ----------------------------------- TYPES ---------------------------------- #
+
+type = primitiveType
+     | arrayType
+     | variantType
+     | typeIdentifier;
+
+primitiveType = "int" | "float" | "byte" | "bool" | "string";
+arrayType = primitiveType, "[", integer, "]";
+variantType = "variant", "<", type, (",", type)*, ">";
+typeIdentifier = identifier;
+
+
+# --------------------------------- VARIABLES -------------------------------- #
+
+varDecl = identifier, ":", type;
+constDecl = "const", identifier, ":", type, "=", expression;
+
+fnDecl = "fn", identifier, "(", varDecl, (",", varDecl)*, ")", "->", type, ["ref"], block;
+block = "{", statement*, "}";
+
+
+# -------------------------------- STATEMENTS -------------------------------- #
+
+statement = varDecl
+          | assignment
+          | ifStatement
+          | forStatement
+          | whileStatement
+          | returnStatement
+          | expression, ";";
+
+assignment = identifier, "=", expression
+           | identifier, ":=", expression;
+
+ifStatement = "if", "(", expression, ")" block, (elif, "(", expression, ")", block)*, ["else", block];
+
+forStatement = "for", range, block;
+
+range = "iter", identifier, [integer], "..", integer, block;
+
+whileStatement = "iter", "while", "(", expression, ")", block;
+
+returnStatement = "return", expression;
+
+
+# -------------------------------- EXPRESSIONS ------------------------------- #
+
+expression = binaryExpression
+           | unaryExpression
+           | literal
+           | identifier
+           | functionCall
+           | arrayAccess
+           | variantAccess
+           | "(" expression ")";
+
+binaryExpression = expression, binaryOperator, expression;
+
+binaryOperator = arithmeticBinaryOp
+               | logicBinaryOp
+               | relationalBinaryOp
+               | bitwiseBinaryOp;
+
+arithmeticBinaryOp = "+" | "-" | "*" | "/" | "%";
+logicalBinaryOp = "&&" | "||";
+relationalBinaryOp = "==" | "!=" | "<" | ">" | "<=" | ">=";
+bitwiseBinaryOp = "&" | "|" | "^";
+
+unaryExpression = unaryOperator, expression;
+
+unaryLogicalOperator = "!" | "~";
+
+
+binaryOperator = "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||", "^" | "&", ";
+

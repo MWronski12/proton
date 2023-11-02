@@ -94,6 +94,33 @@ ref myName: string = name;	<-- referencja
     fn get(ref pool: Pool) -> Obj ref { }
     ```
 
+4) If statements
+
+```
+if true {
+
+}
+```
+
+```
+if (a < 0) {
+
+} elif (a == 0) {
+
+} else {
+
+}
+```
+
+```
+if (isDigit(n)) {
+
+} else {
+
+}
+```
+
+
 
 ### 4) Keywords
 
@@ -143,8 +170,12 @@ ref myName: string = name;	<-- referencja
 
 relacyjne
 ```
+==
+!=
 <
 >
+<=
+>=
 ```
 
 bitowe
