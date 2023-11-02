@@ -2,19 +2,19 @@
 
 nonZeroDigit = "1" |  "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 digit = "0" | nonZeroDigit;
-letter = [a-zA-Z];
-sign = "+" | "-";
-positiveInteger = nonZeroDigit, digit*;
-comment = "$", (character except newline)*, newline
-        | "$$", character*, "$$";
-identifier = letter, (letter | digit)*;
+letter = "a" | "b" | ... | "z" | "A" | "B" | ... | "Z";
+character = any character;
+positiveInteger = nonZeroDigit, {digit};
+comment = "$", single line comment;
+        | "$$", multi line comment, "$$";
+identifier = letter, {letter | digit};
 
 
 # --------------------------------- LITERALS --------------------------------- #
 
-integer = [sign], "0" | nonZeroDigit, digit*;
+integer = [sign], "0" | nonZeroDigit, {digit};
 float = [sign], integer, ".", digit+;
-string = '"', character*, '"';
+string = '"', {character}, '"';
 literal = integer | float | string | "true" | "false" | "null";
 
 
@@ -26,23 +26,24 @@ type = primitiveType
      | typeIdentifier;
 
 primitiveType = "int" | "float" | "byte" | "bool" | "string";
-arrayType = primitiveType, "[", integer, "]";
-variantType = "variant", "<", type, (",", type)*, ">";
+arrayType = primitiveType, "[", "]";
+variantType = "variant", "<", type, {",", type}, ">";
 typeIdentifier = identifier;
 
 
-# --------------------------------- VARIABLES -------------------------------- #
+# ------------------------------- Declarations ------------------------------- #
 
 varDecl = identifier, ":", type;
 constDecl = "const", identifier, ":", type, "=", expression;
-
-fnDecl = "fn", identifier, "(", varDecl, (",", varDecl)*, ")", "->", type, ["ref"], block;
-block = "{", statement*, "}";
+fnDecl = "fn", identifier, "(", varDecl | "void", {",", varDecl}, ")", "->", type, block;
+block = "{", {statement}, "}";
 
 
 # -------------------------------- STATEMENTS -------------------------------- #
 
 statement = varDecl
+          | constDecl
+          | fnDecl
           | assignment
           | ifStatement
           | forStatement
@@ -50,47 +51,37 @@ statement = varDecl
           | returnStatement
           | expression, ";";
 
-assignment = identifier, "=", expression
-           | identifier, ":=", expression;
+assignment = identifier
+           | varAccess
+           | varDecl, "=", expression;
 
-ifStatement = "if", "(", expression, ")" block, (elif, "(", expression, ")", block)*, ["else", block];
+varAccess = arrayAccess
+          | variantAccess;
+          | memberAccess;
 
+arrayAccess = identifier, "[", expression, "]";
+memberAccess = identifier, ".", identifier;
+variantAccess = identifier, ".", "value";
+
+ifStatement = "if", "(", expression, ")" block, {elif, "(", expression, ")", block}, ["else", block];
 forStatement = "for", range, block;
+whileStatement = "iter", "while", "(", expression, ")", block;
+returnStatement = "return", expression;
 
 range = "iter", identifier, [integer], "..", integer, block;
-
-whileStatement = "iter", "while", "(", expression, ")", block;
-
-returnStatement = "return", expression;
 
 
 # -------------------------------- EXPRESSIONS ------------------------------- #
 
-expression = binaryExpression
-           | unaryExpression
-           | literal
-           | identifier
-           | functionCall
-           | arrayAccess
-           | variantAccess
-           | "(" expression ")";
-
-binaryExpression = expression, binaryOperator, expression;
-
-binaryOperator = arithmeticBinaryOp
-               | logicBinaryOp
-               | relationalBinaryOp
-               | bitwiseBinaryOp;
-
-arithmeticBinaryOp = "+" | "-" | "*" | "/" | "%";
-logicalBinaryOp = "&&" | "||";
-relationalBinaryOp = "==" | "!=" | "<" | ">" | "<=" | ">=";
-bitwiseBinaryOp = "&" | "|" | "^";
-
-unaryExpression = unaryOperator, expression;
-
-unaryLogicalOperator = "!" | "~";
-
-
-binaryOperator = "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||", "^" | "&", ";
-
+expression = simpleExpression, [relOp, simpleExpression];
+simpleExpression = [sign], term, {addOp, term};
+term = factor, {mulOp, factor};
+factor = varIdentifier
+       | literal
+       | "(", expression, ")"
+       | "!", factor;
+relOp = "=" | "!=" | "<" | ">" | "<=" | ">=";
+sign = "+" | "-";
+addOp = "+" | "-" | "||";
+mulOp = "*" | "/" | "%" | "&&";
+varIdentifier = identifier | varAccess;

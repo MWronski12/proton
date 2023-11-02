@@ -1,43 +1,47 @@
 ### -1) Elementy składowe języka
 
-- Komentarze single/multi
-- Prymitywne typy danych
-- zmienne
-- kwalifikatory zmiennych (mutable, const, ref, cloned)
-- operatory
-- dyrektywy kontroli przepływu
-- funkcje
-- scope
-- struktury danych
-- wejscie/wyjscie
-- słowa kluczowe
+    - Komentarze single/multi
+    - Prymitywne typy danych
+    - zmienne
+    - operatory
+    - dyrektywy kontroli przepływu
+    - funkcje
+    - scope
+    - struktury danych
+    - wejscie/wyjscie
+    - słowa kluczowe
 
-- generyczne typy i funkcje
+
+    Jeśli będzie czas chciałbym dodać:
+        - generyczne typy i funkcje (argument lub member typu "any")
+        - automatyczną inferencję typów przy pomocy ":="
+        - obsługę zmiennych, argumentów funckji i wartości zwracanych jako referencje
 
 
 ### 0) język PROTON
 
-Uruchomienie programu, wykonanie zaczyna się od funkcji 'main'
+    Uruchomienie programu, wykonanie zaczyna się od funkcji 'main'
 
     proton main.prot
     
 
 ### 1) Założenia
 
-- ogólnego użytku
-- mutable domyślnie
-- silnie typowany
-- przekazywanie przez wartość
-- obsługa referencji
-- automatyczna inferencja typu
-- łatwa obsługa stdin i stdout
+    - ogólnego użytku
+    - mutable domyślnie
+    - silnie typowany
+    - przekazywanie przez wartość
+    - łatwa obsługa stdin i stdout
 
-```
-a: int = 6; 			<-- mutable domyślnie
-const a: int = 0; 		<-- const explicit
-name := "Mikołaj"; 		<-- automatyczna inferencja typu ':='
-ref myName: string = name;	<-- referencja
-```
+    ```
+    a: int = 6; 			<-- mutable domyślnie
+    const a: int = 0; 		<-- const explicit
+    a = "6";                <-- invalid
+    >>>                     <-- read from stdin
+    <<<                     <-- write to stdout
+    ```
+
+    "<<<" i ">>>" będę traktował jako wbudowane funkcje, a nie słowa kluczowe ani operatory.
 
 ### 2) Podstawowe typy danych
 ```
@@ -46,11 +50,11 @@ ref myName: string = name;	<-- referencja
     c: byte;
     isRequired: bool;
     name: string;
-    message: byte[];
+    message: byte[]; <-- tablice to listy dynamiczne
 
     number: variant<int, float, string> = "6";
-    const value: float := number.value(); 	<-- Error, variant holds type "string"!
-    const value: string := number.value();	<-- OK
+    const value: float = number.value; 	<-- Error, variant holds type "string"!
+    const value: string = number.value;	<-- OK
     
     type Credentials {
         id: int;
@@ -67,133 +71,112 @@ ref myName: string = name;	<-- referencja
     const myCredentials: Credentials = {1, "root", "password"};
 
     id: int = credentials.id;
-    id := myCredentials.id;
 ```
 
 ### 3) Funkcje
 
     Argumenty i typ zwracany domyślnie przez kopię
     ```
-    fn login(c: credentials) -> void { }
-    ```
-    Domyślnie przez wartość
-    ```
-    fn add(c: int) -> int { }
-    ```
-    Referencja
-    ```
-    fn login(ref c: credentials) -> int { }
-    ```
-    const Referencja
-    ```
-    fn login(const ref c: credentials) -> int { }
+    fn login(c: Credentials) -> void { }
     ```
     
-    Zwracanie przez referencję
     ```
-    fn get(ref pool: Pool) -> Obj ref { }
+    fn helloWorld(void) -> void { }
     ```
 
 4) If statements
 
-```
-if true {
+    ```
+    if true {
 
-}
-```
+    }
+    ```
 
-```
-if (a < 0) {
+    ```
+    if (a < 0) {
 
-} elif (a == 0) {
+    } elif (a == 0) {
 
-} else {
+    } else {
 
-}
-```
+    }
+    ```
 
-```
-if (isDigit(n)) {
+    ```
+    if (isDigit(n)) {
 
-} else {
+    } else {
 
-}
-```
+    }
+    ```
 
 
-
-### 4) Keywords
+### 5) Keywords
 
     null
-
+    void
     int
     float
     bool
     byte
     string
     variant
-    
     true
     false
-    
-    const
-    ref
-    fn
     type
-    typeof
+    
+    fn
     return
     iter
     while
+    if
+    elif
+    else
 
-    generic <-- jeśli będzie czas
+    // jeśli będzie czas:
+    generic
     any
+    typeof
 
 
-### 5) Operatory
+### 6) Operatory
 
-1) przypisania
-```
-=
-:=
-```
+    1) przypisania
+    ```
+    =
+    ```
 
-2) arytmetyczne dwuargumentowe
-```
-+
--
-*
-/
-%
-&&
-||
-```
+    2) arytmetyczne dwuargumentowe
+    ```
+    +
+    -
+    *
+    /
+    %
+    &&
+    ||
+    ```
 
-relacyjne
-```
-==
-!=
-<
->
-<=
->=
-```
+    relacyjne
+    ```
+    ==
+    !=
+    <
+    >
+    <=
+    >=
+    ```
 
-bitowe
-```
-!
-&
-|
-^
-<<
->>
-```
-```
-<<<     <--- read from stdin
->>>     <-- write to stdout
-```
+    bitowe
+    ```
+    !
+    &
+    |
+    ^
+    ```
 
 
-### 6) Pętle for
+### 7) Pętle for
 
     iter i ..5 {
 
@@ -207,7 +190,9 @@ bitowe
     
     }
 
-### 7) Pętle while
+    Nie trzeba podawać typu, zawsze jest to int. Jeśli zmienna już istnieje, to jest przysłaniana.
+
+### 8) Pętle while
 
     iter while (true) {
 
@@ -220,59 +205,86 @@ bitowe
     }
 
 
-### 8) Wbudowana obsługa stdio:
+### 9) Wbudowana obsługa stdio:
 
     int x = >>> "Podaj liczbę:";
     result := x * i;
     <<< f"Poproszę {i * 5} tokenów";
 
 
-### 9) Komentarze
-```
-$ One line comment
-$ Multiline comment $
-```
+### 10) Komentarze
+    ```
+    $ One line comment
+    $ Multiline comment $
+    ```
 
-### 10) Obsługa błędów - komunikaty
+### 11) Scope
 
-```
-ERROR in line 5:13 of /main.prot:
+    Wyróżniamy zmienne lokalne i globalne.
 
-WHAT? >> Exception "Division by zero"!
+### 12) Obsługa błędów - komunikaty
 
-TRACEBACK:
+    ```
+    ERROR in line 5:13 of /main.prot:
 
->> fn main() in line 10:3 of /main.prot
->> fn divide(int a, int b) in line 4:3 of /main.prot
+    WHAT? >> Exception "Division by zero"!
 
-    >>>> return a / 0; <<<< in line 5:13 of /main.prot
-```
-```
-ERROR in line 5:13 of /main.prot:
+    TRACEBACK:
 
-WHAT? >> Syntax error "Assignment to unknown identifier"!
+    >> fn main(void) in line 10:3 of /main.prot
+    >> fn divide(int a, int b) in line 4:3 of /main.prot
 
-TRACEBACK:
+        >>>> return a / 0; <<<< in line 5:13 of /main.prot
+    ```
 
->> fn main() in line 10:3 of /main.prot
->> fn divide(int a, int b) in line 4:3 of /main.prot
+    ```
+    ERROR in line 5:13 of /main.prot:
 
-    >>>> result = 0; <<<< in line 5:13 of /main.prot <-- should be result := 0;
-```
+    WHAT? >> Syntax error "Assignment to unknown identifier"!
 
-### 11) Dodatkowo jeśli będzie czas - generyczność
+    TRACEBACK:
 
-słowo kluczowe 'generic' + argument/member of type any
+    >> fn main(void) in line 10:3 of /main.prot
+    >> fn divide(int a, int b) in line 4:3 of /main.prot
 
-argumenty funkcji
-```
-generic fn increment(ref number: any) -> void {}
-```
-pola typów
-```
-generic type Container {
-    size: int;
-    elements: any[];
-}
-```
+        >>>> result = 0; <<<< in line 5:13 of /main.prot <-- should be result := 0;
+    ```
 
+### 13) Dodatkowo jeśli będzie czas - generyczność, auto, referencje
+
+    opcjonalne słowo kluczowe 'generic' dla czytelności + argument/member of type any:
+
+        argumenty funkcji
+        ```
+        generic fn increment(ref number: any) -> void {}
+        ```
+
+        pola typów
+        ```
+        generic type Container {
+            size: int;
+            elements: any[];
+        }
+        ```
+
+    Automatyczna inferencja typu
+
+        ```
+        a := 5;
+        b := "Hej";
+        ```
+
+    Obsługa referencji
+
+        ```
+        a := 5;
+        ref a_ref = a;
+
+        fn increment(ref x: int) -> void { x = x + 1; }
+
+        fn getInstance(void) -> Singleton ref { return instance; }
+        ```
+
+14) Sposób testowania
+
+Wygeneruję lexer oraz parser za pomocą definicji gramatyki, a następnie korzystając z powyższych przykładów poprawnych oraz osobno przygotowanych przykładów niepoprawnych, będę testował czy parser prawidłowo obsługuję daną kontrukcję.
