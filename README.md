@@ -84,10 +84,10 @@
     fn helloWorld(void) -> void { }
     ```
 
-4) If statements
+### 4) If statements
 
     ```
-    if true {
+    if (true) {
 
     }
     ```
