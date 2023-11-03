@@ -36,12 +36,8 @@
     ```
     a: int = 6; 			<-- mutable domyślnie
     const a: int = 0; 		<-- const explicit
-    a = "6";                <-- invalid
-    >>>                     <-- read from stdin
-    <<<                     <-- write to stdout
+    a = "6";                <-- invalid - a is const
     ```
-
-    "<<<" i ">>>" będę traktował jako wbudowane funkcje, a nie słowa kluczowe ani operatory.
 
 ### 2) Podstawowe typy danych
 ```
@@ -50,25 +46,30 @@
     c: byte;
     isRequired: bool;
     name: string;
-    message: byte[]; <-- tablice to listy dynamiczne
 
-    number: variant<int, float, string> = "6";
-    const value: float = number.value; 	<-- Error, variant holds type "string"!
-    const value: string = number.value;	<-- OK
+    number: variant<int, float, string> = "22";
+
+    if (number holds string) {
+        whatsMyAge: string = "I am " + number as string + "years old.";
+        <<< whatsMyAge;
+    }
+
+    const value: float = number as float; 	<-- Error, variant holds type "string"!
+    const value: string = number as string;	<-- OK
     
     type Credentials {
         id: int;
-        string username;
-        string password;
-    }
+        username: string;
+        password: string;
+    };                                          <-- Musi być srednik po deklaracji typu
 
-    credentials: Credentials = {
-        id: 1,
-        username: "root",
-        password: "password",
-    };
+    type simple { int a } = { 1 };              <-- Niepoprawne, trzeba najpierw zadeklarować typ, a następnie stworzyć zmienną tego typu;
 
-    const myCredentials: Credentials = {1, "root", "password"};
+    const myCredentials: Credentials = {        <-- Przypisywać
+        1, 
+        "root", 
+        "password"
+    };     
 
     id: int = credentials.id;
 ```
@@ -141,18 +142,23 @@
 
 ### 6) Operatory
 
-    1) przypisania
+    przypisania
     ```
     =
     ```
 
-    2) arytmetyczne dwuargumentowe
+    arytmetyczne
     ```
     +
     -
     *
     /
     %
+    ```
+
+    logiczne
+    ```
+    !
     &&
     ||
     ```
@@ -169,7 +175,7 @@
 
     bitowe
     ```
-    !
+    ~
     &
     |
     ^
@@ -186,8 +192,18 @@
 
     }
 
-    iter countdown 11..1 {
+    iter i 11..1 {
     
+    }
+
+    int a = 0;
+    iter i a..10 {
+
+    }
+
+    int range = 10;
+    iter i startVal()..startVal() + range {
+
     }
 
     Nie trzeba podawać typu, zawsze jest to int. Jeśli zmienna już istnieje, to jest przysłaniana.
@@ -209,7 +225,7 @@
 
     int x = >>> "Podaj liczbę:";
     result := x * i;
-    <<< f"Poproszę {i * 5} tokenów";
+    <<< "Poproszę " <<< (i * 5) as string <<< tokenów";
 
 
 ### 10) Komentarze
@@ -220,7 +236,21 @@
 
 ### 11) Scope
 
-    Wyróżniamy zmienne lokalne i globalne.
+Na poziomie globalnym mogą istnieć tylko deklaracje funkcji.
+Zienne z są przykrywane zmiennymi z głębszych scope'ów.
+
+fn bar() {
+
+    x: float = 1.0;
+
+    if (true) {
+        x: int = 5;
+    } else {
+        x: float = 6.0;
+    }
+
+    <<< x;
+}
 
 ### 12) Obsługa błędów - komunikaty
 
@@ -250,41 +280,12 @@
         >>>> result = 0; <<<< in line 5:13 of /main.prot <-- should be result := 0;
     ```
 
-### 13) Dodatkowo jeśli będzie czas - generyczność, auto, referencje
+13) Sposób testowania
 
-    opcjonalne słowo kluczowe 'generic' dla czytelności + argument/member of type any:
+Na początek przygotować złożone przykłady i ręcznie przetestować poprawność gramatyki.
 
-        argumenty funkcji
-        ```
-        generic fn increment(ref number: any) -> void {}
-        ```
+Dla każdego rodzaju tokenu sprawdzić czy lexer go poprawnie przetwarza.
 
-        pola typów
-        ```
-        generic type Container {
-            size: int;
-            elements: any[];
-        }
-        ```
+Dla parsera trzeba przetestować każdą kombinację gałęzi (alternatywy z produkcji gramatyki).
 
-    Automatyczna inferencja typu
-
-        ```
-        a := 5;
-        b := "Hej";
-        ```
-
-    Obsługa referencji
-
-        ```
-        a := 5;
-        ref a_ref = a;
-
-        fn increment(ref x: int) -> void { x = x + 1; }
-
-        fn getInstance(void) -> Singleton ref { return instance; }
-        ```
-
-14) Sposób testowania
-
-Wygeneruję lexer oraz parser za pomocą definicji gramatyki, a następnie korzystając z powyższych przykładów poprawnych oraz osobno przygotowanych przykładów niepoprawnych, będę testował czy parser prawidłowo obsługuję daną kontrukcję.
+Wygenerować lexer oraz parser za pomocą definicji gramatyki, a następnie go przetestować jak powyżej.

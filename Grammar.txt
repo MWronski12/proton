@@ -1,5 +1,8 @@
-# ---------------------------- LEXICAL CONVENTIONS --------------------------- #
+# ------------------------------- START SYMBOL ------------------------------- #
+program = {fnDecl}, main;
+main = "fn", "main", "(", ")", "->", "int", block;
 
+# ---------------------------- LEXICAL CONVENTIONS --------------------------- #
 nonZeroDigit = "1" |  "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 digit = "0" | nonZeroDigit;
 letter = "a" | "b" | ... | "z" | "A" | "B" | ... | "Z";
@@ -15,7 +18,8 @@ identifier = letter, {letter | digit};
 integer = [sign], "0" | nonZeroDigit, {digit};
 float = [sign], integer, ".", digit+;
 string = '"', {character}, '"';
-literal = integer | float | string | "true" | "false" | "null";
+literal = integer | float | string | "true" | "false" | "null" | object;
+object = "{" , literal, {literal, ","}, "}";
 
 
 # ----------------------------------- TYPES ---------------------------------- #
@@ -24,6 +28,8 @@ type = primitiveType
      | arrayType
      | variantType
      | typeIdentifier;
+
+typeWithVoid = type | "void";
 
 primitiveType = "int" | "float" | "byte" | "bool" | "string";
 arrayType = primitiveType, "[", "]";
@@ -35,53 +41,60 @@ typeIdentifier = identifier;
 
 varDecl = identifier, ":", type;
 constDecl = "const", identifier, ":", type, "=", expression;
-fnDecl = "fn", identifier, "(", [varDecl, {",", varDecl}], ")", "->", type, block;
+fnDecl = "fn", identifier, "(", [varDecl | constDecl, {",", varDecl | constDecl}], ")", "->", type, block;
+typeDecl = "type", identifier, "{", {varDecl, ";"}, "}", block;
 block = "{", {statement}, "}";
 
 
 # -------------------------------- STATEMENTS -------------------------------- #
 
-statement = varDecl
+statement = (varDecl
           | constDecl
+          | typeDecl
           | fnDecl
           | assignment
           | ifStatement
           | forStatement
           | whileStatement
-          | returnStatement
-          | expression, ";";
+          | returnStatement), ";";
 
-assignment = identifier
+assignment = (identifier
            | varAccess
-           | varDecl, "=", expression;
+           | varDecl), "=", expression;
 
-varAccess = arrayAccess
-          | variantAccess;
-          | memberAccess;
+varAccess = | memberAccess;
+            | variantAccess;
 
-arrayAccess = identifier, "[", expression, "]";
-memberAccess = identifier, ".", identifier;
-variantAccess = identifier, ".", "value";
+memberAccess = expression, {".", identifier};
+variantAccess = expression, "as", type;
+variantCheck = expression, "holds", type;
 
 ifStatement = "if", "(", expression, ")" block, {elif, "(", expression, ")", block}, ["else", block];
 forStatement = "for", range, block;
 whileStatement = "iter", "while", "(", expression, ")", block;
-returnStatement = "return", expression;
+returnStatement = "return", [expression];
 
-range = "iter", identifier, [integer], "..", integer, block;
+range = "iter", identifier, [expression], "..", expression, block;
 
 
 # -------------------------------- EXPRESSIONS ------------------------------- #
 
 expression = simpleExpression, [relOp, simpleExpression];
 simpleExpression = [sign], term, {addOp, term};
+parenExpression = "(", expression, ")";
 term = factor, {mulOp, factor};
 factor = varIdentifier
        | literal
-       | "(", expression, ")"
-       | "!", factor;
+       | parenExpression
+       | variantCheck
+       | fnCall
+       | (negation, parenExpression);
+
 relOp = "=" | "!=" | "<" | ">" | "<=" | ">=";
 sign = "+" | "-";
 addOp = "+" | "-" | "||";
-mulOp = "*" | "/" | "%" | "&&";
+mulOp = "*" | "/" | "%" | "&&" | "^" | "|" | "&";
+negation = "!" | "~";
+
 varIdentifier = identifier | varAccess;
+fnCall = identifier, "(", [expression, {",", expression}], ")";
