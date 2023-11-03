@@ -35,7 +35,7 @@ typeIdentifier = identifier;
 
 varDecl = identifier, ":", type;
 constDecl = "const", identifier, ":", type, "=", expression;
-fnDecl = "fn", identifier, "(", varDecl | "void", {",", varDecl}, ")", "->", type, block;
+fnDecl = "fn", identifier, "(", [varDecl, {",", varDecl}], ")", "->", type, block;
 block = "{", {statement}, "}";
 
 
