@@ -1,0 +1,160 @@
+$$$ SEKCJA DEKLARACJI STRUKTUR $$$
+
+struct Board {
+    leftTop: char;
+    midTop: char;
+    rightTop: char;
+
+    leftMid: char;
+    midMid: char;
+    rightMid: char;
+
+    leftBot: char;
+    midBot: char;
+    rightBot: char;
+};
+
+
+$$$ SEKCJA DEKLARACJI ZMIENNYCH GLOBALNYCH $$$
+
+const X: char = 'X';
+const O: char = 'O';
+const EMPTY: char = ' ';
+
+board: Board = Board{
+    EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY,
+    EMPTY, EMPTY, EMPTY,
+};
+
+$ whose turn is it? Player X or O, X starts
+player: char = X;
+
+
+$$$ SEKCJA DEFINICJI FUNKCJI $$$
+
+fn printBoard() {
+    >> board.leftTop >> '|' >> board.midTop >> '|' >> board.rightTop >> '\n';
+    >> board.leftMid >> '|' >> board.midMid >> '|' >> board.rightMid >> '\n';
+    >> board.leftBot >> '|' >> board.midBot >> '|' >> board.rightBot >> '\n';
+}
+
+fn getPlayerMove() -> bool {
+
+    move: int = 0;
+
+    while move == 0 {
+        choice: int;
+        choice << "Choose your move (must be an integer from 1 to 9 indexing board fileds from leftTop to rightBot): ";
+        
+        for i in 1..10 {
+            if choice == i {
+                move = choice;
+            }
+        }
+    }
+
+    return move;
+}
+
+$ Makes a move in a first empty field encoutered
+fn getAIMove() -> {
+    if board.leftTop == EMPTY { return 1; }
+    if board.midTop == EMPTY { return 2; }
+    if board.rightTop == EMPTY { return 3; }
+    if board.leftMid == EMPTY { return 4; }
+    if board.midMid == EMPTY { return 5; }
+    if board.rightMid == EMPTY { return 6; }
+    if board.leftBot == EMPTY { return 7; }
+    if board.midBot == EMPTY { return 8; }
+    if board.rightBot == EMPTY { return 9; }
+    
+    >> "Error: no empty fields on the board!";
+    return 0;
+}
+
+fn makeMove(move: int) {
+    if move == 1 { board.leftTop = player; }
+    else if move == 2 { board.midTop = player; }
+    else if move == 3 { board.rightTop = player; }
+    else if move == 4 { board.leftMid = player; }
+    else if move == 5 { board.midMid = player; }
+    else if move == 6 { board.rightMid = player; }
+    else if move == 7 { board.leftBot = player; }
+    else if move == 8 { board.midBot = player; }
+    else if move == 9 { board.rightBot = player; }
+    else { >> "Error: invalid move!"; }
+}
+
+fn nextPlayer() {
+    if player == X {
+        player = O;
+    } else {
+        player = X;
+    }
+}
+
+fn isGameOver() -> bool {
+    return (board.leftTop == board.midTop && board.midTop == board.rightTop && board.leftTop != EMPTY) ||
+           (board.leftMid == board.midMid && board.midMid == board.rightMid && board.leftMid != EMPTY) ||
+           (board.leftBot == board.midBot && board.midBot == board.rightBot && board.leftBot != EMPTY) ||
+           (board.leftTop == board.leftMid && board.leftMid == board.leftBot && board.leftTop != EMPTY) ||
+           (board.midTop == board.midMid && board.midMid == board.midBot && board.midTop != EMPTY) ||
+           (board.rightTop == board.rightMid && board.rightMid == board.rightBot && board.rightTop != EMPTY) ||
+           (board.leftTop == board.midMid && board.midMid == board.rightBot && board.leftTop != EMPTY) ||
+           (board.rightTop == board.midMid && board.midMid == board.leftBot && board.rightTop != EMPTY);
+}
+
+fn isDraw() {
+    $ Copy the board
+    board: Board = board;
+
+    $ Fill the board with current player's symbol
+    if board.leftTop == EMPTY { board.leftTop = player; }
+    if board.midTop == EMPTY { board.midTop = player; }
+    if board.rightTop == EMPTY { board.rightTop = player; }
+    if board.leftMid == EMPTY { board.leftMid = player; }
+    if board.midMid == EMPTY { board.midMid = player; }
+    if board.rightMid == EMPTY { board.rightMid = player; }
+    if board.leftBot == EMPTY { board.leftBot = player; }
+    if board.midBot == EMPTY { board.midBot = player; }
+    if board.rightBot == EMPTY { board.rightBot = player; }
+
+    $ Check if the game is over
+    if isGameOver() {
+        return false;
+    }
+
+    return true;
+}
+
+
+$$$ SEKCJA DEFINICJI FUNKCJI MAIN $$$
+
+fn main() {
+    while true {
+        printBoard();
+
+        move: int;
+
+        if player == X {
+            move = getPlayerMove();
+        } else {
+            move = getAIMove();
+        }
+
+        makeMove(move);
+
+        if isGameOver() {
+            printBoard();
+            >> "Player " << player << " won!\n";
+            break;
+        } elif isDraw() {
+            printBoard();
+            >> "Draw!\n";
+            break;
+        }
+
+        nextPlayer();
+    }
+}

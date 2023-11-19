@@ -1,0 +1,256 @@
+(* Program structure *)
+
+Program
+    = { Section | Comment };
+Section
+    = { GlobalTypes, GlobalVariables, GlobalFunctions, MainFunction };
+GlobalTypes
+    = { TypeDecl };
+GlobalVariables 
+    = { VarDecl | VarDef };
+GlobalFunctions
+    = { FnDef };
+MainFunction
+    = "fn", "main()", "->", "int", Block;
+
+
+(* Lexical conventions *)
+
+nonZeroDigit 
+    = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+digit 
+    = "0" | nonZeroDigit;
+letter 
+    = "[a-zA-Z]";
+character
+    = "'", ? Any ASCII character ?, "'";
+identifier 
+    = ( letter | "_" ), { letter | digit | "_" };
+typeIdentifier
+    = identifier;
+primitiveType
+    = "int" 
+    | "float" 
+    | "char" 
+    | "bool" 
+    | "string";
+
+
+(* LITERALS *)
+
+literal 
+    = integerLiteral 
+    | floatLiteral 
+    | stringLiteral 
+    | boolLiteral 
+    | variantLiteral 
+    | objectLiteral;
+
+integerLiteral 
+    = "0" | nonZeroDigit, { digit };
+floatLiteral 
+    = integerLiteral, ".", digit, { digit };
+charLiteral 
+    = "'", ( character | escape_sequence ), "'";    (* SINGLE QUOTES *)
+boolLiteral 
+    = "true" | "false";
+stringLiteral 
+    = '"', { character | escape_sequence } , '"';   (* DOUBLE QUOTES *)
+
+variantLiteral 
+    = typeIdentifier, "{", expression, "}";
+
+objectLiteral
+    = typeIdentifier, "{" , fieldValues, [ "," ], "}";
+fieldValues 
+    = fieldValue, { ",", fieldValue };
+fieldValue 
+    = [ identifier, ":" ], expression;
+
+escape_sequence 
+    = "\" , ( "n" | "t" | "\" | '"' | "'");
+
+
+(* EXPRESSIONS *)
+
+expression 
+    = logicOrExpr;
+
+logicOrExpr 
+    = logicAndExpr, { logicOrOp, logicAndExpr };
+logicAndExpr 
+    = equalityExpr, { equalityOp, equalityExpr };
+equalityExpr 
+    = relationalExpr, { equalityOp, relationalExpr };
+relationalExpr 
+    = additiveExpr, { relationalOp, additiveExpr };
+additiveExpr 
+    = multiplicativeExpr, { additiveOp, multiplicativeExpr };
+multiplicativeExpr 
+    = unaryOpExpr, { multiplicativeOp, unaryOpExpr };
+unaryOpExpr
+    = [ unaryOp ], variantAccessExpr;
+variantAccessExpr
+    = memberAccessExpr, { variantAccessOp, typeIdentifier };
+memberAccessExpr
+    = fnCallExpr, { memberAccessOp, identifier };
+fnCallExpr
+    = primaryExpr, "(", [ expression, { ",", expression } ], ")";
+
+primaryExpr 
+    = castExpr
+    | literal
+    | identifier
+    | parenExpr;
+
+castExpr
+    = primitiveType, "(" , expression, ")";
+parenExpr 
+    = "(", expression, ")";
+
+
+(* OPERATORS *)
+
+logicOrOp                   (* prio 0 l-r *)
+    = "||";
+
+logicAndOp                  (* prio 1 l-r *)
+    = "&&";
+
+equalityOp                  (* prio 2 l-r *)
+    = "==" 
+    | "!=";
+
+relationalOp                (* prio 3 l-r *)
+    = "<" 
+    | ">" 
+    | "<=" 
+    | ">=";
+
+additiveOp                  (* prio 4 l-r *)
+    = "+" 
+    | "-";
+
+multiplicativeOp            (* prio 5 l-r *)
+    = "*" 
+    | "/" 
+    | "%";
+
+unaryOp                     (* prio 6 r-l *)
+    = "!"
+    | "-";
+
+variantAccessOp             (* prio 7 l-r *)
+    = "as";
+
+memberAccessOp              (* prio 8 l-r *)
+    = ".";
+
+fnCallOp                    (* prio 9 l-r *)  (* NOT USED, LISTED FOR PRIO CLARITY *)
+    = "()";
+
+catingOp                    (* prio 10 l-r *)  (* NOT USED, LISTED FOR PRIO CLARITY *)
+    = typeIdentifier, "()";
+
+
+(* COMMENTS *)
+
+Comment
+    = "$", ? single-line comment ?
+    | "$$$", ? multi-line comment ?, "$$$";
+
+
+(* DECLARATIONS *)
+
+VarDecl 
+    = identifier, ":", typeIdentifier, ";";
+
+TypeDecl 
+    = StructDecl | VariantDecl;
+StructDecl 
+    = "struct", identifier, "{", { VarDecl }, "}", ";";
+VariantDecl 
+    = "variant", identifier, "{", { typeIdentifier }, "}", ";";
+
+
+(* DEFINITIONS *)
+
+VarDef 
+    = [ "const" ], identifier, ":", typeIdentifier, "=", expression, ";";
+
+FnDef 
+    = "fn", identifier, "(", [ fnArgsDecl ], ")", [ returnTypeAnnotation ], Block;
+fnArgsDecl 
+    = ( fnArgDecl, { ",", fnArgDecl } ) | "void";
+fnArgDecl 
+    = [ "const" ], identifier, ":", ( typeIdentifier | functionSignature);
+returnTypeAnnotation 
+    = "->", ( typeIdentifier | functionSignature | "void" );
+functionSignature
+    = "(", [ argumentTypes ], ")", returnTypeAnnotation;
+argumentTypes
+    = typeIdentifier, { ",", typeIdentifier | "void" };
+
+
+(* STATEMENTS *)
+
+Statement 
+    = Comment
+    | VarDecl
+    | TypeDecl
+    | VarDef
+    | FnDef
+    | StdinExtraction
+    | StdoutInsertion
+    | AssignmentStatement
+    | ExpressionStatement
+    | VariantMatchStatement
+    | IfStatement
+    | ForStatement
+    | WhileStatement
+    | ContinueStatement
+    | BreakStatement
+    | ReturnStatement
+    | Block;
+
+StdinExtraction
+    = expression, "<<", stringLiteral, ";";
+StdoutInsertion
+    = ">>", expression, ";";
+
+AssignmentStatement
+    = expression, "=", expression, ";";
+
+ExpressionStatement
+    = expression, ";";
+
+VariantMatchStatement
+    = "match", expression, "{", { variantCase }, "}";
+variantCase
+    = "case", typeIdentifier, "->", Block;
+
+IfStatement
+    = "if", { elifClause }, [ elseClause ];
+elifClause
+    = "elif", expression, Block;
+elseClause
+    = "else", Block;
+
+WhileStatement
+    = "while", expression, Block;
+
+ForStatement
+    = "for", identifier, "in", range, Block;
+range
+    = expression, "..", expression;
+
+ReturnStatement
+    = "return", [ expression ], ";";
+
+BreakStatement
+    = "break", ";";
+ContinueStatement
+    = "continue", ";";
+
+Block
+    = "{", { Statement }, "}";

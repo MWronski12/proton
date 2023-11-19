@@ -20,9 +20,24 @@
 
 ### 0) język PROTON
 
-    Uruchomienie programu, wykonanie zaczyna się od funkcji 'main'
+    Uruchomienie programu "proton"
 
-    proton main.prot
+    - Pierwszym argumentem jest plik z kodem źródłowym
+    - Następnie opcjonalnie można podać dowolną liczbę argumentów oddzielonych znakiem białym, które zostaną przypisane do globalnych zmiennych typu string o identyfikatorze 'ARG_<num>' (ARG_1, ARG_2...)
+
+    proton main.prot 5 identifier
+
+    ---- w kodzie źródłowym ----
+
+    fn main() {
+        arg1: string = ARG_1;
+        arg2: string = ARG_2;
+
+        $ arg1: int = ARG_1;        <-- INVALID, cannot assign type string to variable of type int!
+
+        >> "Argument 'number' is " >> arg1 >> "\n";
+        >> "Argument 'id' is " >> arg2 >> "\n";  
+    }
     
 
 ### 1) Założenia
@@ -41,62 +56,224 @@
 
 ### 2) Podstawowe typy danych
 ```
-    a: int
+    a: int;
     b: float;
-    c: byte;
+    c: char;
     isRequired: bool;
     name: string;
 
-    number: variant<int, float, string> = "22";
+    a = 5;
+    b = 6.6;
 
-    if (number holds string) {
-        whatsMyAge: string = "I am " + number as string + "years old.";
-        <<< whatsMyAge;
+    c = 'C';    <-- chary są zawsze definiowane przy użyciu pojedynczych nawiasów!
+
+    name = "Mikołaj";   <-- stringi są zawsze definiowane przy użyciu podwójnych nawiasów!
+    isRequired = true;
+```
+
+### 3) Rekord wariantowy
+
+    Rekord variantowy pozwala na przechowywanie przez jedną zmienną różnych typów, co domyślnie jest niedozwolone w języku silnie typowanym.
+
+    ```
+    // Deklaracja typu wariantowego 'Number'
+    variant Number {                            
+        int;
+        float;
+        string;
+    };                                          <-- Musi być srednik po deklaracji typu (variant jest traktowany jak typ użytkownika)
+
+    number: Number = Number{ "22" };            <-- Trzeba używać nazwy typu explicit przy przypisywaniu wartości
+
+
+    // Sprawdzanie typu przetrzymywanego przez variant 'Number' za pomocą konstrukcji match case
+    match number {
+        case int -> {
+            >> "Variable 'number' of type 'Number' currently holds int and it's value is"
+            >> number as int
+            >> "\n";
+        }
+        case float -> {
+            >> "Variable 'number' of type 'Number' currently holds float and it's value is"
+            >> number as float
+            >> "\n";
+        }
+        case string -> {
+            >> "Variable 'number' of type 'Number' currently holds string and it's value is"
+            >> number as string 
+            >> "\n";
+        }
     }
 
-    const value: float = number as float; 	<-- Error, variant holds type "string"!
-    const value: string = number as string;	<-- OK
-    
-    type Credentials {
+
+    // Wypakowanie wartości przetrzymywanej przez variant
+    const value: float = number as float; 	    <-- Error, variant holds type "string"!
+    const value: string = number as string;	    <-- OK
+
+
+    // typ variantowy, oprócz typów prymitywnych, może przetrzymywać również typy użytkownika
+    struct Dog {
+        name: string;
+        likesRunning: bool;
+    };
+
+    struct Cat {
+        name: string;
+        likesMilk: bool;
+    };
+
+    struct Bison {
+        weight: float;
+        age: int;
+    };
+
+    variant Animal {
+       Dog;
+       Cat;
+       Bison;
+       string;
+    };
+
+    animal: Animal;
+
+    animal = Dog{ name: "Burek", likesRunning: true };
+    animal = Cat{ name: "Kitek", likesMilk: true };
+    animal = "UNIDENTIFIED ANIMAL";
+
+    match animal {
+        case Dog -> { >> "It's a dog named " >> (animal as Dog).name >> "!"; }
+        case Cat -> { 
+            unpackedCat: Cat = animal as Cat;
+
+            >> "It's a cat named "
+            >> unpackedCat.name
+            >> "!\n";
+        }
+        case Bison -> { >> "It's a bison!\n"; }
+        case string -> { >> "It's an " >> animal as string >> "!\n"; }
+    }
+    ```
+
+### 4) typy/struktury użytkownika
+
+    ```
+    struct Credentials {
         id: int;
         username: string;
         password: string;
     };                                          <-- Musi być srednik po deklaracji typu
 
-    type simple { int a } = { 1 };              <-- Niepoprawne, trzeba najpierw zadeklarować typ, a następnie stworzyć zmienną tego typu;
+    // Definiowanie zmiennej typu użytkownika
+    const rootCredentials: Credentials = Credentials{
+        id: 1,
+        usename: "root",
+        password: "password",
+    };
 
-    const myCredentials: Credentials = {        <-- Przypisywać
-        1, 
-        "root", 
-        "password"
+    const myCredentials: Credentials = Credentials{
+        1, "root", "password"                   <-- Można pominąć identyfikatory
     };     
 
+
+    // Podawanie nazwy konstruktora jest obowiązkowe przy przypisywaniu wartości do struktury, w celu uniknięcia niejedneznoczności.
+
+    variant VariantCredentials {
+        Credentials;
+        HashedCredentials;
+    };
+
+    credentials: VariantCredentials;
+    credentials = Credentials{ 2, "admin", "proAdminPass%^&" };
+    credentials = HashedCredentials{ 3, "anonymus666", "1^dg#578DXaz$%zaq!23Sa" };
+
+    match creds {
+        case Credentials -> { >> "My credentials are not secured!\n" }
+        case HashedCredentials -> { >> "My credentials are secured!\n" }
+    }
+
+
+    // Odwołanie do pola struktury
+    credentials: Credentials = Credentials{ 4, "Moe", "moe123" };
+
     id: int = credentials.id;
-```
+    username: string = credentials.username;
 
-### 3) Funkcje
-
-    Argumenty i typ zwracany domyślnie przez kopię
+    credentials.password = "hArd#rpAssw0rd$%";
     ```
-    fn login(c: Credentials) -> void { }
+
+
+### 5) Funkcje
+
+    Argumenty i wartość zwracana to kopie
+    ```
+    fn login(c: Credentials) -> void { return; }
     ```
     
+    Jeśli nie określimy argumentów oraz typu zwracanego, domyślnie są to "void"
     ```
-    fn helloWorld(void) -> void { }
+    fn helloWorld() { return; }
     ```
 
-### 4) If statements
+    Argumenty mogą być const
+    ```
+    fn printCredentials(const credentials: Credentials) { ... }
+    ```
+
+    Funkcje mogą być definiowane wewnątrz innych funkcji, przyjmowane jako argument oraz zwracane przez inne funkcje
+    ```
+    fn decorator(func: () -> int) -> () -> int {
+        fn decorated() -> int {
+            >> "This is a decorated function call!\n";
+            return func();
+        }
+
+        return decorated;
+    }
+    ```
+
+    // Funkcje mogą przyjmować typy użytkownika jako argumenty oraz je zwracać
+    ```
+    struct Point {
+        x: float;
+        y: float;
+    };
+
+    fn calculateDistance(A: Point, B: Point) -> float {
+        $ Calculate distance here
+        distance: float = 0;
+
+        return distance;
+    }
+    ```
 
     ```
-    if (true) {
+    struct Person {
+        name: string;
+        age: int;
+    };
+
+    fn foo() -> Person {
+        me: Person = Person{ "Mikołaj", 22 };
+
+        >> "My name is " >> me.name >> "\n";
+        >> "I am " >> me.age >> "years old\n";
+
+        return me;
+    }
+    ```
+
+### 6) If statements
+
+    ```
+    if true {
 
     }
     ```
 
     ```
-    if (a < 0) {
+    if a < 0 {
 
-    } elif (a == 0) {
+    } elif a == 0 {
 
     } else {
 
@@ -104,7 +281,7 @@
     ```
 
     ```
-    if (isDigit(n)) {
+    if isDigit(n) {
 
     } else {
 
@@ -112,19 +289,20 @@
     ```
 
 
-### 5) Keywords
+### 7) Keywords
 
-    null
     void
     int
     float
     bool
-    byte
+    char
+
     string
     variant
+
     true
     false
-    type
+    struct
     
     fn
     return
@@ -133,27 +311,40 @@
     if
     elif
     else
+    continue
+    break
 
-    // jeśli będzie czas:
-    generic
-    any
-    typeof
+    match
+    case
 
+### 8) Operatory
 
-### 6) Operatory
-
-    przypisania
     ```
-    =
+    =       - przypisanie
+    ()      - wywołanie
+    .       - dostęp do pola obiektu
+    as      - dostęp do wartości wariantu (np.: variantVar as float)
+    type()  - castowanie (np.: float(intVar))
+    
     ```
 
     arytmetyczne
     ```
-    +
-    -
     *
     /
     %
+    +
+    -
+    ```
+
+    relacyjne
+    ```
+    <
+    >
+    <=
+    >=
+    ==
+    !=
     ```
 
     logiczne
@@ -163,124 +354,279 @@
     ||
     ```
 
-    relacyjne
-    ```
-    ==
-    !=
-    <
-    >
-    <=
-    >=
-    ```
+#### Priorytety i łączność operatorów
 
-    bitowe
+    Priorytet 0 -   łączność od lewej do prawej:
+
+        ||      -   logical or
+
+    Priorytet 1 -   łączność od lewej do prawej:
+
+        &&      -   logical and
+
+    Priorytet 2 - łączność od lewej do prawej:
+
+        ==      -   equal to
+        !=      -   not equal to
+
+    Priorytet 3 - łączność od lewej do prawej:
+
+        <       -   mniejszy
+        <=      -   mniejszy równy
+        >       -   większy
+        >=      -   większy równy
+
+    Priorytet 4 - łączność od lewej do prawej:
+
+        +       -   dodawanie
+        -       -   odejmowanie 
+
+    Priorytet 5 - łączność od lewej do prawej:
+
+        *       -   mnożenie
+        /       -   dzielenie 
+        %       -   modulo
+
+    Priorytet 6 - łączność od prawej do lewej:
+
+        !       -   negacja logiczna
+        -       -   negacja arytmetyczna
+        
+    Priorytet 7 - łączność od lewej do prawej:
+        as      -   wypakowanie wartości variantu
+
+    Priorytet 8 - łączność od lewej do prawej:
+        .       -   dostęp do pola struktury
+
+    Priorytet 9 - łączność od lewej do prawej:
+        ()      -   wywołanie funkcji
+
+    Priorytet 10 - łączność od lewej do prawej:
+        type()  -   castowanie (np.: float(intVar))
+
+
+### 9) Pętle for
+
+    Zasięg to kolejne po sobie liczby całkowite, które reprezentujemy za pomocą zapisu "x..y".
+    Klasycznie, początek zasięgu będzie brany pod uwagę, a koniec nie.
+
+    Słowo kluczowe "in" służy do iterowania po zasięgu.
+    Jest ono używane zamiast tradycyjnego podejścia do pętli for. 
+    Zamiast "for (int i = 0; i < 10; i++) {}" piszemy "for i in 0..10".
+
+    Typ zmiennej pętli jest automatycznie dedukowany na podstawie typu obiektu, po którym iterujemy. Narazie ten typ może być tylko zasięgiem liczb całkowitych definiowanym w postaci "x..y". Wraz z rozwojem języka można zaimplementować iterację po dowolnym iterowalnym obiekcie, takim jak string, tablica lub klasa implementująca odpowiednie metody.
+
     ```
-    ~
-    &
-    |
-    ^
-    ```
-
-
-### 7) Pętle for
-
-    iter i ..5 {
+    for i in 1..5 {
 
     }
 
-    iter i 3..5 {
+    for i in 3..5 {
 
     }
 
-    iter i 11..1 {
+    // Zmienna może się nazywać dowolnie, a zasięg może być zasięgiem malejącym
+    countdown in 10..1 {
+
+    }
+
+    i: int = 10;
+    for i in 11..1 {
+        // Tutaj i z wyższego scope'u zostało przysłonięte
+    }
+
+    a: int = 0;
+    for i in a..10 {
+
+    }
+
+    fn startVal() -> int { return 5; }
+    range: int = 10;
+    for i in startVal()..startVal() + range {
+
+    }
+
+    name: string = "Mikołaj";
+    length: int = 0;
+
+    for letter in name {
+        length = length + 1;
+    }
+    ```
+ 
+
+### 10) Pętle while
+
+    while true {
+
+    }
+
+    // We can use continue and break statements
+    i: int = 0;
+    while true {
+        if i % 10 == 0 {
+            continue;
+        }
+
+        if i == 100 {
+            break;
+        }
+
+        i = i + 1;
+    }
     
-    }
-
-    int a = 0;
-    iter i a..10 {
-
-    }
-
-    int range = 10;
-    iter i startVal()..startVal() + range {
-
-    }
-
-    Nie trzeba podawać typu, zawsze jest to int. Jeśli zmienna już istnieje, to jest przysłaniana.
-
-### 8) Pętle while
-
-    iter while (true) {
-
-    }
-    
-    i := 10;
-    iter while (i > 0) {
+    i: int = 10;
+    while i > 0 {
         i = i - 1;
-        <<< i;
+        >> i as string >> '\n';
     }
 
 
-### 9) Wbudowana obsługa stdio:
+### 11) Wbudowana obsługa stdio:
 
-    int x = >>> "Podaj liczbę:";
-    result := x * i;
-    <<< "Poproszę " <<< (i * 5) as string <<< tokenów";
+    Operator "<<":
+        - służy do wczytywania wartości z stdin
+
+        - jest dwuargumentowy
+            * po lewej stronie musi się znaleźć identyfikator zmiennej, do której chcemy przypisać wartość zczytaną. Musi to być zmienna już zainicjalizowana, a nie deklaracja.
+            * po prawej stronie musi się znaleźć string, który będzie wyprintowany na konsoli jako prompt
+
+        - W zależności od typu zmiennej, do której przypisujemy zczytuje wartości w różny sposób. Działa tak samo jak scanf, tylko zamiast implicit podawać jaki typ wczytujemy (scanf("%d", &a)), ten typ jest automatycznie dedukowany na podstawie zmiennej, do której przypisujemy wynik (a: int; a << "Podaj liczbę całkowitą: ";).
+
+        - Obsługuje tylko typy: int, float, char, string. Kolejne znaki z konsoli są wczytywane aż do momentu napotkania znaku niepasującego do regexa definiującego literał danego typu.
 
 
-### 10) Komentarze
+    ```
+    a: int;
+    a << "Podaj liczbę całkowitą: ";
+
+    b: float;
+    b << "Podaj liczbę zmiennoprzecinkową: ";
+
+    c: char;
+    c << "Podaj jeden znak: ";
+
+    name: string;
+    name << "Jak się nazywasz? ";
+    ```
+
+    Operator ">>":
+        - służy do wypisywania wartości na stdout
+        - może być wielokrotnie łączony
+        - Obsługuje:
+    
+            * float, int    - wypisuje postac tekstowa liczby
+            * char          - wypisuje znak ascii
+            * string        - wypisuje łańcuch znaków
+            * bool          - wypisuje "0" lub "1"
+
+    ```
+    x: int;
+    x << "Podaj liczbę: ";  <-- wpisujemy do konsoli "10<ENTER>"
+
+    >> Twoja liczba " >> x >> " pomnożona przez 10 daje " >> x * 10 >> "\n";
+
+    Wypisze na stdout "Twoja liczba 10 pomnożona przez 10 daje 100<NEWLINE>"
+    ```
+
+### 12) Komentarze
     ```
     $ One line comment
-    $ Multiline comment $
+
+    $$$
+    Multiline 
+    comment 
+    $$$
     ```
 
-### 11) Scope
+### 13) Scope i struktura programu
 
-Na poziomie globalnym mogą istnieć tylko deklaracje funkcji.
-Zienne z są przykrywane zmiennymi z głębszych scope'ów.
+    Program składa się z 4 kluczowych sekcji, które muszą wystąpić kolejno po sobie:
 
-fn bar() {
+        1) Sekcja deklaracji globalnych typów użytkownika (opcjonalna)
+        2) Sekcja zmiennych globalnych (opcjonalna)
+        3) Sekcja deklaracji funkcji użytkownika (opcjonalna)
+        4) Funckja o identyfikatorze 'main' będąca punktem wejściowym programu
 
-    x: float = 1.0;
+    Zmienne mogą zostać przykryte zmiennymi z niższych scope'ów, lecz na tym samym poziomie nie możemy ponownie zadeklarować zmiennej o tej samej nazwie.
 
-    if (true) {
-        x: int = 5;
-    } else {
-        x: float = 6.0;
+    ```
+    fn bar() {
+
+        x: float = 1.0;
+
+        if true {
+            x: int = 5;
+            >> "Here x is int 5";
+        } else {
+            x: float = 6.0;
+            >> "Here x is float 6.0";
+        }
+
+        >> "Here x is float 1.0";
+
+        $ x: int = 10;      <-- ERROR, variable "x" was already declared in this scope!
     }
+    ```
 
-    <<< x;
-}
+### 14) Castowanie
 
-### 12) Obsługa błędów - komunikaty
+    ```
+    a: int = 5;
+
+    b: float = float(a);
+
+    age: string = string(a);
+
+    c: char = char(a);
+
+    d: int = int(3.14);
+    ```
+
+### 15) Obsługa błędów - komunikaty
+
+    Whenever interpreter encounters an error it stops its execution and prints an error message that is composed of position of the code which caused the error, explanation what kind of error it is and traceback of calls.
 
     ```
     ERROR in line 5:13 of /main.prot:
 
-    WHAT? >> Exception "Division by zero"!
+    WHAT? >>> Exception: "Division by zero"!
 
     TRACEBACK:
 
-    >> fn main(void) in line 10:3 of /main.prot
-    >> fn divide(int a, int b) in line 4:3 of /main.prot
+    >>> fn main(void) in line 10:3 of /main.prot
+    >>> fn divide(int a, int b) in line 4:3 of /main.prot
 
-        >>>> return a / 0; <<<< in line 5:13 of /main.prot
+        >>> "return a / 0;" <<< in line 5:13 of /main.prot
     ```
 
     ```
-    ERROR in line 5:13 of /main.prot:
+    ERROR in line 5:4 of /main.prot:
 
-    WHAT? >> Syntax error "Assignment to unknown identifier"!
+    WHAT? >>> Unknown identifier: "Variable 'result' was not declared in this scope!"!
 
     TRACEBACK:
 
-    >> fn main(void) in line 10:3 of /main.prot
-    >> fn divide(int a, int b) in line 4:3 of /main.prot
+    >>> fn main(void) in line 10:3 of /main.prot
+    >>> fn divide(int a, int b) in line 4:3 of /main.prot
 
-        >>>> result = 0; <<<< in line 5:13 of /main.prot <-- should be result := 0;
+        >>> "result = 0"; <<< in line 5:4 of /main.prot
     ```
 
-13) Sposób testowania
+    ```
+    ERROR in line 6:4 of /main.prot:
+
+    WHAT? >>> Syntax error: "';' expected!"
+
+    TRACEBACK:
+
+    >>> fn main(void) in line 10:3 of /main.prot
+    >>> fn printLine() in line 4:3 of /main.prot
+
+        >>> ">> result;" <<< in line 6:4 of /main.prot        <-- Interpreter encountered next statement instead of semicolon
+    ```
+
+### 16) Sposób testowania
 
 Na początek przygotować złożone przykłady i ręcznie przetestować poprawność gramatyki.
 
