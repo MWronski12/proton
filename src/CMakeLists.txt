@@ -1,6 +1,5 @@
-add_subdirectory(
-    lexer
-)
+add_subdirectory(input)
+add_subdirectory(lexer)
 
 add_executable(proton
     main.cpp

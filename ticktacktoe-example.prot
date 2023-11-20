@@ -34,9 +34,9 @@ player: char = X;
 $$$ SEKCJA DEFINICJI FUNKCJI $$$
 
 fn printBoard() {
-    >> board.leftTop >> '|' >> board.midTop >> '|' >> board.rightTop >> '\n';
-    >> board.leftMid >> '|' >> board.midMid >> '|' >> board.rightMid >> '\n';
-    >> board.leftBot >> '|' >> board.midBot >> '|' >> board.rightBot >> '\n';
+    << board.leftTop << '|' << board.midTop << '|' << board.rightTop << '\n';
+    << board.leftMid << '|' << board.midMid << '|' << board.rightMid << '\n';
+    << board.leftBot << '|' << board.midBot << '|' << board.rightBot << '\n';
 }
 
 fn getPlayerMove() -> bool {
@@ -45,8 +45,9 @@ fn getPlayerMove() -> bool {
 
     while move == 0 {
         choice: int;
-        choice << "Choose your move (must be an integer from 1 to 9 indexing board fileds from leftTop to rightBot): ";
-        
+        << "Choose your move (must be an integer from 1 to 9 indexing board fileds from leftTop to rightBot): ";
+        >> choice;
+
         for i in 1..10 {
             if choice == i {
                 move = choice;
@@ -69,7 +70,7 @@ fn getAIMove() -> {
     if board.midBot == EMPTY { return 8; }
     if board.rightBot == EMPTY { return 9; }
     
-    >> "Error: no empty fields on the board!";
+    << "Error: no empty fields on the board!";
     return 0;
 }
 
@@ -83,7 +84,7 @@ fn makeMove(move: int) {
     else if move == 7 { board.leftBot = player; }
     else if move == 8 { board.midBot = player; }
     else if move == 9 { board.rightBot = player; }
-    else { >> "Error: invalid move!"; }
+    else { << "Error: invalid move!"; }
 }
 
 fn nextPlayer() {
@@ -147,11 +148,11 @@ fn main() {
 
         if isGameOver() {
             printBoard();
-            >> "Player " << player << " won!\n";
+            << "Player " << player << " won!\n";
             break;
         } elif isDraw() {
             printBoard();
-            >> "Draw!\n";
+            << "Draw!\n";
             break;
         }
 

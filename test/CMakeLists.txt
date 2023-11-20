@@ -11,12 +11,16 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(test
+  input/StringCharReader_test.cpp
+
   lexer/Lexer_test.cpp
   lexer/CharReader_test.cpp
 )
 
 target_link_libraries(test
   GTest::gtest_main
+  
+  input
   lexer
 )
 

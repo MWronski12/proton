@@ -68,7 +68,7 @@ fieldValue
     = [ identifier, ":" ], expression;
 
 escape_sequence 
-    = "\" , ( "n" | "t" | "\" | '"' | "'");
+    = "\" , ( "n" | "t" | "\" | '"' | "'" | "0");
 
 
 (* EXPRESSIONS *)
@@ -214,9 +214,9 @@ Statement
     | Block;
 
 StdinExtraction
-    = expression, "<<", stringLiteral, ";";
+    = ">>" expression, ";";
 StdoutInsertion
-    = ">>", expression, ";";
+    = "<<", expression, { "<<", expression } ";";
 
 AssignmentStatement
     = expression, "=", expression, ";";

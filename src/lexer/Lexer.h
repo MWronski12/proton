@@ -4,5 +4,5 @@
 
 class Lexer {
 public:
-  Token next();
+  Token getNextToken();
 };

@@ -1,6 +1,9 @@
 add_library(lexer STATIC
-    CharReader.cpp
     Lexer.cpp
+)
+
+target_link_libraries(lexer PUBLIC
+    input
 )
 
 target_include_directories(lexer PUBLIC

@@ -35,8 +35,8 @@
 
         $ arg1: int = ARG_1;        <-- INVALID, cannot assign type string to variable of type int!
 
-        >> "Argument 'number' is " >> arg1 >> "\n";
-        >> "Argument 'id' is " >> arg2 >> "\n";  
+        << "Argument 'number' is " << arg1 << "\n";
+        << "Argument 'id' is " << arg2 << "\n";  
     }
     
 
@@ -89,19 +89,19 @@
     // Sprawdzanie typu przetrzymywanego przez variant 'Number' za pomocą konstrukcji match case
     match number {
         case int -> {
-            >> "Variable 'number' of type 'Number' currently holds int and it's value is"
-            >> number as int
-            >> "\n";
+            << "Variable 'number' of type 'Number' currently holds int and it's value is"
+            << number as int
+            << "\n";
         }
         case float -> {
-            >> "Variable 'number' of type 'Number' currently holds float and it's value is"
-            >> number as float
-            >> "\n";
+            << "Variable 'number' of type 'Number' currently holds float and it's value is"
+            << number as float
+            << "\n";
         }
         case string -> {
-            >> "Variable 'number' of type 'Number' currently holds string and it's value is"
-            >> number as string 
-            >> "\n";
+            << "Variable 'number' of type 'Number' currently holds string and it's value is"
+            << number as string 
+            << "\n";
         }
     }
 
@@ -141,16 +141,16 @@
     animal = "UNIDENTIFIED ANIMAL";
 
     match animal {
-        case Dog -> { >> "It's a dog named " >> (animal as Dog).name >> "!"; }
+        case Dog -> { << "It's a dog named " << (animal as Dog).name << "!"; }
         case Cat -> { 
             unpackedCat: Cat = animal as Cat;
 
-            >> "It's a cat named "
-            >> unpackedCat.name
-            >> "!\n";
+            << "It's a cat named "
+            << unpackedCat.name
+            << "!\n";
         }
-        case Bison -> { >> "It's a bison!\n"; }
-        case string -> { >> "It's an " >> animal as string >> "!\n"; }
+        case Bison -> { << "It's a bison!\n"; }
+        case string -> { << "It's an " << animal as string << "!\n"; }
     }
     ```
 
@@ -187,8 +187,8 @@
     credentials = HashedCredentials{ 3, "anonymus666", "1^dg#578DXaz$%zaq!23Sa" };
 
     match creds {
-        case Credentials -> { >> "My credentials are not secured!\n" }
-        case HashedCredentials -> { >> "My credentials are secured!\n" }
+        case Credentials -> { << "My credentials are not secured!\n" }
+        case HashedCredentials -> { << "My credentials are secured!\n" }
     }
 
 
@@ -223,7 +223,7 @@
     ```
     fn decorator(func: () -> int) -> () -> int {
         fn decorated() -> int {
-            >> "This is a decorated function call!\n";
+            << "This is a decorated function call!\n";
             return func();
         }
 
@@ -255,8 +255,8 @@
     fn foo() -> Person {
         me: Person = Person{ "Mikołaj", 22 };
 
-        >> "My name is " >> me.name >> "\n";
-        >> "I am " >> me.age >> "years old\n";
+        << "My name is " << me.name << "\n";
+        << "I am " << me.age << "years old\n";
 
         return me;
     }
@@ -299,6 +299,7 @@
 
     string
     variant
+    struct
 
     true
     false
@@ -306,16 +307,18 @@
     
     fn
     return
-    iter
-    while
     if
     elif
     else
+    for
+    in
+    while
     continue
     break
 
     match
     case
+    as
 
 ### 8) Operatory
 
@@ -330,28 +333,28 @@
 
     arytmetyczne
     ```
+    +
+    -
     *
     /
     %
-    +
-    -
     ```
 
     relacyjne
     ```
+    ==
+    !=
     <
     >
     <=
     >=
-    ==
-    !=
     ```
 
     logiczne
     ```
-    !
-    &&
     ||
+    &&
+    !
     ```
 
 #### Priorytety i łączność operatorów
@@ -478,39 +481,13 @@
     i: int = 10;
     while i > 0 {
         i = i - 1;
-        >> i as string >> '\n';
+        << i as string << '\n';
     }
 
 
 ### 11) Wbudowana obsługa stdio:
 
     Operator "<<":
-        - służy do wczytywania wartości z stdin
-
-        - jest dwuargumentowy
-            * po lewej stronie musi się znaleźć identyfikator zmiennej, do której chcemy przypisać wartość zczytaną. Musi to być zmienna już zainicjalizowana, a nie deklaracja.
-            * po prawej stronie musi się znaleźć string, który będzie wyprintowany na konsoli jako prompt
-
-        - W zależności od typu zmiennej, do której przypisujemy zczytuje wartości w różny sposób. Działa tak samo jak scanf, tylko zamiast implicit podawać jaki typ wczytujemy (scanf("%d", &a)), ten typ jest automatycznie dedukowany na podstawie zmiennej, do której przypisujemy wynik (a: int; a << "Podaj liczbę całkowitą: ";).
-
-        - Obsługuje tylko typy: int, float, char, string. Kolejne znaki z konsoli są wczytywane aż do momentu napotkania znaku niepasującego do regexa definiującego literał danego typu.
-
-
-    ```
-    a: int;
-    a << "Podaj liczbę całkowitą: ";
-
-    b: float;
-    b << "Podaj liczbę zmiennoprzecinkową: ";
-
-    c: char;
-    c << "Podaj jeden znak: ";
-
-    name: string;
-    name << "Jak się nazywasz? ";
-    ```
-
-    Operator ">>":
         - służy do wypisywania wartości na stdout
         - może być wielokrotnie łączony
         - Obsługuje:
@@ -524,9 +501,34 @@
     x: int;
     x << "Podaj liczbę: ";  <-- wpisujemy do konsoli "10<ENTER>"
 
-    >> Twoja liczba " >> x >> " pomnożona przez 10 daje " >> x * 10 >> "\n";
+    << Twoja liczba " << x << " pomnożona przez 10 daje " << x * 10 << "\n";
 
     Wypisze na stdout "Twoja liczba 10 pomnożona przez 10 daje 100<NEWLINE>"
+    ```
+
+    Operator ">>":
+        - służy do wczytywania wartości z stdin
+        - po prawej stronie musi się znaleźć zmienna, do której przypiszemy wczytaną warość
+        - W zależności od typu zmiennej, do której przypisujemy zczytuje wartości w różny sposób. Działa tak samo jak scanf, tylko zamiast implicit podawać jaki typ wczytujemy (scanf("%d", &a)), ten typ jest automatycznie dedukowany na podstawie zmiennej, do której przypisujemy wynik (a: int; >> a;).
+        - Obsługuje tylko typy: int, float, char, string. Kolejne znaki z konsoli są wczytywane aż do momentu napotkania znaku niepasującego do regexa definiującego literał danego typu.
+
+
+    ```
+    a: int;
+    << "Podaj liczbę całkowitą: ";
+    >> a;
+
+    b: float;
+    << "Podaj liczbę zmiennoprzecinkową: ";
+    >> b;
+
+    c: char;
+    << "Podaj jeden znak: ";
+    >> c;
+
+    name: string;
+    << "Jak się nazywasz? ";
+    >> name;
     ```
 
 ### 12) Komentarze
@@ -534,8 +536,8 @@
     $ One line comment
 
     $$$
-    Multiline 
-    comment 
+    Multiline
+    comment
     $$$
     ```
 
@@ -557,13 +559,13 @@
 
         if true {
             x: int = 5;
-            >> "Here x is int 5";
+            << "Here x is int 5";
         } else {
             x: float = 6.0;
-            >> "Here x is float 6.0";
+            << "Here x is float 6.0";
         }
 
-        >> "Here x is float 1.0";
+        << "Here x is float 1.0";
 
         $ x: int = 10;      <-- ERROR, variable "x" was already declared in this scope!
     }
