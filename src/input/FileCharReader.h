@@ -7,9 +7,10 @@
 class FileCharReader : public CharReaderBase {
 public:
   FileCharReader(const std::string &filename);
+  wchar_t peek() override;
 
 private:
-  std::optional<wchar_t> next() override;
+  wchar_t next() override;
 
   std::wifstream m_stream;
 };

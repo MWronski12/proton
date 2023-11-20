@@ -3,12 +3,6 @@
 FileCharReader::FileCharReader(const std::string &filename)
     : m_stream{std::wifstream(filename)}, CharReaderBase() {}
 
-std::optional<wchar_t> FileCharReader::next() {
-  auto character = m_stream.get();
+wchar_t FileCharReader::peek() { return m_stream.peek(); }
 
-  if (m_stream.eof()) {
-    return std::nullopt;
-  }
-
-  return character;
-}
+wchar_t FileCharReader::next() { return m_stream.get(); }

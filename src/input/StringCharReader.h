@@ -7,9 +7,10 @@
 class StringCharReader : public CharReaderBase {
 public:
   StringCharReader(const std::wstring &str);
+  wchar_t peek();
 
 private:
-  std::optional<wchar_t> next() override;
+  wchar_t next() override;
 
   std::wstringstream m_stream;
   int m_index = 0;
