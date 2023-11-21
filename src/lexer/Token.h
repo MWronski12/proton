@@ -1,9 +1,9 @@
 #pragma once
 
+#include <string>
+
 #include "Position.h"
 #include "TokenType.h"
-
-#include <string>
 
 struct Token {
   TokenType type;

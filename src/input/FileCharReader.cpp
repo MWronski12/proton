@@ -1,6 +1,6 @@
 #include "FileCharReader.h"
 
-FileCharReader::FileCharReader(const std::string &filename)
+FileCharReader::FileCharReader(const std::string& filename)
     : m_stream{std::wifstream(filename)}, CharReaderBase() {}
 
 wchar_t FileCharReader::peek() { return m_stream.peek(); }

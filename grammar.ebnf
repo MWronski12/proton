@@ -157,7 +157,7 @@ catingOp                    (* prio 10 l-r *)  (* NOT USED, LISTED FOR PRIO CLAR
 
 Comment
     = "$", ? single-line comment ?
-    | "$$$", ? multi-line comment ?, "$$$";
+    | "$$", ? multi-line comment ?, "$$";
 
 
 (* DECLARATIONS *)
@@ -242,7 +242,7 @@ WhileStatement
 ForStatement
     = "for", identifier, "in", range, Block;
 range
-    = expression, "..", expression;
+    = expression, "until", expression;
 
 ReturnStatement
     = "return", [ expression ], ";";

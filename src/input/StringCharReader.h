@@ -1,17 +1,20 @@
 #pragma once
 
-#include "CharReaderBase.h"
-
 #include <sstream>
 
-class StringCharReader : public CharReaderBase {
-public:
-  StringCharReader(const std::wstring &str);
-  wchar_t peek();
+#include "CharReaderBase.h"
 
-private:
+class StringCharReader : public CharReaderBase {
+ public:
+  StringCharReader() = default;
+  StringCharReader(const std::wstring& str);
+
+  wchar_t peek();
+  void load(const std::wstring& str);
+
+ private:
   wchar_t next() override;
 
-  std::wstringstream m_stream;
+  std::wistringstream m_stream;
   int m_index = 0;
 };

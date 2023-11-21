@@ -6,5 +6,5 @@ add_executable(proton
 )
 
 target_link_libraries(proton PUBLIC
-    lexer
+    lexerlib
 )

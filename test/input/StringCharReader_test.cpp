@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "StringCharReader.h"
+
+#include <gtest/gtest.h>
 
 TEST(StringCharReader, HandlesEmptyString) {
   StringCharReader reader{L""};

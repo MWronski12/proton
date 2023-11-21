@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Position.h"
-
 #include <limits>
+
+#include "Position.h"
 
 const wchar_t NO_CHAR_YET = std::numeric_limits<wchar_t>::max();
 
 class CharReaderBase {
-public:
+ public:
   CharReaderBase();
 
   wchar_t get();
@@ -32,7 +32,7 @@ public:
    */
   virtual wchar_t peek() = 0;
 
-private:
+ private:
   wchar_t m_char = NO_CHAR_YET;
   Position m_position;
 };
