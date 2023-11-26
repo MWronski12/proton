@@ -1,6 +1,6 @@
-#include "utils.h"
-
 #include <iostream>
+
+#include "utils.h"
 
 void printTokenInfo(const Token& token) {
   std::wcout << '\"' << token.value << '\"' << L" -> " << token.type << L" at "
@@ -9,5 +9,5 @@ void printTokenInfo(const Token& token) {
 }
 
 std::wostream& operator<<(std::wostream& os, const TokenType& tokenType) {
-  return std::wcout << TOKEN_TYPE_NAMES[int(tokenType)];
+  return os << TOKEN_TYPE_NAMES[int(tokenType)];
 }

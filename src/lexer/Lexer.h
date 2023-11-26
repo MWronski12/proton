@@ -7,19 +7,26 @@ class Lexer {
  public:
   Lexer(CharReaderBase& reader);
   Token getNextToken();
+  Token getToken() const;
 
  private:
   Token buildToken();
 
   void skipWhiteSpaces();
   void buildIdentifier();
-  bool isIdentifierChar(wchar_t c);
   void matchIdentifier();
+  bool isIdentifierChar(const wchar_t c) const;
+
   void buildNumber();
-  bool isNumberChar(wchar_t c);
   void matchNumber();
-  void buildString();
+  void validateBuiltNumber();
+  bool isNumberChar(const wchar_t c) const;
+  bool isAllowedAfterNumber(const wchar_t c) const;
+
   void buildChar();
+  void buildString();
+  void addEscapedChar(const wchar_t c);
+
   void buildComment();
   void matchMultiLineComment();
   void matchSingleLineComment();
