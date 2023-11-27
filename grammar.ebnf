@@ -58,7 +58,7 @@ stringLiteral
     = '"', { character | escape_sequence } , '"';   (* DOUBLE QUOTES *)
 
 variantLiteral 
-    = typeIdentifier, "{", expression, "}";
+    = typeIdentifier, "{", expression, [ "," ], "}";
 
 objectLiteral
     = typeIdentifier, "{" , fieldValues, [ "," ], "}";
@@ -80,7 +80,7 @@ logicOrExpr
     = logicAndExpr, { logicOrOp, logicAndExpr };
 logicAndExpr 
     = equalityExpr, { equalityOp, equalityExpr };
-equalityExpr 
+equalityExpr
     = relationalExpr, { equalityOp, relationalExpr };
 relationalExpr 
     = additiveExpr, { relationalOp, additiveExpr };
@@ -89,24 +89,21 @@ additiveExpr
 multiplicativeExpr 
     = unaryOpExpr, { multiplicativeOp, unaryOpExpr };
 unaryOpExpr
-    = [ unaryOp ], variantAccessExpr;
-variantAccessExpr
-    = memberAccessExpr, { variantAccessOp, typeIdentifier };
-memberAccessExpr
-    = fnCallExpr, { memberAccessOp, identifier };
-fnCallExpr
-    = primaryExpr, "(", [ expression, { ",", expression } ], ")";
+    = { unaryOp }, functionalExpr;
 
-primaryExpr 
-    = castExpr
-    | literal
+functionalExpr
+    = primaryExpr, { functionalOp };
+
+primaryExpr
+    = literal
     | identifier
-    | parenExpr;
+    | parenExpr
+    | castExpr;
 
-castExpr
-    = primitiveType, "(" , expression, ")";
 parenExpr 
     = "(", expression, ")";
+castExpr
+    = primitiveType, "(" , expression, ")";
 
 
 (* OPERATORS *)
@@ -140,17 +137,17 @@ unaryOp                     (* prio 6 r-l *)
     = "!"
     | "-";
 
-variantAccessOp             (* prio 7 l-r *)
-    = "as";
+functionalOp                (* prio 7 l-r *)
+    = fnCallOp 
+    | memberAccessOp 
+    | variantAccessOp;
 
-memberAccessOp              (* prio 8 l-r *)
-    = ".";
-
-fnCallOp                    (* prio 9 l-r *)  (* NOT USED, LISTED FOR PRIO CLARITY *)
-    = "()";
-
-catingOp                    (* prio 10 l-r *)  (* NOT USED, LISTED FOR PRIO CLARITY *)
-    = typeIdentifier, "()";
+fnCallOp
+    = "(", [ expression, { ",", expression } ], ")"; 
+memberAccessOp 
+    = ".", identifier;
+variantAccessOp
+    = "as", typeIdentifier;
 
 
 (* COMMENTS *)
@@ -214,9 +211,9 @@ Statement
     | Block;
 
 StdinExtraction
-    = ">>" expression, ";";
+    = ">>", expression, ";";
 StdoutInsertion
-    = "<<", expression, { "<<", expression } ";";
+    = "<<", expression, { "<<", expression }, ";";
 
 AssignmentStatement
     = expression, "=", expression, ";";

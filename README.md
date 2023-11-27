@@ -396,15 +396,9 @@
         -       -   negacja arytmetyczna
         
     Priorytet 7 - łączność od lewej do prawej:
-        as      -   wypakowanie wartości variantu
-
-    Priorytet 8 - łączność od lewej do prawej:
         .       -   dostęp do pola struktury
-
-    Priorytet 9 - łączność od lewej do prawej:
         ()      -   wywołanie funkcji
-
-    Priorytet 10 - łączność od lewej do prawej:
+        as      -   wypakowanie wartości variantu
         type()  -   castowanie (np.: float(intVar))
 
 
