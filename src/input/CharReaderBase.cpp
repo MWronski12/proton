@@ -1,15 +1,14 @@
 #include "CharReaderBase.h"
 
-CharReaderBase::CharReaderBase() : m_char{std::nullopt}, m_position{0, 0} {};
+CharReaderBase::CharReaderBase() : m_position{0, 0} {};
 
 /*
- * @brief Consumes next character from the input stream and advances
- * internal position. Returns nullopt if end of file is reached.
+ * @brief Gets next character from the input stream and advances
+ * internal position.
  *
- * @return std::optional<wchar_t> - next character from the input stream or
- * nullopt if end of file is reached
+ * @return wchar_t - next character from the input stream
  */
-std::optional<wchar_t> CharReaderBase::getNextCharacter() {
+wchar_t CharReaderBase::get() {
   m_char = next();
 
   if (m_char == L'\n') {
@@ -23,14 +22,15 @@ std::optional<wchar_t> CharReaderBase::getNextCharacter() {
 };
 
 /*
- * @brief Returns current character in the input stream. Returns nullopt if
- * getNextCharacter() was not called before or end of file is reached.
+ * @brief Gets last consumed character.
+ * Before consuming first character, returns NO_CHAR_YET.
+ * After the end of file was reached returns WEOF.
  *
- * @return std::optional<wchar_t> - current character in the input stream
+ * @return wchar_t - last consumed character in the input stream
  */
-std::optional<wchar_t> CharReaderBase::getCharacter() { return m_char; };
+wchar_t CharReaderBase::last() { return m_char; };
 
 /*
  * @return Position - current position in the input stream
  */
-Position CharReaderBase::getPosition() { return m_position; };
+Position CharReaderBase::pos() { return m_position; };

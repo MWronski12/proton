@@ -154,7 +154,7 @@ variantAccessOp
 
 Comment
     = "$", ? single-line comment ?
-    | "$$$", ? multi-line comment ?, "$$$";
+    | "$$", ? multi-line comment ?, "$$";
 
 
 (* DECLARATIONS *)
@@ -239,7 +239,7 @@ WhileStatement
 ForStatement
     = "for", identifier, "in", range, Block;
 range
-    = expression, "..", expression;
+    = expression, "until", expression;
 
 ReturnStatement
     = "return", [ expression ], ";";

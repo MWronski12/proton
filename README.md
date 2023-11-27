@@ -312,6 +312,7 @@
     else
     for
     in
+    until
     while
     continue
     break
@@ -404,42 +405,42 @@
 
 ### 9) Pętle for
 
-    Zasięg to kolejne po sobie liczby całkowite, które reprezentujemy za pomocą zapisu "x..y".
+    Zasięg to kolejne po sobie liczby całkowite, które reprezentujemy za pomocą zapisu "x until y".
     Klasycznie, początek zasięgu będzie brany pod uwagę, a koniec nie.
 
     Słowo kluczowe "in" służy do iterowania po zasięgu.
     Jest ono używane zamiast tradycyjnego podejścia do pętli for. 
-    Zamiast "for (int i = 0; i < 10; i++) {}" piszemy "for i in 0..10".
+    Zamiast "for (int i = 0; i < 10; i++) {}" piszemy "for i in 0 until 10".
 
-    Typ zmiennej pętli jest automatycznie dedukowany na podstawie typu obiektu, po którym iterujemy. Narazie ten typ może być tylko zasięgiem liczb całkowitych definiowanym w postaci "x..y". Wraz z rozwojem języka można zaimplementować iterację po dowolnym iterowalnym obiekcie, takim jak string, tablica lub klasa implementująca odpowiednie metody.
+    Typ zmiennej pętli jest automatycznie dedukowany na podstawie typu obiektu, po którym iterujemy. Narazie ten typ może być tylko zasięgiem liczb całkowitych definiowanym w postaci "x until y". Wraz z rozwojem języka można zaimplementować iterację po dowolnym iterowalnym obiekcie, takim jak string, tablica lub klasa implementująca odpowiednie metody.
 
     ```
-    for i in 1..5 {
+    for i in 1 until 5 {
 
     }
 
-    for i in 3..5 {
+    for i in 3 until 5 {
 
     }
 
     // Zmienna może się nazywać dowolnie, a zasięg może być zasięgiem malejącym
-    countdown in 10..1 {
+    countdown in 10 until 1 {
 
     }
 
     i: int = 10;
-    for i in 11..1 {
+    for i in 11 until 1 {
         // Tutaj i z wyższego scope'u zostało przysłonięte
     }
 
     a: int = 0;
-    for i in a..10 {
+    for i in a until 10 {
 
     }
 
     fn startVal() -> int { return 5; }
     range: int = 10;
-    for i in startVal()..startVal() + range {
+    for i in startVal() until startVal() + range {
 
     }
 
@@ -529,10 +530,10 @@
     ```
     $ One line comment
 
-    $$$
+    $$
     Multiline
     comment
-    $$$
+    $$
     ```
 
 ### 13) Scope i struktura programu

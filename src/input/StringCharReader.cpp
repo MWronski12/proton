@@ -1,14 +1,13 @@
 #include "StringCharReader.h"
 
-StringCharReader::StringCharReader(const std::wstring &str)
+StringCharReader::StringCharReader(const std::wstring& str)
     : m_stream{str}, CharReaderBase() {}
 
-std::optional<wchar_t> StringCharReader::next() {
-  auto character = m_stream.get();
+wchar_t StringCharReader::peek() { return m_stream.peek(); }
 
-  if (m_stream.eof()) {
-    return std::nullopt;
-  }
+wchar_t StringCharReader::next() { return m_stream.get(); }
 
-  return character;
+void StringCharReader::load(const std::wstring& str) {
+  m_stream = std::wistringstream(str);
+  m_index = 0;
 }

@@ -1,29 +1,38 @@
 #pragma once
 
-#include <optional>
+#include <limits>
 
 #include "Position.h"
 
+const wchar_t NO_CHAR_YET = std::numeric_limits<wchar_t>::max();
+
 class CharReaderBase {
-public:
+ public:
   CharReaderBase();
 
-  std::optional<wchar_t> getNextCharacter();
-
-  std::optional<wchar_t> getCharacter();
-  Position getPosition();
+  wchar_t get();
+  wchar_t last();
+  Position pos();
 
   /*
    * @brief Consumes next character from the input stream. This method has to be
-   * overriden in derived classes. It operates on std::optional<wchar_t> for
-   * unicode support. Returns nullopt if end of file is reached.
+   * overriden in derived classes. Must return WEOF when end of stream is
+   * reached.
    *
-   * @return std::optional<wchar_t> - next character from the input stream or
-   * nullopt if end of file is reached
+   * @return wchar_t - next character from the input stream
    */
-  virtual std::optional<wchar_t> next() = 0;
+  virtual wchar_t next() = 0;
 
-private:
-  std::optional<wchar_t> m_char;
+  /*
+   * @brief Looks up next character in the input stream. This method has to be
+   * overriden in derived classes Must return WEOF when end of stream is
+   * reached.
+   *
+   * @return wchar_t - next character from the input stream
+   */
+  virtual wchar_t peek() = 0;
+
+ private:
+  wchar_t m_char = NO_CHAR_YET;
   Position m_position;
 };

@@ -1,4 +1,4 @@
-$$$ SEKCJA DEKLARACJI STRUKTUR $$$
+$$ SEKCJA DEKLARACJI STRUKTUR $$
 
 struct Board {
     leftTop: char;
@@ -15,7 +15,7 @@ struct Board {
 };
 
 
-$$$ SEKCJA DEKLARACJI ZMIENNYCH GLOBALNYCH $$$
+$$ SEKCJA DEKLARACJI ZMIENNYCH GLOBALNYCH $$
 
 const X: char = 'X';
 const O: char = 'O';
@@ -31,7 +31,7 @@ $ whose turn is it? Player X or O, X starts
 player: char = X;
 
 
-$$$ SEKCJA DEFINICJI FUNKCJI $$$
+$$ SEKCJA DEFINICJI FUNKCJI $$
 
 fn printBoard() {
     << board.leftTop << '|' << board.midTop << '|' << board.rightTop << '\n';
@@ -48,7 +48,7 @@ fn getPlayerMove() -> bool {
         << "Choose your move (must be an integer from 1 to 9 indexing board fileds from leftTop to rightBot): ";
         >> choice;
 
-        for i in 1..10 {
+        for i in 1 until 10 {
             if choice == i {
                 move = choice;
             }
@@ -130,7 +130,7 @@ fn isDraw() {
 }
 
 
-$$$ SEKCJA DEFINICJI FUNKCJI MAIN $$$
+$$ SEKCJA DEFINICJI FUNKCJI MAIN $$
 
 fn main() {
     while true {

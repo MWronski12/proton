@@ -20,8 +20,8 @@ add_executable(test
 target_link_libraries(test
   GTest::gtest_main
   
-  input
-  lexer
+  inputlib
+  lexerlib
 )
 
 include(GoogleTest)
