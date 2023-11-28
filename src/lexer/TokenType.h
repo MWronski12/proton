@@ -4,6 +4,9 @@
 #include <vector>
 
 enum class TokenType {
+  // Default
+  UNEXPECTED = 0,
+
   // Keywords
   CONST_KWRD,
   VOID_KWRD,
@@ -14,8 +17,6 @@ enum class TokenType {
   STRING_KWRD,
   VARIANT_KWRD,
   STRUCT_KWRD,
-  TRUE_KWRD,
-  FALSE_KWRD,
   FN_KWRD,
   RETURN_KWRD,
 
@@ -79,10 +80,10 @@ enum class TokenType {
 
   // SPECIAL TOKENS
   ETX,
-  UNEXPECTED,
 };
 
 static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
+    L"unexpected",
     L"const",
     L"void",
     L"int",
@@ -109,11 +110,11 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"case",
     L"as",
     L"identifier",
-    L"integer",
-    L"float",
-    L"char",
-    L"bool",
-    L"string",
+    L"integer_literal",
+    L"float_literal",
+    L"char_literal",
+    L"bool_literal",
+    L"string_literal",
     L"assignment",
     L"plus",
     L"minus",
@@ -143,15 +144,14 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"single_line_comment",
     L"multi_line_comment",
     L"etx",
-    L"unexpected",
 };
 
 static const int KEYWORDS_OFFSET = (int)TokenType::CONST_KWRD;
 static const std::vector<std::wstring> KEYWORDS = {
-    L"const",   L"void",   L"int",  L"float", L"char",  L"bool",   L"string",
-    L"variant", L"struct", L"true", L"false", L"fn",    L"return", L"if",
-    L"elif",    L"else",   L"for",  L"in",    L"until", L"while",  L"continue",
-    L"break",   L"match",  L"case", L"as",
+    L"const",    L"void",    L"int",    L"float", L"char",   L"bool",
+    L"string",   L"variant", L"struct", L"fn",    L"return", L"if",
+    L"elif",     L"else",    L"for",    L"in",    L"until",  L"while",
+    L"continue", L"break",   L"match",  L"case",  L"as",
 };
 
 static const int OPERATORS_OFFSET = (int)TokenType::ASSIGNMENT;

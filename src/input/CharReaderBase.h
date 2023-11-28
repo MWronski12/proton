@@ -11,8 +11,8 @@ class CharReaderBase {
   CharReaderBase();
 
   wchar_t get();
-  wchar_t last();
-  Position pos();
+  wchar_t last() const;
+  Position pos() const;
 
   /*
    * @brief Consumes next character from the input stream. This method has to be
@@ -30,7 +30,7 @@ class CharReaderBase {
    *
    * @return wchar_t - next character from the input stream
    */
-  virtual wchar_t peek() = 0;
+  virtual wchar_t peek() const = 0;
 
  private:
   wchar_t m_char = NO_CHAR_YET;

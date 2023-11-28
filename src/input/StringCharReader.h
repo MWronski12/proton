@@ -9,12 +9,11 @@ class StringCharReader : public CharReaderBase {
   StringCharReader() = default;
   StringCharReader(const std::wstring& str);
 
-  wchar_t peek();
+  wchar_t peek() const override;
   void load(const std::wstring& str);
 
  private:
   wchar_t next() override;
 
-  std::wistringstream m_stream;
-  int m_index = 0;
+  mutable std::wistringstream m_stream;
 };

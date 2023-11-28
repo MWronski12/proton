@@ -1,6 +1,6 @@
 #include "CharReaderBase.h"
 
-CharReaderBase::CharReaderBase() : m_position{0, 0} {};
+CharReaderBase::CharReaderBase() : m_position{0, 0} {}
 
 /*
  * @brief Gets next character from the input stream and advances
@@ -19,7 +19,7 @@ wchar_t CharReaderBase::get() {
   }
 
   return m_char;
-};
+}
 
 /*
  * @brief Gets last consumed character.
@@ -28,9 +28,9 @@ wchar_t CharReaderBase::get() {
  *
  * @return wchar_t - last consumed character in the input stream
  */
-wchar_t CharReaderBase::last() { return m_char; };
+wchar_t CharReaderBase::last() const { return m_char; }
 
 /*
  * @return Position - current position in the input stream
  */
-Position CharReaderBase::pos() { return m_position; };
+Position CharReaderBase::pos() const { return m_position; }
