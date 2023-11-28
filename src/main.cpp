@@ -7,10 +7,12 @@ int main() {
   StringCharReader reader(src);
   Lexer lexer(reader);
 
-  do {
-    auto token = lexer.getNextToken();
+  auto token = lexer.getNextToken();
+  while (token.type != TokenType::ETX) {
     printTokenInfo(token);
-  } while (lexer.getToken().type != TokenType::ETX);
+    token = lexer.getNextToken();
+  }
+  printTokenInfo(token);
 
   return 0;
 }

@@ -5,7 +5,7 @@
 
 class Lexer {
  public:
-  Lexer(CharReaderBase& reader);
+  explicit Lexer(CharReaderBase& reader);
   Token getNextToken();
 
  private:

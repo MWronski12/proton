@@ -13,7 +13,7 @@ wchar_t CharReaderBase::get() {
 
   if (m_char == L'\n') {
     m_position.line++;
-    m_position.column = 0;
+    m_position.column = LINE_START;
   } else {
     m_position.column++;
   }
