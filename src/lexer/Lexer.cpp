@@ -11,42 +11,47 @@ Lexer::Lexer(CharReaderBase& reader) : m_reader{reader}, m_token{} {}
 
 Token Lexer::getNextToken() {
   skipWhiteSpaces();
-  return buildToken();
+  buildToken();
+  return m_token;
 }
-
-Token Lexer::getToken() const { return m_token; }
 
 void Lexer::skipWhiteSpaces() {
   while (iswspace(m_reader.peek())) m_reader.get();
 }
 
-Token Lexer::buildToken() {
+void Lexer::buildToken() {
   m_token.value.clear();
   m_token.position = m_reader.pos();
 
   auto first = m_reader.peek();
-  if (first == L'_' || iswalpha(first)) {
+  if (isIdentifierStart(first)) {
     buildIdentifier();
-  } else if (iswdigit(first)) {
+  } else if (isNumberStart(first)) {
     buildNumber();
-  } else if (first == L'"') {
+  } else if (isStringStart(first)) {
     buildString();
-  } else if (first == L'\'') {
+  } else if (isCharStart(first)) {
     buildChar();
-  } else if (first == L'$') {
+  } else if (isCommentStart(first)) {
     buildComment();
   } else {
     buildOther();
   }
-
-  return m_token;
 }
 
 /* -------------------------------------------------------------------------- */
 /*                            IDENTIFIER OR KEYWORD                           */
 /* -------------------------------------------------------------------------- */
 
+bool Lexer::isIdentifierStart(wchar_t first) {
+  return first == L'_' || iswalpha(first);
+}
+
 void Lexer::buildIdentifier() {
+  if (!isIdentifierStart(m_reader.peek())) {
+    throw std::logic_error("Identifier must start with a '_' or alpabet char!");
+  }
+
   while (isIdentifierChar(m_reader.peek())) {
     auto next = m_reader.get();
     m_token.value.push_back(next);
@@ -74,7 +79,13 @@ void Lexer::matchIdentifier() {
 /*                              FLOAT OR INTEGER                              */
 /* -------------------------------------------------------------------------- */
 
+bool Lexer::isNumberStart(wchar_t first) { return iswdigit(first); }
+
 void Lexer::buildNumber() {
+  if (!isNumberStart(m_reader.peek())) {
+    throw std::logic_error("Number literal must start with a digit character!");
+  }
+
   while (isNumberChar(m_reader.peek())) {
     auto next = m_reader.get();
     m_token.value.push_back(next);
@@ -161,11 +172,14 @@ bool Lexer::isAllowedAfterNumber(const wchar_t c) const {
 /*                               STRING LITERAL                               */
 /* -------------------------------------------------------------------------- */
 
+bool Lexer::isStringStart(wchar_t first) { return first == L'"'; }
+
 void Lexer::buildString() {
-  // Consume opening quote
-  if (m_reader.get() != L'\"') {
-    throw std::logic_error("String literal must begin with L'\"' character!");
+  if (!isStringStart(m_reader.peek())) {
+    throw std::logic_error("String literal must start with L'\"' character!");
   }
+
+  m_reader.get();  // Consume opening quote
 
   while (true) {
     auto next = m_reader.peek();
@@ -211,10 +225,14 @@ void Lexer::addEscapedChar(const wchar_t c) {
 /*                                CHAR LITERAL                                */
 /* -------------------------------------------------------------------------- */
 
+bool Lexer::isCharStart(wchar_t first) { return first == L'\''; }
+
 void Lexer::buildChar() {
-  if (m_reader.get() != L'\'') {  // Consume opening quote
+  if (!isCharStart(m_reader.peek())) {
     throw std::logic_error("Char literal must start with L'\'' character!");
   }
+
+  m_reader.get();  // Consume opening quote
 
   while (true) {
     auto next = m_reader.peek();
@@ -248,9 +266,12 @@ void Lexer::buildChar() {
 /*                                   COMMENT                                  */
 /* -------------------------------------------------------------------------- */
 
+bool Lexer::isCommentStart(wchar_t first) { return first == L'$'; }
+
 void Lexer::buildComment() {
-  if (m_reader.peek() != L'$')
+  if (!isCommentStart(m_reader.peek())) {
     throw std::logic_error("Comment must start with L'$' character!");
+  }
 
   m_token.value.push_back(m_reader.get());
 
