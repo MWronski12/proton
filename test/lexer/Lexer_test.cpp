@@ -195,18 +195,6 @@ TEST_F(LexerTest, LexerHandlesInvalidFloatLiterals) {
   EXPECT_EQ(token.value, L"0.0.0.0");
 }
 
-TEST_F(LexerTest, LexerHandlesBoolLiterals) {
-  m_reader.load(L"true false");
-
-  auto token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::BOOL);
-  EXPECT_EQ(token.value, L"true");
-
-  token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::BOOL);
-  EXPECT_EQ(token.value, L"false");
-}
-
 TEST_F(LexerTest, LexerHandlesUnexpectedCharacters) {
   m_reader.load(L"\\ # ? `");
 

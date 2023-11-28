@@ -18,7 +18,6 @@ enum class TokenType {
   VARIANT_KWRD,
   STRUCT_KWRD,
   FN_KWRD,
-  RETURN_KWRD,
 
   IF_KWRD,
   ELIF_KWRD,
@@ -29,10 +28,14 @@ enum class TokenType {
   WHILE_KWRD,
   CONTINUE_KWRD,
   BREAK_KWRD,
+  RETURN_KWRD,
 
   MATCH_KWRD,
   CASE_KWRD,
   AS_KWRD,
+
+  TRUE_KWRD,
+  FALSE_KWRD,
 
   // IDENTIFIER
   IDENTIFIER,
@@ -41,7 +44,6 @@ enum class TokenType {
   INTEGER,
   FLOAT,
   CHAR,
-  BOOL,
   STRING,
 
   // OPERATORS
@@ -83,7 +85,10 @@ enum class TokenType {
 };
 
 static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
+    // DEFAULT
     L"unexpected",
+
+    // KEYWORDS
     L"const",
     L"void",
     L"int",
@@ -93,10 +98,8 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"string",
     L"variant",
     L"struct",
-    L"true",
-    L"false",
     L"fn",
-    L"return",
+
     L"if",
     L"elif",
     L"else",
@@ -106,15 +109,26 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"while",
     L"continue",
     L"break",
+    L"return",
+
     L"match",
     L"case",
     L"as",
+
+    L"true",
+    L"false",
+
+    // IDENTIFIER
     L"identifier",
+
+    // LITERALS
     L"integer_literal",
     L"float_literal",
     L"char_literal",
     L"bool_literal",
     L"string_literal",
+
+    // OPERATORS
     L"assignment",
     L"plus",
     L"minus",
@@ -132,6 +146,8 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"logic_not",
     L"insertion_op",
     L"extraction_op",
+
+    // PUNCTUATION
     L"dot",
     L"comma",
     L"colon",
@@ -141,17 +157,22 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"lbrace",
     L"rbrace",
     L"arrow",
+
+    // COMMENTS
     L"single_line_comment",
     L"multi_line_comment",
+
+    // SPECIAL TOKENS
     L"etx",
 };
 
 static const int KEYWORDS_OFFSET = (int)TokenType::CONST_KWRD;
 static const std::vector<std::wstring> KEYWORDS = {
-    L"const",    L"void",    L"int",    L"float", L"char",   L"bool",
-    L"string",   L"variant", L"struct", L"fn",    L"return", L"if",
-    L"elif",     L"else",    L"for",    L"in",    L"until",  L"while",
-    L"continue", L"break",   L"match",  L"case",  L"as",
+    L"const", L"void",   L"int",      L"float",  L"char",
+    L"bool",  L"string", L"variant",  L"struct", L"fn",
+    L"if",    L"elif",   L"else",     L"for",    L"in",
+    L"until", L"while",  L"continue", L"break",  L"return",
+    L"match", L"case",   L"as",       L"true",   L"false",
 };
 
 static const int OPERATORS_OFFSET = (int)TokenType::ASSIGNMENT;

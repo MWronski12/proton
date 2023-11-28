@@ -58,58 +58,16 @@ void Lexer::buildIdentifier() {
 bool Lexer::isIdentifierChar(const wchar_t c) const { return iswalnum(c); }
 
 void Lexer::matchIdentifier() {
-  if (m_token.value == L"const")
-    m_token.type = TokenType::CONST_KWRD;
-  else if (m_token.value == L"void")
-    m_token.type = TokenType::VOID_KWRD;
-  else if (m_token.value == L"int")
-    m_token.type = TokenType::INT_KWRD;
-  else if (m_token.value == L"float")
-    m_token.type = TokenType::FLOAT_KWRD;
-  else if (m_token.value == L"char")
-    m_token.type = TokenType::CHAR_KWRD;
-  else if (m_token.value == L"bool")
-    m_token.type = TokenType::BOOL_KWRD;
-  else if (m_token.value == L"string")
-    m_token.type = TokenType::STRING_KWRD;
-  else if (m_token.value == L"variant")
-    m_token.type = TokenType::VARIANT_KWRD;
-  else if (m_token.value == L"struct")
-    m_token.type = TokenType::STRUCT_KWRD;
-  else if (m_token.value == L"fn")
-    m_token.type = TokenType::FN_KWRD;
-  else if (m_token.value == L"return")
-    m_token.type = TokenType::RETURN_KWRD;
-  else if (m_token.value == L"if")
-    m_token.type = TokenType::IF_KWRD;
-  else if (m_token.value == L"elif")
-    m_token.type = TokenType::ELIF_KWRD;
-  else if (m_token.value == L"else")
-    m_token.type = TokenType::ELSE_KWRD;
-  else if (m_token.value == L"for")
-    m_token.type = TokenType::FOR_KWRD;
-  else if (m_token.value == L"in")
-    m_token.type = TokenType::IN_KWRD;
-  else if (m_token.value == L"until")
-    m_token.type = TokenType::UNTIL_KWRD;
-  else if (m_token.value == L"while")
-    m_token.type = TokenType::WHILE_KWRD;
-  else if (m_token.value == L"continue")
-    m_token.type = TokenType::CONTINUE_KWRD;
-  else if (m_token.value == L"break")
-    m_token.type = TokenType::BREAK_KWRD;
-  else if (m_token.value == L"match")
-    m_token.type = TokenType::MATCH_KWRD;
-  else if (m_token.value == L"case")
-    m_token.type = TokenType::CASE_KWRD;
-  else if (m_token.value == L"as")
-    m_token.type = TokenType::AS_KWRD;
-  else if (m_token.value == L"true")
-    m_token.type = TokenType::BOOL;
-  else if (m_token.value == L"false")
-    m_token.type = TokenType::BOOL;
-  else
-    m_token.type = TokenType::IDENTIFIER;
+  // Keyword
+  for (uint i = 0; i < KEYWORDS.size(); i++) {
+    if (m_token.value == KEYWORDS[i]) {
+      m_token.type = TokenType(i + KEYWORDS_OFFSET);
+      return;
+    }
+  }
+
+  // User defined identifier
+  m_token.type = TokenType::IDENTIFIER;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -342,6 +300,7 @@ void Lexer::buildOther() {
   m_token.value.push_back(next);
 
   switch (next) {
+    // Cases where first char doesnt uniquely identify the token
     case L'-':
       if (m_reader.peek() == L'>') {
         m_token.value.push_back(m_reader.get());
@@ -393,6 +352,7 @@ void Lexer::buildOther() {
       }
       return;
 
+    // Cases where first char uniquely identifies the token
     case L'+':
       m_token.type = TokenType::PLUS;
       return;
