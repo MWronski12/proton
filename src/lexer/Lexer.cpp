@@ -1,5 +1,3 @@
-#include "Lexer.h"
-
 #include <algorithm>
 #include <cwctype>
 #include <functional>
@@ -7,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "Lexer.h"
 #include "Token.h"
 #include "utils.h"
 
@@ -56,6 +55,8 @@ void Lexer::buildIdentifier() {
     throw std::logic_error("Identifier must start with a '_' or alpabet char!");
   }
 
+  m_token.value.push_back(m_reader.get());
+
   while (isIdentifierChar(m_reader.peek())) {
     auto next = m_reader.get();
     m_token.value.push_back(next);
@@ -64,7 +65,9 @@ void Lexer::buildIdentifier() {
   matchIdentifier();
 }
 
-bool Lexer::isIdentifierChar(const wchar_t c) const { return iswalnum(c); }
+bool Lexer::isIdentifierChar(const wchar_t c) const {
+  return c == L'_' || iswalnum(c);
+}
 
 void Lexer::matchIdentifier() {
   // Keyword
@@ -78,6 +81,35 @@ void Lexer::matchIdentifier() {
   // User defined identifier
   m_token.type = TokenType::IDENTIFIER;
 }
+
+// bool Lexer::isAllowedAfterIdentifier(const wchar_t c) const {
+//   bool isAllowed = false;
+//   switch (c) {
+//     // whitespace, right parenthese, semicolon, comma, comment or EOF
+//     case L' ':
+//     case L'\n':
+//     case L'\t':
+//     case L'(':
+//     case L'{':
+//     case L';':
+//     case L',':
+//     case L'$':
+//     case WEOF:
+//       isAllowed = true;
+//       break;
+
+//     default:
+//       // Any operator
+//       for (const auto& el : OPERATORS) {
+//         if (c == el.front()) {
+//           isAllowed = true;
+//           break;
+//         }
+//       }
+//   }
+
+//   return isAllowed;
+// }
 
 /* -------------------------------------------------------------------------- */
 /*                              FLOAT OR INTEGER                              */
@@ -158,7 +190,6 @@ bool Lexer::isAllowedAfterNumber(const wchar_t c) const {
     case L'\n':
     case L'\t':
     case L')':
-    case L']':
     case L'}':
     case L';':
     case L',':

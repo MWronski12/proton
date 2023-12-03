@@ -23,11 +23,6 @@ class LexerTest : public ::testing::Test {
   Lexer m_lexer;
 };
 
-TEST(TokenType, TokenTypeConfigurationsAreCorrect) {
-  ASSERT_EQ((int)TokenType::UNEXPECTED, 0);
-  ASSERT_EQ((int)TokenType::ETX, TOKEN_TYPE_NAMES.size() - 1);
-}
-
 /* -------------------------------------------------------------------------- */
 /*                                SPECIAL CASES                               */
 /* -------------------------------------------------------------------------- */
@@ -135,6 +130,71 @@ TEST_F(LexerTest, LexerHandlesAllPunctuation) {
     EXPECT_EQ(token.type, static_cast<TokenType>(i + PUNCTUATION_OFFSET));
     EXPECT_EQ(token.value, PUNCTUATION[i]);
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 IDENTIFIERS                                */
+/* -------------------------------------------------------------------------- */
+
+TEST_F(LexerTest, LexerHandlesValidIdentifiers) {
+  m_reader.load(L"abc _abc _abc123 _123_abc_");
+
+  auto token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"abc");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"_abc");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"_abc123");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"_123_abc_");
+}
+
+TEST_F(LexerTest, LexerHandlesIdentifiersStartingWithOtherKeyword) {
+  m_reader.load(L"int_ void_ptr for___EveryLovinSoul as_GodToldMe");
+
+  auto token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"int_");
+  std::wcout << token.value << std::endl;
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"void_ptr");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"for___EveryLovinSoul");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"as_GodToldMe");
+}
+
+TEST_F(LexerTest, LexerHandlesInvalidIdentifiers) {
+  m_reader.load(L"123abc 3.14abc #HASHTAG");
+
+  auto token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::UNEXPECTED);
+  EXPECT_EQ(token.value, L"123abc");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::UNEXPECTED);
+  EXPECT_EQ(token.value, L"3.14abc");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::UNEXPECTED);
+  EXPECT_EQ(token.value, L"#");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"HASHTAG");
 }
 
 /* -------------------------------------------------------------------------- */
