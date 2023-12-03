@@ -5,7 +5,8 @@
 #include "Position.h"
 
 const wchar_t NO_CHAR_YET = std::numeric_limits<wchar_t>::max();
-const int LINE_START = 0;  // Index of the first column in line
+const int FIRST_COL = 0;
+const int FIRST_LINE = 0;
 
 class CharReaderBase {
  public:

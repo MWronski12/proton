@@ -1,6 +1,6 @@
 #pragma once
 
 struct Position {
-  int line;
-  int column;
+  int line = FIRST_LINE;
+  int column = FIRST_COL;
 };
