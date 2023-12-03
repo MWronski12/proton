@@ -1,6 +1,6 @@
-#include <iostream>
-
 #include "utils.h"
+
+#include <iostream>
 
 void printTokenInfo(const Token& token) {
   std::wcout << '\"' << token.value << '\"' << L" -> " << token.type << L" at "

@@ -1,13 +1,17 @@
+#include "Lexer.h"
+
 #include <algorithm>
 #include <cwctype>
+#include <functional>
+#include <map>
 #include <stdexcept>
 #include <string>
 
-#include "Lexer.h"
 #include "Token.h"
 #include "utils.h"
 
-Lexer::Lexer(CharReaderBase& reader) : m_reader{reader}, m_token{} {}
+Lexer::Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler)
+    : m_reader{reader}, m_errorHandler{errorHandler} {}
 
 Token Lexer::getNextToken() {
   skipWhiteSpaces();
@@ -20,7 +24,7 @@ void Lexer::skipWhiteSpaces() {
 }
 
 void Lexer::buildToken() {
-  m_token.value.clear();
+  m_token = Token{};
   m_token.position = m_reader.pos();
 
   auto first = m_reader.peek();
@@ -104,6 +108,8 @@ void Lexer::buildNumber() {
       m_token.value.push_back(next);
     }
     m_token.type = TokenType::UNEXPECTED;
+    m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
+                         m_reader.getInputFilename());
   }
 
   validateBuiltNumber();
@@ -112,8 +118,10 @@ void Lexer::buildNumber() {
 void Lexer::matchNumber() {
   if (m_token.value.find('.') != std::wstring::npos) {
     m_token.type = TokenType::FLOAT;
+    m_token.floatValue = std::stof(m_token.value);
   } else {
     m_token.type = TokenType::INTEGER;
+    m_token.intValue = std::stoi(m_token.value);
   }
 }
 
@@ -126,11 +134,15 @@ void Lexer::validateBuiltNumber() {
   if (m_token.value.front() == L'0' && m_token.value.length() > 1 &&
       m_token.value[1] != L'.') {
     m_token.type = TokenType::UNEXPECTED;
+    m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
+                         m_reader.getInputFilename());
   }
 
   // Number literal can have 0 or 1 '.'
   else if (std::count(m_token.value.cbegin(), m_token.value.cend(), L'.') > 1) {
     m_token.type = TokenType::UNEXPECTED;
+    m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
+                         m_reader.getInputFilename());
   }
 }
 
@@ -188,11 +200,14 @@ void Lexer::buildString() {
     if (next == L'"') {
       m_reader.get();  // Consume closing quote
       m_token.type = TokenType::STRING;
+      m_token.strValue = m_token.value;
       return;
     }
     // Newline or WEOF
     else if (next == L'\n' || next == wchar_t(WEOF)) {
       m_token.type = TokenType::UNEXPECTED;
+      m_errorHandler.error(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
+                           m_reader.getInputFilename());
       return;
     }
     // Escape sequence
@@ -239,14 +254,22 @@ void Lexer::buildChar() {
 
     // Closing quote
     if (next == L'\'') {
-      m_reader.get();  // Consume closing quote
-      m_token.type =
-          m_token.value.length() == 1 ? TokenType::CHAR : TokenType::UNEXPECTED;
+      m_reader.get();
+      if (m_token.value.length() == 1) {
+        m_token.type = TokenType::CHAR;
+        m_token.charValue = m_token.value.front();
+      } else {
+        m_token.type = TokenType::UNEXPECTED;
+        m_errorHandler.error(ErrorType::INVALID_CHAR_LITERAL, m_token.position,
+                             m_reader.getInputFilename());
+      }
       return;
     }
     // Newline or WEOF
     else if (next == L'\n' || next == wchar_t(WEOF)) {
       m_token.type = TokenType::UNEXPECTED;
+      m_errorHandler.error(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
+                           m_reader.getInputFilename());
       return;
     }
     // Escape sequence
@@ -288,7 +311,9 @@ void Lexer::matchMultiLineComment() {
     auto next = m_reader.get();
 
     if (next == wchar_t(WEOF)) {
-      m_token.type = TokenType::UNEXPECTED;  // missing closing comment
+      m_token.type = TokenType::UNEXPECTED;
+      m_errorHandler.error(ErrorType::UNEXPECTED_END_OF_FILE, m_token.position,
+                           m_reader.getInputFilename());
       return;
     }
 
@@ -320,8 +345,7 @@ void Lexer::buildOther() {
   auto next = m_reader.get();
   m_token.value.push_back(next);
 
-  switch (next) {
-    // Cases where first char doesnt uniquely identify the token
+  switch (next) {  // Cases where first char doesnt uniquely identify the token
     case L'-':
       if (m_reader.peek() == L'>') {
         m_token.value.push_back(m_reader.get());
@@ -423,6 +447,8 @@ void Lexer::buildOther() {
       return;
     default:
       m_token.type = TokenType::UNEXPECTED;  // stray
+      m_errorHandler.error(ErrorType::UNEXPECTED_CHARACTER, m_token.position,
+                           m_reader.getInputFilename());
       return;
   }
 }

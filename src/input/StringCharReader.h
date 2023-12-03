@@ -9,6 +9,8 @@ class StringCharReader : public CharReaderBase {
   StringCharReader() = default;
   StringCharReader(const std::wstring& str);
 
+  std::string getInputFilename() const override;
+
   wchar_t peek() const override;
   void load(const std::wstring& str);
 

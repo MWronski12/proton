@@ -1,3 +1,4 @@
+add_subdirectory(errors)
 add_subdirectory(input)
 add_subdirectory(lexer)
 

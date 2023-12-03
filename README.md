@@ -607,7 +607,7 @@
     >>> fn main(void) in line 10:3 of /main.prot
     >>> fn divide(int a, int b) in line 4:3 of /main.prot
 
-        >>> "result = 0"; <<< in line 5:4 of /main.prot
+        >>> "result = 0;" <<< in line 5:4 of /main.prot
     ```
 
     ```

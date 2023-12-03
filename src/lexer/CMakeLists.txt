@@ -5,6 +5,7 @@ add_library(lexerlib STATIC
 
 target_link_libraries(lexerlib PUBLIC
     inputlib
+    errorslib
 )
 
 target_include_directories(lexerlib PUBLIC

@@ -1,7 +1,5 @@
 #include "CharReaderBase.h"
 
-CharReaderBase::CharReaderBase() : m_position{0, 0} {}
-
 /*
  * @brief Gets next character from the input stream and advances
  * internal position.

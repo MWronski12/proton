@@ -1,11 +1,12 @@
 #pragma once
 
 #include "CharReaderBase.h"
+#include "ErrorHandlerBase.h"
 #include "Token.h"
 
 class Lexer {
  public:
-  explicit Lexer(CharReaderBase& reader);
+  explicit Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler);
   Token getNextToken();
 
  private:
@@ -40,5 +41,7 @@ class Lexer {
   void buildOther();
 
   CharReaderBase& m_reader;
+  ErrorHandlerBase& m_errorHandler;
+
   Token m_token;
 };

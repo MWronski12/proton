@@ -125,7 +125,6 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"integer_literal",
     L"float_literal",
     L"char_literal",
-    L"bool_literal",
     L"string_literal",
 
     // OPERATORS

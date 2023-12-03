@@ -13,6 +13,7 @@ enable_testing()
 add_executable(test
   input/StringCharReader_test.cpp
   lexer/Lexer_test.cpp
+  lexer/TokenType_test.cpp
 )
 
 target_link_libraries(test
