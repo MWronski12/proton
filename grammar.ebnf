@@ -89,21 +89,20 @@ additiveExpr
 multiplicativeExpr 
     = unaryOpExpr, { multiplicativeOp, unaryOpExpr };
 unaryOpExpr
-    = { unaryOp }, functionalExpr;
-
+    = [ unaryOp ], functionalExpr;
 functionalExpr
     = primaryExpr, { functionalOp };
 
 primaryExpr
-    = literal
-    | identifier
+    = castExpr
     | parenExpr
-    | castExpr;
+    | literal
+    | identifier;
 
+castExpr
+    = typeIdentifier, "(", expression, ")";
 parenExpr 
     = "(", expression, ")";
-castExpr
-    = primitiveType, "(" , expression, ")";
 
 
 (* OPERATORS *)
