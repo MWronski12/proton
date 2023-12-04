@@ -1,33 +1,23 @@
 (* Program structure *)
 
 Program
-    = { GlobalVariable | TypeDef | FnDef }, MainFunction;
-
-GlobalVariable
-    = { VarDecl | VarDef };
+    = { TypeDef | FnDef }, MainFunction;
+    
 MainFunction
     = "fn", "main()", "->", "int", Block;
 
 
 (* Lexical conventions *)
 
-nonZeroDigit 
-    = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-digit 
-    = "0" | nonZeroDigit;
-letter 
-    = "[a-zA-Z]";
-character
-    = "'", ? Any ASCII character ?, "'";
 identifier 
-    = ( letter | "_" ), { letter | digit | "_" };
+    = ? RETURNED BY LEXER ?;
 typeIdentifier
     = identifier;
 primitiveType
-    = "int" 
-    | "float" 
-    | "char" 
-    | "bool" 
+    = "int"
+    | "float"
+    | "char"
+    | "bool"
     | "string";
 
 
@@ -42,15 +32,15 @@ literal
     | objectLiteral;
 
 integerLiteral 
-    = "0" | nonZeroDigit, { digit };
+    = ? RETURNED BY LEXER ?;
 floatLiteral 
-    = integerLiteral, ".", digit, { digit };
+    = ? RETURNED BY LEXER ?;
 charLiteral 
-    = "'", ( character | escape_sequence ), "'";    (* SINGLE QUOTES *)
+    = ? RETURNED BY LEXER ?;
 boolLiteral 
-    = "true" | "false";
+    = ? RETURNED BY LEXER ?;
 stringLiterals
-    = '"', { character | escape_sequence } , '"';   (* DOUBLE QUOTES *)
+    = ? RETURNED BY LEXER ?;
 
 variantLiteral 
     = typeIdentifier, "{", expression, [ "," ], "}";
@@ -61,9 +51,6 @@ fieldValues
     = fieldValue, { ",", fieldValue };
 fieldValue 
     = [ identifier, ":" ], expression;
-
-escape_sequence 
-    = "\" , ( "n" | "t" | "\" | '"' | "'" | "0");
 
 
 (* EXPRESSIONS *)
@@ -163,19 +150,13 @@ VariantDef
     = "variant", identifier, "{", { typeIdentifier }, "}", ";";
 
 FnDef
-    = "fn", identifier, "(", [ parameters ], ")", [ returnTypeAnnotation ], Block;
-parameters 
+    = "fn", identifier, "(", [ parameters ], ")", returnTypeAnnotation, Block;
+parameters
     = parameter, { ",", parameter };
 parameter
-    = [ "const" ], identifier, ":", ( typeIdentifier | functionSignature );
-functionSignature
-    = "(", [ parameterTypes ], ")", returnTypeAnnotation;
-parameterTypes
-    = parameterType, { ",", parameterType };
-parameterType
-    = typeIdentifier | functionSignature;
+    = [ "const" ], identifier, ":", typeIdentifier;
 returnTypeAnnotation
-    = "->", ( typeIdentifier | "void" | functionSignature );
+    = "->", ( typeIdentifier | "void" );
 
 
 
@@ -184,8 +165,6 @@ returnTypeAnnotation
 Statement 
     = VarDecl
     | VarDef
-    | TypeDef
-    | FnDef
     | StdinExtraction
     | StdoutInsertion
     | AssignmentStatement
