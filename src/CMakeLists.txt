@@ -1,6 +1,7 @@
 add_subdirectory(errors)
 add_subdirectory(input)
 add_subdirectory(lexer)
+add_subdirectory(parser)
 
 add_executable(proton
     main.cpp

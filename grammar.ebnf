@@ -1,15 +1,10 @@
 (* Program structure *)
 
 Program
-    = { Section | Comment };
-Section
-    = { GlobalTypes, GlobalVariables, GlobalFunctions, MainFunction };
-GlobalTypes
-    = { TypeDecl };
-GlobalVariables 
+    = { GlobalVariable | TypeDef | FnDef }, MainFunction;
+
+GlobalVariable
     = { VarDecl | VarDef };
-GlobalFunctions
-    = { FnDef };
 MainFunction
     = "fn", "main()", "->", "int", Block;
 
@@ -54,7 +49,7 @@ charLiteral
     = "'", ( character | escape_sequence ), "'";    (* SINGLE QUOTES *)
 boolLiteral 
     = "true" | "false";
-stringLiteral 
+stringLiterals
     = '"', { character | escape_sequence } , '"';   (* DOUBLE QUOTES *)
 
 variantLiteral 
@@ -94,15 +89,15 @@ functionalExpr
     = primaryExpr, { functionalOp };
 
 primaryExpr
-    = castExpr
-    | parenExpr
+    = parenExpr
+    | castExpr
     | literal
     | identifier;
 
-castExpr
-    = typeIdentifier, "(", expression, ")";
 parenExpr 
     = "(", expression, ")";
+castExpr
+    = primitiveType, "(", expression, ")";
 
 
 (* OPERATORS *)
@@ -149,52 +144,47 @@ variantAccessOp
     = "as", typeIdentifier;
 
 
-(* COMMENTS *)
-
-Comment
-    = "$", ? single-line comment ?
-    | "$$", ? multi-line comment ?, "$$";
-
-
 (* DECLARATIONS *)
 
 VarDecl 
     = identifier, ":", typeIdentifier, ";";
 
-TypeDecl 
-    = StructDecl | VariantDecl;
-StructDecl 
-    = "struct", identifier, "{", { VarDecl }, "}", ";";
-VariantDecl 
-    = "variant", identifier, "{", { typeIdentifier }, "}", ";";
-
 
 (* DEFINITIONS *)
 
-VarDef 
+VarDef
     = [ "const" ], identifier, ":", typeIdentifier, "=", expression, ";";
 
-FnDef 
-    = "fn", identifier, "(", [ fnArgsDecl ], ")", [ returnTypeAnnotation ], Block;
-fnArgsDecl 
-    = ( fnArgDecl, { ",", fnArgDecl } ) | "void";
-fnArgDecl 
-    = [ "const" ], identifier, ":", ( typeIdentifier | functionSignature);
-returnTypeAnnotation 
-    = "->", ( typeIdentifier | functionSignature | "void" );
+TypeDef
+    = StructDef | VariantDef;
+StructDef
+    = "struct", identifier, "{", { VarDecl }, "}", ";";
+VariantDef
+    = "variant", identifier, "{", { typeIdentifier }, "}", ";";
+
+FnDef
+    = "fn", identifier, "(", [ parameters ], ")", [ returnTypeAnnotation ], Block;
+parameters 
+    = parameter, { ",", parameter };
+parameter
+    = [ "const" ], identifier, ":", ( typeIdentifier | functionSignature );
 functionSignature
-    = "(", [ argumentTypes ], ")", returnTypeAnnotation;
-argumentTypes
-    = typeIdentifier, { ",", typeIdentifier | "void" };
+    = "(", [ parameterTypes ], ")", returnTypeAnnotation;
+parameterTypes
+    = parameterType, { ",", parameterType };
+parameterType
+    = typeIdentifier | functionSignature;
+returnTypeAnnotation
+    = "->", ( typeIdentifier | "void" | functionSignature );
+
 
 
 (* STATEMENTS *)
 
 Statement 
-    = Comment
-    | VarDecl
-    | TypeDecl
+    = VarDecl
     | VarDef
+    | TypeDef
     | FnDef
     | StdinExtraction
     | StdoutInsertion

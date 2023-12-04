@@ -397,8 +397,8 @@
         -       -   negacja arytmetyczna
         
     Priorytet 7 - łączność od lewej do prawej:
-        .       -   dostęp do pola struktury
         ()      -   wywołanie funkcji
+        .       -   dostęp do pola struktury
         as      -   wypakowanie wartości variantu
         type()  -   castowanie (np.: float(intVar))
 
@@ -591,7 +591,7 @@
 
     TRACEBACK:
 
-    >>> fn main(void) in line 10:3 of /main.prot
+    >>> fn main() in line 10:3 of /main.prot
     >>> fn divide(int a, int b) in line 4:3 of /main.prot
 
         >>> "return a / 0;" <<< in line 5:13 of /main.prot
@@ -604,7 +604,7 @@
 
     TRACEBACK:
 
-    >>> fn main(void) in line 10:3 of /main.prot
+    >>> fn main() in line 10:3 of /main.prot
     >>> fn divide(int a, int b) in line 4:3 of /main.prot
 
         >>> "result = 0;" <<< in line 5:4 of /main.prot
@@ -617,7 +617,7 @@
 
     TRACEBACK:
 
-    >>> fn main(void) in line 10:3 of /main.prot
+    >>> fn main() in line 10:3 of /main.prot
     >>> fn printLine() in line 4:3 of /main.prot
 
         >>> ">> result;" <<< in line 6:4 of /main.prot        <-- Interpreter encountered next statement instead of semicolon
