@@ -162,7 +162,6 @@ TEST_F(LexerTest, LexerHandlesIdentifiersStartingWithOtherKeyword) {
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::IDENTIFIER);
   EXPECT_EQ(token.value, L"int_");
-  std::wcout << token.value << std::endl;
 
   token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::IDENTIFIER);
@@ -289,11 +288,36 @@ TEST_F(LexerTest, LexerHandlesInvalidFloatLiterals) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                  BOOLEANS                                  */
+/* -------------------------------------------------------------------------- */
+
+TEST_F(LexerTest, LexerHandlesBooleanLiterals) {
+  m_reader.load(L"true false");
+
+  auto token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::TRUE_KWRD);
+  EXPECT_EQ(token.value, L"true");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::FALSE_KWRD);
+  EXPECT_EQ(token.value, L"false");
+
+  m_reader.load(L"true_but_not_really false_but_maybe_not");
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"true_but_not_really");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.value, L"false_but_maybe_not");
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                    CHARS                                   */
 /* -------------------------------------------------------------------------- */
 
 TEST_F(LexerTest, LexerHandlesCharLiterals) {
-  m_reader.load(L"\'X\'");
+  m_reader.load(L"\'X\'");  // Valid char literal 'X'
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::CHAR);
   EXPECT_EQ(token.value, L"X");
@@ -316,27 +340,21 @@ TEST_F(LexerTest, LexerHandlesCharLiterals) {
 }
 
 TEST_F(LexerTest, LexerHandlesEscapeSequencesInCharLiterals) {
-  m_reader.load(L"\'\\\"\'");
+  m_reader.load(L"\'\\\"\'");  // Valid escape sequence
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::CHAR);
   EXPECT_EQ(token.value, L"\"");
   EXPECT_EQ(token.charValue.value(), L'\"');
-}
 
-/* -------------------------------------------------------------------------- */
-/*                                  BOOLEANS                                  */
-/* -------------------------------------------------------------------------- */
-
-TEST_F(LexerTest, LexerHandlesBooleanLiterals) {
-  m_reader.load(L"true false");
-
-  auto token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::TRUE_KWRD);
-  EXPECT_EQ(token.value, L"true");
+  // Missing closing quote in char containing '\'
+  m_reader.load(L"\'\\\\\n");
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::UNEXPECTED);
+  EXPECT_EQ(token.value, L"\\");
 
   token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::FALSE_KWRD);
-  EXPECT_EQ(token.value, L"false");
+  EXPECT_EQ(token.type, TokenType::ETX);
+  EXPECT_EQ(token.value.front(), WEOF);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -368,4 +386,14 @@ TEST_F(LexerTest, LexerHandlesEscapeSequencesInStringLiterals) {
   EXPECT_EQ(token.type, TokenType::STRING);
   EXPECT_EQ(token.value, L" \" \' \n \t ");
   EXPECT_EQ(token.strValue.value(), L" \" \' \n \t ");
+
+  // Missing closing quote in string, last char is '\'
+  m_reader.load(L"\" \\\\ \' \\\\ \n");
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::UNEXPECTED);
+  EXPECT_EQ(token.value, L" \\ \' \\ ");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::ETX);
+  EXPECT_EQ(token.value.front(), WEOF);
 }

@@ -46,7 +46,7 @@ void Lexer::buildToken() {
 /*                            IDENTIFIER OR KEYWORD                           */
 /* -------------------------------------------------------------------------- */
 
-bool Lexer::isIdentifierStart(wchar_t first) {
+bool Lexer::isIdentifierStart(wchar_t first) const {
   return first == L'_' || iswalpha(first);
 }
 
@@ -71,51 +71,22 @@ bool Lexer::isIdentifierChar(const wchar_t c) const {
 
 void Lexer::matchIdentifier() {
   // Keyword
-  for (uint i = 0; i < KEYWORDS.size(); i++) {
-    if (m_token.value == KEYWORDS[i]) {
-      m_token.type = TokenType(i + KEYWORDS_OFFSET);
-      return;
-    }
+  if (auto keyword = std::find(KEYWORDS.begin(), KEYWORDS.end(), m_token.value);
+      keyword != KEYWORDS.end()) {
+    m_token.type =
+        TokenType(KEYWORDS_OFFSET + std::distance(KEYWORDS.begin(), keyword));
+    return;
   }
 
   // User defined identifier
   m_token.type = TokenType::IDENTIFIER;
 }
 
-// bool Lexer::isAllowedAfterIdentifier(const wchar_t c) const {
-//   bool isAllowed = false;
-//   switch (c) {
-//     // whitespace, right parenthese, semicolon, comma, comment or EOF
-//     case L' ':
-//     case L'\n':
-//     case L'\t':
-//     case L'(':
-//     case L'{':
-//     case L';':
-//     case L',':
-//     case L'$':
-//     case WEOF:
-//       isAllowed = true;
-//       break;
-
-//     default:
-//       // Any operator
-//       for (const auto& el : OPERATORS) {
-//         if (c == el.front()) {
-//           isAllowed = true;
-//           break;
-//         }
-//       }
-//   }
-
-//   return isAllowed;
-// }
-
 /* -------------------------------------------------------------------------- */
 /*                              FLOAT OR INTEGER                              */
 /* -------------------------------------------------------------------------- */
 
-bool Lexer::isNumberStart(wchar_t first) { return iswdigit(first); }
+bool Lexer::isNumberStart(wchar_t first) const { return iswdigit(first); }
 
 void Lexer::buildNumber() {
   if (!isNumberStart(m_reader.peek())) {
@@ -215,7 +186,7 @@ bool Lexer::isAllowedAfterNumber(const wchar_t c) const {
 /*                               STRING LITERAL                               */
 /* -------------------------------------------------------------------------- */
 
-bool Lexer::isStringStart(wchar_t first) { return first == L'"'; }
+bool Lexer::isStringStart(wchar_t first) const { return first == L'"'; }
 
 void Lexer::buildString() {
   if (!isStringStart(m_reader.peek())) {
@@ -271,7 +242,7 @@ void Lexer::addEscapedChar(const wchar_t c) {
 /*                                CHAR LITERAL                                */
 /* -------------------------------------------------------------------------- */
 
-bool Lexer::isCharStart(wchar_t first) { return first == L'\''; }
+bool Lexer::isCharStart(wchar_t first) const { return first == L'\''; }
 
 void Lexer::buildChar() {
   if (!isCharStart(m_reader.peek())) {
@@ -320,7 +291,7 @@ void Lexer::buildChar() {
 /*                                   COMMENT                                  */
 /* -------------------------------------------------------------------------- */
 
-bool Lexer::isCommentStart(wchar_t first) { return first == L'$'; }
+bool Lexer::isCommentStart(wchar_t first) const { return first == L'$'; }
 
 void Lexer::buildComment() {
   if (!isCommentStart(m_reader.peek())) {

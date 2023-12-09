@@ -14,30 +14,36 @@ class Lexer {
 
   void skipWhiteSpaces();
 
-  bool isIdentifierStart(wchar_t first);
+  // Identifiers
+  bool isIdentifierStart(wchar_t first) const;
   void buildIdentifier();
   void matchIdentifier();
   bool isIdentifierChar(const wchar_t c) const;
 
-  bool isNumberStart(wchar_t first);
+  // Numbers
+  bool isNumberStart(wchar_t first) const;
   void buildNumber();
   void matchNumber();
   void validateBuiltNumber();
   bool isNumberChar(const wchar_t c) const;
   bool isAllowedAfterNumber(const wchar_t c) const;
 
-  bool isStringStart(wchar_t first);
+  // Strings
+  bool isStringStart(wchar_t first) const;
   void buildString();
   void addEscapedChar(const wchar_t c);
 
-  bool isCharStart(wchar_t first);
+  // Chars
+  bool isCharStart(wchar_t first) const;
   void buildChar();
 
-  bool isCommentStart(wchar_t first);
+  // Comments
+  bool isCommentStart(wchar_t first) const;
   void buildComment();
   void matchMultiLineComment();
   void matchSingleLineComment();
 
+  // Operators, punctuation and special tokens
   void buildOther();
 
   CharReaderBase& m_reader;
