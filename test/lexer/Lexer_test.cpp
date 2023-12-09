@@ -1,8 +1,9 @@
+#include "Lexer.h"
+
 #include <gtest/gtest.h>
 
 #include <iostream>
 
-#include "Lexer.h"
 #include "StringCharReader.h"
 
 class ErrorHandlerMock : public ErrorHandlerBase {
@@ -295,8 +296,7 @@ TEST_F(LexerTest, LexerHandlesStringLiterals) {
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
   EXPECT_EQ(token.value, L" hello ");
 
-  m_reader.load(
-      L"\" first line \n second line \"");  // Newline before closing quote
+  m_reader.load(L"\" first line \n second line \"");  // Newline before closing quote
   token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
   EXPECT_EQ(token.value, L" first line ");

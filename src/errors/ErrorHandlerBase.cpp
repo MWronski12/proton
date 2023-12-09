@@ -16,11 +16,10 @@ void ErrorHandlerBase::throwError() {
 /*
  * @brief Formats and stores signaled error message.
  */
-void ErrorHandlerBase::appendError(ErrorType type, Position position,
-                                   std::string filename) {
+void ErrorHandlerBase::appendError(ErrorType type, Position position, std::string filename) {
   m_errorMessage << "\n"
-                 << "ERROR in line " << position.line << " col "
-                 << position.column << " of " << filename << "\n"
+                 << "ERROR in line " << position.line << " col " << position.column << " of "
+                 << filename << "\n"
                  << "WHAT? " << ERROR_MESSAGES[int(type)].first << ": "
                  << ERROR_MESSAGES[int(type)].second << "\n";
 }

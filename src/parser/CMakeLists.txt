@@ -3,7 +3,8 @@ add_library(parserlib STATIC
 )
 
 target_link_libraries(parserlib PUBLIC
-    errorslib    
+    errorslib
+    inputlib
     lexerlib
 )
 

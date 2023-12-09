@@ -19,6 +19,8 @@ Token Lexer::getNextToken() {
   return m_token;
 }
 
+std::string Lexer::getInputFilename() const { return m_reader.getInputFilename(); }
+
 void Lexer::skipWhiteSpaces() {
   while (iswspace(m_reader.peek())) m_reader.get();
 }
@@ -47,9 +49,7 @@ void Lexer::buildToken() {
 /*                            IDENTIFIER OR KEYWORD                           */
 /* -------------------------------------------------------------------------- */
 
-bool Lexer::isIdentifierStart(wchar_t first) {
-  return first == L'_' || iswalpha(first);
-}
+bool Lexer::isIdentifierStart(wchar_t first) { return first == L'_' || iswalpha(first); }
 
 void Lexer::buildIdentifier() {
   if (!isIdentifierStart(m_reader.peek())) {
@@ -127,12 +127,10 @@ void Lexer::matchNumber() {
 
 void Lexer::validateBuiltNumber() {
   if (m_token.type == TokenType::UNEXPECTED) return;
-  if (m_token.value.length() == 0)
-    throw std::logic_error("Built token is empty!");
+  if (m_token.value.length() == 0) throw std::logic_error("Built token is empty!");
 
   // Number starting with 0 must be either int 0 or float 0.xxx
-  if (m_token.value.front() == L'0' && m_token.value.length() > 1 &&
-      m_token.value[1] != L'.') {
+  if (m_token.value.front() == L'0' && m_token.value.length() > 1 && m_token.value[1] != L'.') {
     m_token.type = TokenType::UNEXPECTED;
     m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
                          m_reader.getInputFilename());
@@ -146,9 +144,7 @@ void Lexer::validateBuiltNumber() {
   }
 }
 
-bool Lexer::isNumberChar(const wchar_t c) const {
-  return iswdigit(c) || c == L'.';
-}
+bool Lexer::isNumberChar(const wchar_t c) const { return iswdigit(c) || c == L'.'; }
 
 bool Lexer::isAllowedAfterNumber(const wchar_t c) const {
   bool isAllowed = false;

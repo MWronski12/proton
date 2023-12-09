@@ -15,8 +15,7 @@ class ErrorHandlerBase {
    * @brief This method is used for signaling encountered errors during
    * compilation and execution.
    */
-  virtual void error(ErrorType type, Position position,
-                     std::string filename) = 0;
+  virtual void error(ErrorType type, Position position, std::string filename) = 0;
 
  protected:
   void appendError(ErrorType type, Position position, std::string filename);

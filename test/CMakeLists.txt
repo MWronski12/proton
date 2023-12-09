@@ -14,6 +14,11 @@ add_executable(test
   input/StringCharReader_test.cpp
   lexer/Lexer_test.cpp
   lexer/TokenType_test.cpp
+  parser/Block_test.cpp
+  parser/Declaration_test.cpp
+  parser/Definition_test.cpp
+  parser/Expression_test.cpp
+  parser/Program_test.cpp
 )
 
 target_link_libraries(test

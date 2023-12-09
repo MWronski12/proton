@@ -1,14 +1,10 @@
-#include <gtest/gtest.h>
-
 #include "TokenType.h"
 
-TEST(TokenTypeTest, UnexpectedTokenIsFirst) {
-  EXPECT_EQ(int(TokenType::UNEXPECTED), 0);
-}
+#include <gtest/gtest.h>
 
-TEST(TokenTypeTest, ETXTokenIsLast) {
-  EXPECT_EQ(int(TokenType::ETX), TOKEN_TYPE_NAMES.size() - 1);
-}
+TEST(TokenTypeTest, UnexpectedTokenIsFirst) { EXPECT_EQ(int(TokenType::UNEXPECTED), 0); }
+
+TEST(TokenTypeTest, ETXTokenIsLast) { EXPECT_EQ(int(TokenType::ETX), TOKEN_TYPE_NAMES.size() - 1); }
 
 TEST(TokenTypeTest, KeywordsOffset) {
   EXPECT_EQ(KEYWORDS_OFFSET, static_cast<int>(TokenType::UNEXPECTED) + 1);

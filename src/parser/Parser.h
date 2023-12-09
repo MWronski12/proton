@@ -1,4 +1,4 @@
-// 1. Every ebnf definition is one parsingFunction
+// 1. Every ebnf definition is one parsing Function
 // 2. Need to report appropriate errors
 // 3. Make sure objects representing lang constructs can only exist in a valid
 // state.
@@ -9,20 +9,69 @@
 
 #pragma once
 
-#include <optional>
+#include <functional>
+#include <memory>
 
+#include "Declaration.h"
+#include "Definition.h"
 #include "ErrorHandlerBase.h"
 #include "Lexer.h"
+#include "Program.h"
 
-class Program {};
+using Result = std::pair<std::unique_ptr<ASTNode>, std::optional<ErrorType>>;
 
 class Parser {
  public:
   Parser(Lexer& lexer, ErrorHandlerBase& errorHandler);
 
-  std::optional<Program> parseProgram();
+  void consumeToken();
+  void skipSyntaxError();
+
+  template <typename... FactoryMethods>
+  Result expectOneOf(FactoryMethods&&... args) {
+    std::function<Result(Parser&)> arr[] = {std::forward<FactoryMethods>(args)...};
+
+    for (auto&& creator : arr) {
+      auto [obj, error] = creator(*this);
+      if (error != std::nullopt) {
+        return {std::move(obj), std::nullopt};
+      }
+    }
+    return {nullptr, ErrorType::EXPECTED_LBRACE};
+  }
+
+  template <typename... FactoryMethods>
+  std::optional<std::vector<Result>> expectAllOf(FactoryMethods&&... args) {
+    std::function<Result(Parser&)> arr[] = {std::forward<FactoryMethods>(args)...};
+
+    std::vector<Result> results;
+    for (auto&& creator : arr) {
+      auto [obj, error] = creator(*this);
+      if (error != std::nullopt) {
+        return std::nullopt;
+      }
+      results.push_back({std::move(obj), std::nullopt});
+    }
+    return results;
+  }
+
+  Result parseDeclaration() {
+    return {std::make_unique<VarDecl>(L"foo", L"string"), std::nullopt};
+  };
+
+  Result parseDefinition() {
+    return {std::make_unique<VarDef>(true, L"foo", L"string", nullptr), std::nullopt};
+  }
+
+  Result parseNullNode() { return {nullptr, ErrorType::EXPECTED_LBRACE}; };
+
+  std::pair<std::unique_ptr<ASTNode>, std::optional<ErrorType>> parseStatement() {
+    return expectOneOf(&Parser::parseDeclaration, &Parser::parseDefinition);
+  }
 
  private:
   Lexer& m_lexer;
   ErrorHandlerBase& m_errorHandler;
+
+  Token m_token;
 };

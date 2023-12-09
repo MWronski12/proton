@@ -11,19 +11,24 @@ enum class ErrorType {
   UNEXPECTED_END_OF_FILE,
 
   // Syntax Errors
+  EXPECTED_LBRACE,
 
   // Semantic Errors
 };
 
-using ErrorInfo =
-    std::pair<std::string, std::string>;  // pairs of <ErrorTypeStr, ErrorMsg>
+const auto LEXICAL_ERROR = std::string("Lexical Error");
+const auto SYNTAX_ERROR = std::string("Syntax Error");
+
+using ErrorInfo = std::pair<std::string, std::string>;  // pairs of <ErrorTypeStr, ErrorMsg>
 
 static const std::vector<ErrorInfo> ERROR_MESSAGES = {
-    {"Lexical Error", "Invalid number literal!"},
-    {"Lexical Error",
+    {LEXICAL_ERROR, "Invalid number literal!"},
+    {LEXICAL_ERROR,
      "Invalid char literal! Char literals must contain exactly one character "
      "enclosed in single quotes!"},
-    {"Lexical Error", "Missing closing quote!"},
-    {"Lexical Error", "Unexpected character encountered!"},
-    {"Lexical Error", "Unexpected end of file reached!"},
+    {LEXICAL_ERROR, "Missing closing quote!"},
+    {LEXICAL_ERROR, "Unexpected character encountered!"},
+    {LEXICAL_ERROR, "Unexpected end of file reached!"},
+
+    {SYNTAX_ERROR, "Exppected LBRACE '{' !"},
 };

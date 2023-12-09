@@ -1,10 +1,7 @@
 (* Program structure *)
 
 Program
-    = { TypeDef | FnDef }, MainFunction;
-    
-MainFunction
-    = "fn", "main()", "->", "int", Block;
+    = { Declaration | Definition };
 
 
 (* Lexical conventions *)
@@ -31,11 +28,11 @@ literal
     | variantLiteral 
     | objectLiteral;
 
-integerLiteral 
+integerLiteral
     = ? RETURNED BY LEXER ?;
-floatLiteral 
+floatLiteral
     = ? RETURNED BY LEXER ?;
-charLiteral 
+charLiteral
     = ? RETURNED BY LEXER ?;
 boolLiteral 
     = ? RETURNED BY LEXER ?;
@@ -46,10 +43,10 @@ variantLiteral
     = typeIdentifier, "{", expression, [ "," ], "}";
 
 objectLiteral
-    = typeIdentifier, "{" , fieldValues, [ "," ], "}";
-fieldValues 
-    = fieldValue, { ",", fieldValue };
-fieldValue 
+    = typeIdentifier, "{" , memberValues, [ "," ], "}";
+memberValues 
+    = memberValue, { ",", memberValue };
+memberValue 
     = [ identifier, ":" ], expression;
 
 
@@ -133,36 +130,47 @@ variantAccessOp
 
 (* DECLARATIONS *)
 
-VarDecl 
+Declaration
+    = VarDecl;
+VarDecl
     = identifier, ":", typeIdentifier, ";";
 
 
 (* DEFINITIONS *)
 
+Definition
+    = VarDef
+    | StructDef
+    | VariantDef
+    | FnDef;
+
 VarDef
     = [ "const" ], identifier, ":", typeIdentifier, "=", expression, ";";
 
-TypeDef
-    = StructDef | VariantDef;
 StructDef
-    = "struct", identifier, "{", { VarDecl }, "}", ";";
+    = "struct", identifier, "{", [ structMembers ] "}", ";";
+structMembers
+    = typeIdentifier, { typeIdentifier };
+
 VariantDef
-    = "variant", identifier, "{", { typeIdentifier }, "}", ";";
+    = "variant", identifier, "{", variantTypes, "}", ";";
+variantTypes 
+    = typeIdentifier, { typeIdentifier };
 
 FnDef
-    = "fn", identifier, "(", [ parameters ], ")", returnTypeAnnotation, Block;
-parameters
-    = parameter, { ",", parameter };
-parameter
+    = "fn", identifier, "(", [ fnParameters ], ")", returnTypeAnnotation, Block;
+fnParameters
+    = fnParameter, { ",", fnParameter };
+fnParameter
     = [ "const" ], identifier, ":", typeIdentifier;
-returnTypeAnnotation
-    = "->", ( typeIdentifier | "void" );
+fnReturnType
+    = "->", typeIdentifier;
 
 
 
 (* STATEMENTS *)
 
-Statement 
+Statement
     = VarDecl
     | VarDef
     | StdinExtraction
