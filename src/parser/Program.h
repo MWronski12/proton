@@ -7,15 +7,15 @@
 #include "ASTNode.h"
 #include "Definition.h"
 
-using ProgramDefinitions = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
-
 /*
  * Program
- *     = { Definition }, MainFunction;
+ *     = { Definition };
  */
 struct Program : public ASTNode {
  public:
-  Program(ProgramDefinitions&& definitions) : definitions{std::move(definitions)} {}
+  using Definitions = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
 
-  ProgramDefinitions definitions;
+  Program(Definitions&& definitions) : definitions{std::move(definitions)} {}
+
+  Definitions definitions;
 };

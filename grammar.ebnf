@@ -72,8 +72,8 @@ parenExpr
 castExpr
     = primitiveType, "(", expression, ")";
 
-
-(* OPERATORS *)
+                                                    
+(* OPERATORS *)             (* RETURNED BY LEXER *) 
 
 logicOrOp                   (* prio 0 l-r *)
     = "||";
@@ -117,10 +117,6 @@ variantAccessOp
     = "as", typeIdentifier;
 
 
-(* DECLARATIONS *)
-varDecl
-    = identifier, ":", typeIdentifier;
-
 (* DEFINITIONS *)
 
 Definition
@@ -130,29 +126,31 @@ Definition
     | VariantDef
     | FnDef;
 
-ConstDef
-    = "const", varDecl, "=", expression, ";";
 VarDef
-    = "var", varDecl, "=", expression, ";";
+    = "var", identifier, ":", typeIdentifier, "=", expression, ";";
+ConstDef
+    = "const", identifier, ":", typeIdentifier, "=", expression, ";";
 
 StructDef
     = "struct", identifier, "{", [ structMembers ], "}", ";";
 structMembers
     = structMember, { structMember };
 structMember
-    = varDecl, ";";
+    = identifier, ":", typeIdentifier, ";";
 
 VariantDef
     = "variant", identifier, "{", variantTypes, "}", ";";
 variantTypes
-    = typeIdentifier, { ",", typeIdentifier };
+    = variantType, { ",", variantType };
+variantType
+    = typeIdentifier
 
 FnDef
-    = "fn", identifier, "(", [ fnParameters ], ")", returnTypeAnnotation, Block;
-fnParameters
-    = fnParameter, { ",", fnParameter };
-fnParameter
-    = [ "const" ], varDecl;
+    = "fn", identifier, "(", [ fnParams ], ")", returnTypeAnnotation, Block;
+fnParams
+    = fnParam, { ",", fnParam };
+fnParam
+    = [ "const" ], identifier, ":", typeIdentifier;
 fnReturnType
     = "->", typeIdentifier;
 

@@ -1,4 +1,3 @@
-#include "Declaration.h"
 #include "Definition.h"
 #include "Expression.h"
 #include "Lexer.h"
@@ -26,8 +25,6 @@ int main() {
   // definitions[Baz->name] = std::move(Baz);
 
   // program = Program{std::move(declarations), std::move(definitions)};
-
-  auto statement = parser.parseStatement();
 
   return 0;
 }
