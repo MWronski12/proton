@@ -12,7 +12,6 @@
 #include <functional>
 #include <memory>
 
-#include "Declaration.h"
 #include "Definition.h"
 #include "ErrorHandlerBase.h"
 #include "Lexer.h"
@@ -55,10 +54,6 @@ class Parser {
     return results;
   }
 
-  Result parseDeclaration() {
-    return {std::make_unique<VarDecl>(L"foo", L"string"), std::nullopt};
-  };
-
   Result parseDefinition() {
     return {std::make_unique<VarDef>(true, L"foo", L"string", nullptr), std::nullopt};
   }
@@ -66,7 +61,7 @@ class Parser {
   Result parseNullNode() { return {nullptr, ErrorType::EXPECTED_LBRACE}; };
 
   std::pair<std::unique_ptr<ASTNode>, std::optional<ErrorType>> parseStatement() {
-    return expectOneOf(&Parser::parseDeclaration, &Parser::parseDefinition);
+    return expectOneOf(&Parser::parseDefinition);
   }
 
  private:

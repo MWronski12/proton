@@ -1,16 +1,16 @@
 (* Program structure *)
 
 Program
-    = { Declaration | Definition };
+    = { Definition };
 
 
 (* Lexical conventions *)
 
-identifier 
-    = ? RETURNED BY LEXER ?;
+identifier                              (* RETURNED BY LEXER *) 
+    = [_a-zA-Z][_a-zA-Z0-9]*;           
 typeIdentifier
     = identifier;
-primitiveType
+primitiveType                           (* RETURNED BY LEXER *)
     = "int"
     | "float"
     | "char"
@@ -20,34 +20,23 @@ primitiveType
 
 (* LITERALS *)
 
-literal 
+literal
+    = primitiveLiteral
+    | compositeLiteral;
+
+primitiveLiteral                        (* RETURNED BY LEXER *)
     = integerLiteral 
     | floatLiteral 
-    | stringLiteral 
+    | charLiteral
     | boolLiteral 
-    | variantLiteral 
-    | objectLiteral;
-
-integerLiteral
-    = ? RETURNED BY LEXER ?;
-floatLiteral
-    = ? RETURNED BY LEXER ?;
-charLiteral
-    = ? RETURNED BY LEXER ?;
-boolLiteral 
-    = ? RETURNED BY LEXER ?;
-stringLiterals
-    = ? RETURNED BY LEXER ?;
-
-variantLiteral 
-    = typeIdentifier, "{", expression, [ "," ], "}";
+    | stringLiteral;
 
 objectLiteral
-    = typeIdentifier, "{" , memberValues, [ "," ], "}";
-memberValues 
-    = memberValue, { ",", memberValue };
-memberValue 
-    = [ identifier, ":" ], expression;
+    = "{", [ memberValues ], "}";
+memberValues
+    =  memberValue, {",", memberValue };
+memberValue
+    = identifier, ":", expression;
 
 
 (* EXPRESSIONS *)
@@ -58,7 +47,7 @@ expression
 logicOrExpr 
     = logicAndExpr, { logicOrOp, logicAndExpr };
 logicAndExpr 
-    = equalityExpr, { equalityOp, equalityExpr };
+    = equalityExpr, { logicAndOp, equalityExpr };
 equalityExpr
     = relationalExpr, { equalityOp, relationalExpr };
 relationalExpr 
@@ -73,10 +62,10 @@ functionalExpr
     = primaryExpr, { functionalOp };
 
 primaryExpr
-    = parenExpr
-    | castExpr
+    = identifier
     | literal
-    | identifier;
+    | parenExpr 
+    | castExpr;
 
 parenExpr 
     = "(", expression, ")";
@@ -129,54 +118,53 @@ variantAccessOp
 
 
 (* DECLARATIONS *)
-
-Declaration
-    = VarDecl;
-VarDecl
-    = identifier, ":", typeIdentifier, ";";
-
+varDecl
+    = identifier, ":", typeIdentifier;
 
 (* DEFINITIONS *)
 
 Definition
     = VarDef
+    | ConstDef
     | StructDef
     | VariantDef
     | FnDef;
 
+ConstDef
+    = "const", varDecl, "=", expression, ";";
 VarDef
-    = [ "const" ], identifier, ":", typeIdentifier, "=", expression, ";";
+    = "var", varDecl, "=", expression, ";";
 
 StructDef
-    = "struct", identifier, "{", [ structMembers ] "}", ";";
+    = "struct", identifier, "{", [ structMembers ], "}", ";";
 structMembers
-    = typeIdentifier, { typeIdentifier };
+    = structMember, { structMember };
+structMember
+    = varDecl, ";";
 
 VariantDef
     = "variant", identifier, "{", variantTypes, "}", ";";
-variantTypes 
-    = typeIdentifier, { typeIdentifier };
+variantTypes
+    = typeIdentifier, { ",", typeIdentifier };
 
 FnDef
     = "fn", identifier, "(", [ fnParameters ], ")", returnTypeAnnotation, Block;
 fnParameters
     = fnParameter, { ",", fnParameter };
 fnParameter
-    = [ "const" ], identifier, ":", typeIdentifier;
+    = [ "const" ], varDecl;
 fnReturnType
     = "->", typeIdentifier;
-
 
 
 (* STATEMENTS *)
 
 Statement
-    = VarDecl
-    | VarDef
+    = VarDef
+    | ConstDef
+    | ExpressionOrAssignmentStatement
     | StdinExtraction
     | StdoutInsertion
-    | AssignmentStatement
-    | ExpressionStatement
     | VariantMatchStatement
     | IfStatement
     | ForStatement
@@ -191,11 +179,8 @@ StdinExtraction
 StdoutInsertion
     = "<<", expression, { "<<", expression }, ";";
 
-AssignmentStatement
-    = expression, "=", expression, ";";
-
-ExpressionStatement
-    = expression, ";";
+ExpressionOrAssignmentStatement
+    = expression, [ "=", expression ], ";";
 
 VariantMatchStatement
     = "match", expression, "{", { variantCase }, "}";
