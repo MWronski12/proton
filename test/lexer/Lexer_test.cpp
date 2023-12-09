@@ -7,10 +7,11 @@
 #include "StringCharReader.h"
 
 class ErrorHandlerMock : public ErrorHandlerBase {
-  void error(ErrorType type, Position position, std::string filename) {
+  void operator()(const ErrorType type, const Position& position,
+                  const std::string& sourceFile) {
     (void)type;
     (void)position;
-    (void)filename;
+    (void)sourceFile;
   }
 };
 

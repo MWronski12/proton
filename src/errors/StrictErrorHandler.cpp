@@ -1,8 +1,9 @@
-#include "StrictErrorHandler.h"
-
 #include <sstream>
 
-void StrictErrorHandler::error(ErrorType type, Position position, std::string filename) {
-  appendError(type, position, filename);
-  throwError();
+#include "StrictErrorHandler.h"
+
+void StrictErrorHandler::operator()(const ErrorType type, const Position& position,
+                                    const std::string& sourceFile) {
+  ErrorHandlerBase::append(type, position, sourceFile);
+  ErrorHandlerBase::exitIfErrors();
 }

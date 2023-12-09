@@ -1,25 +1,40 @@
-#include "ErrorHandlerBase.h"
-
 #include <iostream>
 #include <sstream>
 
+#include "ErrorHandlerBase.h"
+
 /*
- * @brief Throws runtime error to stop compilation process and provide user with
- * error info. This method should be called by derrived class.
+ * @brief Throws runtime error to if internal error message is not empty. Must
+ * be explicitly called at the end of compilation.
  */
-void ErrorHandlerBase::throwError() {
-  auto message = m_errorMessage.str();
-  std::cerr << message << std::endl;
-  std::exit(1);
+void ErrorHandlerBase::exitIfErrors() {
+  auto message = m_errors.str();
+  if (!message.empty()) {
+    std::cerr << message << std::endl;
+    std::exit(1);
+  }
 }
 
 /*
- * @brief Formats and stores signaled error message.
+ * @brief Appends formatted error message. Designed to be called from derived.
  */
-void ErrorHandlerBase::appendError(ErrorType type, Position position, std::string filename) {
-  m_errorMessage << "\n"
-                 << "ERROR in line " << position.line << " col " << position.column << " of "
-                 << filename << "\n"
-                 << "WHAT? " << ERROR_MESSAGES[int(type)].first << ": "
-                 << ERROR_MESSAGES[int(type)].second << "\n";
+void ErrorHandlerBase::append(const ErrorType type, const Position& position,
+                              const std::string& sourceFile) {
+  m_errors << format(type, position, sourceFile);
+}
+
+/*
+ * @brief Formats error message including ErorType, position and sourceFile.
+ */
+std::string ErrorHandlerBase::format(const ErrorType type, const Position& position,
+                                     const std::string& sourceFile) const {
+  std::stringstream message;
+
+  message << "\n"
+          << "ERROR in line " << position.line << " col " << position.column << " of " << sourceFile
+          << "\n"
+          << "WHAT? " << ERROR_MESSAGES[int(type)].first << ": " << ERROR_MESSAGES[int(type)].second
+          << "\n";
+
+  return message.str();
 }

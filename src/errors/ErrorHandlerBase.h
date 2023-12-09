@@ -13,14 +13,22 @@ class ErrorHandlerBase {
 
   /*
    * @brief This method is used for signaling encountered errors during
-   * compilation and execution.
+   * compilation and execution. Error handlers can add some logic here. The
+   * easiest ones are StrictErrorHandler calling assert on first signaled error
+   * and SilentErrorHandler which calls assert only after N errors are
+   * encountered.
    */
-  virtual void error(ErrorType type, Position position, std::string filename) = 0;
+  virtual void operator()(const ErrorType type, const Position& position,
+                          const std::string& sourceFile) = 0;
+
+  void exitIfErrors();
 
  protected:
-  void appendError(ErrorType type, Position position, std::string filename);
-  void throwError();
+  void append(const ErrorType type, const Position& position, const std::string& sourceFile);
 
  private:
-  std::stringstream m_errorMessage;
+  std::string format(const ErrorType type, const Position& position,
+                     const std::string& sourceFile) const;
+
+  std::stringstream m_errors;
 };

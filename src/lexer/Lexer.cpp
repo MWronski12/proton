@@ -1,5 +1,3 @@
-#include "Lexer.h"
-
 #include <algorithm>
 #include <cwctype>
 #include <functional>
@@ -7,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "Lexer.h"
 #include "Token.h"
 #include "utils.h"
 
@@ -108,8 +107,8 @@ void Lexer::buildNumber() {
       m_token.value.push_back(next);
     }
     m_token.type = TokenType::UNEXPECTED;
-    m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
-                         m_reader.getInputFilename());
+    m_errorHandler(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
+                   m_reader.getInputFilename());
   }
 
   validateBuiltNumber();
@@ -132,15 +131,15 @@ void Lexer::validateBuiltNumber() {
   // Number starting with 0 must be either int 0 or float 0.xxx
   if (m_token.value.front() == L'0' && m_token.value.length() > 1 && m_token.value[1] != L'.') {
     m_token.type = TokenType::UNEXPECTED;
-    m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
-                         m_reader.getInputFilename());
+    m_errorHandler(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
+                   m_reader.getInputFilename());
   }
 
   // Number literal can have 0 or 1 '.'
   else if (std::count(m_token.value.cbegin(), m_token.value.cend(), L'.') > 1) {
     m_token.type = TokenType::UNEXPECTED;
-    m_errorHandler.error(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
-                         m_reader.getInputFilename());
+    m_errorHandler(ErrorType::INVALID_NUMBER_LITERAL, m_token.position,
+                   m_reader.getInputFilename());
   }
 }
 
@@ -202,8 +201,8 @@ void Lexer::buildString() {
     // Newline or WEOF
     else if (next == L'\n' || next == wchar_t(WEOF)) {
       m_token.type = TokenType::UNEXPECTED;
-      m_errorHandler.error(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
-                           m_reader.getInputFilename());
+      m_errorHandler(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
+                     m_reader.getInputFilename());
       return;
     }
     // Escape sequence
@@ -256,16 +255,16 @@ void Lexer::buildChar() {
         m_token.charValue = m_token.value.front();
       } else {
         m_token.type = TokenType::UNEXPECTED;
-        m_errorHandler.error(ErrorType::INVALID_CHAR_LITERAL, m_token.position,
-                             m_reader.getInputFilename());
+        m_errorHandler(ErrorType::INVALID_CHAR_LITERAL, m_token.position,
+                       m_reader.getInputFilename());
       }
       return;
     }
     // Newline or WEOF
     else if (next == L'\n' || next == wchar_t(WEOF)) {
       m_token.type = TokenType::UNEXPECTED;
-      m_errorHandler.error(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
-                           m_reader.getInputFilename());
+      m_errorHandler(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
+                     m_reader.getInputFilename());
       return;
     }
     // Escape sequence
@@ -308,8 +307,8 @@ void Lexer::matchMultiLineComment() {
 
     if (next == wchar_t(WEOF)) {
       m_token.type = TokenType::UNEXPECTED;
-      m_errorHandler.error(ErrorType::UNEXPECTED_END_OF_FILE, m_token.position,
-                           m_reader.getInputFilename());
+      m_errorHandler(ErrorType::UNEXPECTED_END_OF_FILE, m_token.position,
+                     m_reader.getInputFilename());
       return;
     }
 
@@ -443,8 +442,8 @@ void Lexer::buildOther() {
       return;
     default:
       m_token.type = TokenType::UNEXPECTED;  // stray
-      m_errorHandler.error(ErrorType::UNEXPECTED_CHARACTER, m_token.position,
-                           m_reader.getInputFilename());
+      m_errorHandler(ErrorType::UNEXPECTED_CHARACTER, m_token.position,
+                     m_reader.getInputFilename());
       return;
   }
 }
