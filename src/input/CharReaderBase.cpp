@@ -27,6 +27,8 @@ wchar_t CharReaderBase::get() {
  */
 void CharReaderBase::setCurrentFilename(const std::string& filename) {
   m_position.sourceFile = filename;
+  m_position.line = FIRST_LINE;
+  m_position.column = FIRST_COL;
 }
 std::string CharReaderBase::getCurrentFilename() const { return m_position.sourceFile; }
 

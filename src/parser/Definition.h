@@ -76,7 +76,14 @@ struct ConstDef : public Definition {
  */
 struct StructDef : public Definition {
  public:
+  /* structMember
+   *  = identifier, ":", typeIdentifier, ";";
+   */
   using Member = std::pair<Identifier, TypeIdentifier>;
+  /*
+   * structMembers
+   *  = structMember, { structMember };
+   */
   using Members = std::vector<Member>;
 
   StructDef(const Position& position, Identifier&& structName, Members&& structMembers)

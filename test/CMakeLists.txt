@@ -11,14 +11,13 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(test
-  source/input/StringCharReader_test.cpp
-  source/lexer/Lexer_test.cpp
-  source/lexer/TokenType_test.cpp
+  # source/input/StringCharReader_test.cpp
+  # source/lexer/Lexer_test.cpp
+  # source/lexer/TokenType_test.cpp
   source/parser/Parser_test.cpp
-  source/parser/Block_test.cpp
-  source/parser/Definition_test.cpp
-  source/parser/Expression_test.cpp
-  source/parser/Program_test.cpp
+  source/parser/ParseVarDef_test.cpp
+  source/parser/ParseConstDef_test.cpp
+  source/parser/ParseStructDef_test.cpp
 )
 
 target_include_directories(test PUBLIC

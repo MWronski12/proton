@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <variant>
 
 #include "Block.h"
 #include "Definition.h"
@@ -16,22 +17,22 @@ class Parser {
   Parser(Lexer &lexer, ErrorHandlerBase &errorHandler);
   std::optional<Program> parseProgram();
 
- private:
-  bool expect(TokenType expectedToken, ErrorType error);
-  void consumeToken();
-  bool consumeAndExpect(TokenType expectedToken, ErrorType error);
-  bool consumeAndExpect(std::function<bool(const Token &token)> predicate, ErrorType error);
+  friend class ParserTest;
 
-  /* --------------------------------- Program -------------------------------- */
-  // bool handleTermToken(const TokenType &tokenType, const ErrorType err);
-  // bool handleTermToken(std::wstring, const TokenType &tokenType, const ErrorType err);
+ private:
+  /* ----------------------------- Utility methods ---------------------------- */
+
+  void consumeToken();
+  void skipError(const TokenType delimiter);
+  bool expect(std::function<bool(const Token &token)> predicate, ErrorType err);
+  bool expect(std::wstring &out, std::function<bool(const Token &token)> predicate, ErrorType err);
+  bool expect(TokenType expectedType, ErrorType error);
+  bool expect(std::wstring &out, TokenType expectedType, ErrorType error);
 
   /* ------------------------------- Definition ------------------------------- */
 
   std::unique_ptr<Definition> parseDefinition();
-
   std::unique_ptr<Definition> parseVarDef();
-
   std::unique_ptr<Definition> parseConstDef();
 
   std::unique_ptr<Definition> parseStructDef();
