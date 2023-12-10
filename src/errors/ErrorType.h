@@ -12,6 +12,7 @@ enum class ErrorType {
 
   // Syntax Errors
   EXPECTED_DEFINITION,
+  VARDEF_MISSING_SEMICOLON,
 
   // Semantic Errors
   MISSING_MAIN_FUNCTION,
@@ -36,6 +37,7 @@ static const std::vector<ErrorInfo> ERROR_MESSAGES = {
 
     // Syntax Errors
     {SYNTAX_ERROR, "Expected definition!"},
+    {SYNTAX_ERROR, "Missing semicolon in variable definition!"},
 
     // Semantic Errors
     {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"},

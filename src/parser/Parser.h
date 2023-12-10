@@ -14,10 +14,11 @@ class Parser {
  public:
   Parser(Lexer& lexer, ErrorHandlerBase& errorHandler);
   std::optional<Program> parseProgram();
-  void consumeToken();
 
  private:
+  void consumeToken();
   void skipError();
+  bool expect(TokenType expectedToken, ErrorType error, const Position& position);
 
   /* --------------------------------- Program -------------------------------- */
 
@@ -51,5 +52,5 @@ class Parser {
   Lexer& m_lexer;
   ErrorHandlerBase& m_errorHandler;
 
-  Token m_token;
+  Token& m_token;
 };

@@ -12,7 +12,7 @@
 Lexer::Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler)
     : m_reader{reader}, m_errorHandler{errorHandler} {}
 
-Token Lexer::getNextToken() {
+Token& Lexer::getNextToken() {
   skipWhiteSpaces();
   buildToken();
   return m_token;

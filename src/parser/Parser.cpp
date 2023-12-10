@@ -3,11 +3,9 @@
 #include "Parser.h"
 
 Parser::Parser(Lexer& lexer, ErrorHandlerBase& errorHandler)
-    : m_lexer{lexer}, m_errorHandler{errorHandler} {
-  consumeToken();
-}
+    : m_lexer{lexer}, m_errorHandler{errorHandler}, m_token{m_lexer.getNextToken()} {}
 
-void Parser::consumeToken() { m_token = m_lexer.getNextToken(); }
+void Parser::consumeToken() { m_lexer.getNextToken(); }
 
 /*
  * @brief Recover from error by skipping tokens until semicolon or end of text. After calling
@@ -21,6 +19,21 @@ void Parser::skipError() {
   if (m_token.type == TokenType::SEMICOLON) {
     consumeToken();
   }
+}
+
+/*
+ * @brief Utility function to check if current token is of expected type. If not, error is
+ * signaled to errorHandler.
+ *
+ * @return true if current token is of expected type, false otherwise.
+ */
+bool Parser::expect(TokenType expectedToken, ErrorType error, const Position& position) {
+  if (m_token.type != expectedToken) {
+    m_errorHandler(error, position, m_lexer.getInputFilename());
+    return false;
+  }
+
+  return true;
 }
 
 /* --------------------------------- Program -------------------------------- */
@@ -75,16 +88,27 @@ std::unique_ptr<Definition> Parser::parseDefinition() {
   return std::move(it->second());
 }
 
+/*
+ * VarDef
+ *     = "var", identifier, ":", typeIdentifier, "=", expression, ";";
+ */
 std::unique_ptr<Definition> Parser::parseVarDef() {
-  consumeToken();  // var
-  consumeToken();  // foo
-  consumeToken();  // :
-  consumeToken();  // string
-  consumeToken();  // =
-  consumeToken();  // "boo"
-  consumeToken();  // ;
+  auto position = m_token.position;
 
-  return std::make_unique<VarDef>(L"foo", L"string", std::make_unique<Expression>());
+  if (m_token.type != TokenType::VAR_KWRD ||
+      m_token.value != KEYWORDS.at(int(TokenType::VAR_KWRD) - KEYWORDS_OFFSET)) {
+    throw std::logic_error("Parser::parseVarDef() called when m_token is not var keyword");
+  }
+
+  consumeToken();
+  if (!expect(TokenType::SEMICOLON, ErrorType::VARDEF_MISSING_SEMICOLON, position)) {
+    skipError();
+    return nullptr;
+  }
+
+  consumeToken();
+
+  return std::make_unique<VarDef>(L"foo", TypeIdentifier::String, std::make_unique<Expression>());
 }
 
 std::unique_ptr<Definition> Parser::parseConstDef() { return nullptr; }
@@ -99,4 +123,4 @@ std::optional<VariantDef::Types> Parser::parseVariantTypes() { return std::nullo
 std::unique_ptr<Definition> Parser::parseFnDef() { return nullptr; }
 std::optional<FnDef::Params> Parser::parseFnParams() { return std::nullopt; }
 std::optional<FnDef::Param> Parser::parseFnParam() { return std::nullopt; }
-std::optional<FnDef::ReturnType> Parser::parseFnReturnType() { return nullptr; }
+std::optional<FnDef::ReturnType> Parser::parseFnReturnType() { return std::nullopt; }

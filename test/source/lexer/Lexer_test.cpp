@@ -14,7 +14,7 @@ class LexerTest : public ::Test {
   LexerTest() : m_lexer{m_reader, m_errorHandler} {}
 
  protected:
-  NiceMock<ErrorHandlerMock> m_errorHandler;
+  StrictMock<ErrorHandlerMock> m_errorHandler;
   StringCharReader m_reader;
   Lexer m_lexer;
 };

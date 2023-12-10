@@ -13,7 +13,7 @@ class Lexer {
   ~Lexer() = default;
 
   explicit Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler);
-  Token getNextToken();
+  Token& getNextToken();
   std::string getInputFilename() const;
 
  private:

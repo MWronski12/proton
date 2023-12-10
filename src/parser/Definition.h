@@ -39,7 +39,7 @@ struct Definition : public ASTNode {
  */
 struct VarDef : public Definition {
  public:
-  VarDef(Identifier&& varName, TypeIdentifier&& varType, std::unique_ptr<Expression>&& varValue)
+  VarDef(Identifier&& varName, TypeIdentifier varType, std::unique_ptr<Expression>&& varValue)
       : Definition{std::move(varName)}, type{std::move(varType)}, value{std::move(varValue)} {}
 
   TypeIdentifier type;
@@ -54,7 +54,7 @@ struct VarDef : public Definition {
  */
 struct ConstDef : public Definition {
  public:
-  ConstDef(Identifier&& varName, TypeIdentifier&& varType, std::unique_ptr<Expression>&& varValue)
+  ConstDef(Identifier&& varName, TypeIdentifier varType, std::unique_ptr<Expression>&& varValue)
       : Definition{std::move(varName)}, type{std::move(varType)}, value{std::move(varValue)} {}
 
   TypeIdentifier type;
@@ -72,7 +72,7 @@ struct StructDef : public Definition {
   using Member = std::pair<Identifier, TypeIdentifier>;
   using Members = std::vector<Member>;
 
-  StructDef(TypeIdentifier&& structName, Members&& structMembers)
+  StructDef(Identifier&& structName, Members&& structMembers)
       : Definition{std::move(structName)}, members{std::move(structMembers)} {}
 
   Members members;
@@ -116,7 +116,7 @@ struct FnDef : public Definition {
    *    = [ "const" ], identifier, ":", typeIdentifier;
    */
   struct Param {
-    Param(bool paramIsConst, Identifier&& paramName, TypeIdentifier&& paramType)
+    Param(bool paramIsConst, Identifier&& paramName, TypeIdentifier paramType)
         : isConst{paramIsConst}, name{std::move(paramName)}, type{std::move(paramType)} {}
 
     bool isConst;
@@ -136,7 +136,7 @@ struct FnDef : public Definition {
    */
   using ReturnType = TypeIdentifier;
 
-  FnDef(Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType, Block&& fnBody)
+  FnDef(Identifier&& fnName, Params&& fnParams, TypeIdentifier fnReturnType, Block&& fnBody)
       : Definition{std::move(fnName)},
         parameters{std::move(fnParams)},
         returnType{std::move(fnReturnType)},

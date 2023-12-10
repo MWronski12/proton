@@ -7,7 +7,7 @@
 #include "TokenType.h"
 
 struct Token {
-  TokenType type;
+  TokenType type = TokenType::NO_TOKEN_YET;
   Position position;
   std::wstring value;
 
