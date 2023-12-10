@@ -1,5 +1,6 @@
 add_library(parserlib STATIC
     Parser.cpp
+    parser_utils.cpp
 )
 
 target_link_libraries(parserlib PUBLIC

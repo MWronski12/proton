@@ -5,7 +5,7 @@
 #include "FileCharReader.h"
 #include "Lexer.h"
 #include "StrictErrorHandler.h"
-#include "utils.h"
+#include "lexer_utils.h"
 
 int main(int argc, char** argv) {
   if (argc < 2) {

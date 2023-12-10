@@ -5,24 +5,17 @@
 #include "Position.h"
 
 using Identifier = std::wstring;
-
-enum class TypeIdentifier {
-  Unknown = 0,
-  Int,
-  Float,
-  Bool,
-  Char,
-  String,
-  Void,
-};
+using TypeIdentifier = std::wstring;
 
 /*
  * @brief Main struct for all the AST nodes.
  */
 struct ASTNode {
  public:
+  ASTNode() = delete;
   virtual ~ASTNode() = default;
 
-  std::string filename;
+  ASTNode(const Position &pos) : position{pos} {}
+
   Position position;
 };

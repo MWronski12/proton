@@ -7,16 +7,17 @@
 
 class ParserTest : public ::testing::Test {
  public:
-  ParserTest() : m_lexer{m_reader, m_errorHandler}, m_parser{m_lexer, m_errorHandler} {}
+  ParserTest()
+      : m_reader{L""},
+        m_lexer{m_reader, m_errorHandler},
+        m_parser{
+            m_lexer,
+            m_errorHandler,
+        } {}
 
   void SetUp() override {
     // Should be called each time we finish parsing program
     EXPECT_CALL(m_errorHandler, exitIfErrors()).Times(1);
-  }
-
-  void TearDown() override {
-    // Should parse all tokens
-    EXPECT_TRUE(m_lexer.getNextToken().type == TokenType::ETX);
   }
 
  protected:

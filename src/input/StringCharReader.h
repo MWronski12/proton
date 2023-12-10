@@ -6,7 +6,7 @@
 
 class StringCharReader : public CharReaderBase {
  public:
-  StringCharReader() = default;
+  StringCharReader() = delete;
   StringCharReader(const std::wstring& str);
 
   std::string getInputFilename() const override;

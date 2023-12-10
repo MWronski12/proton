@@ -11,7 +11,7 @@ using namespace ::testing;
 
 class LexerTest : public ::Test {
  public:
-  LexerTest() : m_lexer{m_reader, m_errorHandler} {}
+  LexerTest() : m_reader{L""}, m_lexer{m_reader, m_errorHandler} {}
 
  protected:
   StrictMock<ErrorHandlerMock> m_errorHandler;

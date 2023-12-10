@@ -1,7 +1,7 @@
 #include "Lexer.h"
 #include "StrictErrorHandler.h"
 #include "StringCharReader.h"
-#include "utils.h"
+#include "lexer_utils.h"
 
 int main() {
   std::wstring src = L"fn main() -> int { return 1; }";

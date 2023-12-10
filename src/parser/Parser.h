@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -12,15 +13,18 @@
 
 class Parser {
  public:
-  Parser(Lexer& lexer, ErrorHandlerBase& errorHandler);
+  Parser(Lexer &lexer, ErrorHandlerBase &errorHandler);
   std::optional<Program> parseProgram();
 
  private:
+  bool expect(TokenType expectedToken, ErrorType error);
   void consumeToken();
-  void skipError();
-  bool expect(TokenType expectedToken, ErrorType error, const Position& position);
+  bool consumeAndExpect(TokenType expectedToken, ErrorType error);
+  bool consumeAndExpect(std::function<bool(const Token &token)> predicate, ErrorType error);
 
   /* --------------------------------- Program -------------------------------- */
+  // bool handleTermToken(const TokenType &tokenType, const ErrorType err);
+  // bool handleTermToken(std::wstring, const TokenType &tokenType, const ErrorType err);
 
   /* ------------------------------- Definition ------------------------------- */
 
@@ -43,14 +47,18 @@ class Parser {
   std::optional<FnDef::ReturnType> parseFnReturnType();
 
   /* ------------------------------- Expression ------------------------------- */
-  std::optional<std::unique_ptr<Expression>> parseExpression() { return std::nullopt; }
+  std::unique_ptr<Expression> parseExpression() {
+    auto position = m_token.position;
+    consumeToken();
+    return std::make_unique<Expression>(position);
+  }
 
   /* --------------------------------- Block ---------------------------------- */
   std::optional<Block> parseBlock() { return std::nullopt; }
 
  private:
-  Lexer& m_lexer;
-  ErrorHandlerBase& m_errorHandler;
+  Lexer &m_lexer;
+  ErrorHandlerBase &m_errorHandler;
 
-  Token& m_token;
+  Token m_token;
 };

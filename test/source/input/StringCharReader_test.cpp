@@ -48,3 +48,14 @@ TEST(StringCharReader, HandlesNonASCIICharacters) {
   EXPECT_EQ(reader.pos().column, str.length() + 1);
   EXPECT_EQ(reader.pos().sourceFile, std::string("<custom string>"));
 }
+
+TEST(StringCharReader, HandlesLoadingNewString) {
+  std::wstring str = L"Hello";
+  StringCharReader reader{str};
+  EXPECT_EQ(reader.getInputFilename(), "<custom string>");
+  EXPECT_EQ(reader.peek(), L'H');
+
+  reader.load(L"World");
+  EXPECT_EQ(reader.getInputFilename(), "<custom string>");
+  EXPECT_EQ(reader.peek(), L'W');
+}

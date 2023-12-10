@@ -1,6 +1,6 @@
-#include "utils.h"
-
 #include <iostream>
+
+#include "lexer_utils.h"
 
 void printTokenInfo(const Token& token) {
   std::wcout << '\"' << token.value << '\"' << L" -> " << token.type << L" at "

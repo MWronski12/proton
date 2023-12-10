@@ -7,12 +7,12 @@
 
 #include "Lexer.h"
 #include "Token.h"
-#include "utils.h"
+#include "lexer_utils.h"
 
 Lexer::Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler)
     : m_reader{reader}, m_errorHandler{errorHandler} {}
 
-Token& Lexer::getNextToken() {
+Token Lexer::getNextToken() {
   skipWhiteSpaces();
   buildToken();
   return m_token;

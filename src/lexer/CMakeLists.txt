@@ -1,6 +1,6 @@
 add_library(lexerlib STATIC
     Lexer.cpp
-    utils.cpp
+    lexer_utils.cpp
 )
 
 target_link_libraries(lexerlib PUBLIC

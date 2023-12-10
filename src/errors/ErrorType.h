@@ -12,7 +12,22 @@ enum class ErrorType {
 
   // Syntax Errors
   EXPECTED_DEFINITION,
-  VARDEF_MISSING_SEMICOLON,
+
+  ERROR_PARSING_VARDEF,
+  VARDEF_EXPECTED_IDENTIFIER,
+  VARDEF_EXPECTED_COLON,
+  VARDEF_EXPECTED_TYPE_IDENTIFIER,
+  VARDEF_EXPECTED_ASSIGNMENT,
+  VARDEF_EXPECTED_EXPRESSION,
+  VARDEF_EXPECTED_SEMICOLON,
+
+  ERROR_PARSING_CONSTDEF,
+  CONSTDEF_EXPECTED_IDENTIFIER,
+  CONSTDEF_EXPECTED_COLON,
+  CONSTDEF_EXPECTED_TYPE_IDENTIFIER,
+  CONSTDEF_EXPECTED_ASSIGNMENT,
+  CONSTDEF_EXPECTED_EXPRESSION,
+  CONSTDEF_EXPECTED_SEMICOLON,
 
   // Semantic Errors
   MISSING_MAIN_FUNCTION,
@@ -36,8 +51,23 @@ static const std::vector<ErrorInfo> ERROR_MESSAGES = {
     {LEXICAL_ERROR, "Unexpected end of file reached!"},
 
     // Syntax Errors
-    {SYNTAX_ERROR, "Expected definition!"},
-    {SYNTAX_ERROR, "Missing semicolon in variable definition!"},
+    {SYNTAX_ERROR, "Definition expected!"},  // Definition
+
+    {SYNTAX_ERROR, "Error parsing variable definition!"},
+    {SYNTAX_ERROR, "Expected identifier in variable definition!"},
+    {SYNTAX_ERROR, "Expected colon in variable definition!"},
+    {SYNTAX_ERROR, "Expected type identifier in variable definition!"},
+    {SYNTAX_ERROR, "Expected assignment in variable definition!"},
+    {SYNTAX_ERROR, "Expected expression in variable definition!"},
+    {SYNTAX_ERROR, "Missing semicolon at the end of variable definition!"},
+
+    {SYNTAX_ERROR, "Error parsing const definition!"},
+    {SYNTAX_ERROR, "Expected identifier in const definition!"},
+    {SYNTAX_ERROR, "Expected colon in const definition!"},
+    {SYNTAX_ERROR, "Expected type identifier in const definition!"},
+    {SYNTAX_ERROR, "Expected assignment in const definition!"},
+    {SYNTAX_ERROR, "Expected expression in const definition!"},
+    {SYNTAX_ERROR, "Missing semicolon at the end of const definition!"},
 
     // Semantic Errors
     {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"},
