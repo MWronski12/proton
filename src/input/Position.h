@@ -6,4 +6,6 @@ const int FIRST_LINE = 0;
 struct Position {
   int line = FIRST_LINE;
   int column = FIRST_COL;
+
+  std::string sourceFile;
 };

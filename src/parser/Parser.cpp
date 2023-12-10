@@ -29,7 +29,7 @@ void Parser::skipError() {
  */
 bool Parser::expect(TokenType expectedToken, ErrorType error, const Position& position) {
   if (m_token.type != expectedToken) {
-    m_errorHandler(error, position, m_lexer.getInputFilename());
+    m_errorHandler(error, position);
     return false;
   }
 
@@ -50,8 +50,7 @@ std::optional<Program> Parser::parseProgram() {
     }
     // Definition already exists
     else if (definitions.find(definition->name) != definitions.end()) {
-      m_errorHandler(ErrorType::FUNCTION_REDEFINITION, m_token.position,
-                     m_lexer.getInputFilename());
+      m_errorHandler(ErrorType::FUNCTION_REDEFINITION, m_token.position);
       skipError();
     }
     // Success, add to map
@@ -80,7 +79,7 @@ std::unique_ptr<Definition> Parser::parseDefinition() {
 
   auto it = map.find(m_token.value);
   if (it == map.end()) {
-    m_errorHandler(ErrorType::EXPECTED_DEFINITION, position, m_lexer.getInputFilename());
+    m_errorHandler(ErrorType::EXPECTED_DEFINITION, position);
     skipError();
     return nullptr;
   }

@@ -20,6 +20,17 @@ wchar_t CharReaderBase::get() {
 }
 
 /*
+ * @brief Should be called by implementors in constructor and on each
+ * load operation in order to update sourceFile of tracked.
+ *
+ * @param filename - new filename
+ */
+void CharReaderBase::setCurrentFilename(const std::string& filename) {
+  m_position.sourceFile = filename;
+}
+std::string CharReaderBase::getCurrentFilename() const { return m_position.sourceFile; }
+
+/*
  * @brief Gets last consumed character.
  * Before consuming first character, returns NO_CHAR_YET.
  * After the end of file was reached returns WEOF.

@@ -16,7 +16,7 @@ class ErrorHandlerBase {
   ErrorHandlerBase() = default;
   virtual ~ErrorHandlerBase() = default;
 
-  void operator()(const ErrorType type, const Position& position, const std::string& sourceFile);
+  void operator()(const ErrorType type, const Position& position);
 
   /*
    * @brief This method is used for signaling encountered errors during
@@ -25,17 +25,15 @@ class ErrorHandlerBase {
    * and SilentErrorHandler which calls assert only after N errors are
    * encountered.
    */
-  virtual void handleError(const ErrorType type, const Position& position,
-                           const std::string& sourceFile) = 0;
+  virtual void handleError(const ErrorType type, const Position& position) = 0;
 
   virtual void exitIfErrors();
 
  protected:
-  void append(const ErrorType type, const Position& position, const std::string& sourceFile);
+  void append(const ErrorType type, const Position& position);
 
  private:
-  std::string format(const ErrorType type, const Position& position,
-                     const std::string& sourceFile) const;
+  std::string format(const ErrorType type, const Position& position) const;
 
   std::stringstream m_errors;
 };

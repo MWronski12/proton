@@ -17,26 +17,32 @@ class CharReaderBase {
   CharReaderBase() = default;
   virtual ~CharReaderBase() = default;
 
-  virtual std::string getInputFilename() const = 0;
-
   wchar_t get();
   wchar_t last() const;
   Position pos() const;
 
   /*
-   * @brief Looks up next character in the input stream. This method has to be
-   * overriden in derived classes Must return WEOF when end of stream is
-   * reached.
+   * @brief Implementors must provide function to get current input file descriptor for tracking
+   * position.
+   */
+  virtual std::string getInputFilename() const = 0;
+
+  /*
+   * @brief Implementors must provide a way to Look up next character in the input stream. This
+   * method has to be overriden in derived classes Must return WEOF when end of stream is reached.
    *
    * @return wchar_t - next character from the input stream
    */
   virtual wchar_t peek() const = 0;
 
+ protected:
+  void setCurrentFilename(const std::string& filename);
+  std::string getCurrentFilename() const;
+
  private:
   /*
-   * @brief Consumes next character from the input stream. This method has to be
-   * overriden in derived classes. Must return WEOF when end of stream is
-   * reached.
+   * @brief Implementors must provide a way to consume next character from the input stream. This
+   * method has to be overriden in derived classes. Must return WEOF when end of stream is reached.
    *
    * @return wchar_t - next character from the input stream
    */

@@ -2,8 +2,7 @@
 
 #include "StrictErrorHandler.h"
 
-void StrictErrorHandler::handleError(const ErrorType type, const Position& position,
-                                     const std::string& sourceFile) {
-  ErrorHandlerBase::append(type, position, sourceFile);
+void StrictErrorHandler::handleError(const ErrorType type, const Position& position) {
+  ErrorHandlerBase::append(type, position);
   ErrorHandlerBase::exitIfErrors();
 }

@@ -10,9 +10,8 @@ class FileCharReader : public CharReaderBase {
   FileCharReader(const std::string& filename);
 
   std::string getInputFilename() const override;
-
+  void load(const std::string& filename);
   wchar_t peek() const override;
-  void load(const std::string& str);
 
  private:
   wchar_t next() override;

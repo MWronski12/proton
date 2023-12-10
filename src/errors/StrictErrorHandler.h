@@ -8,6 +8,5 @@
  */
 class StrictErrorHandler : public ErrorHandlerBase {
  public:
-  void handleError(const ErrorType type, const Position& position,
-                   const std::string& sourceFile) override;
+  void handleError(const ErrorType type, const Position& position) override;
 };
