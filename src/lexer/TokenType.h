@@ -35,9 +35,6 @@ enum class TokenType {
   CASE_KWRD,
   AS_KWRD,
 
-  TRUE_KWRD,
-  FALSE_KWRD,
-
   // IDENTIFIER
   IDENTIFIER,
 
@@ -46,6 +43,7 @@ enum class TokenType {
   FLOAT,
   CHAR,
   STRING,
+  BOOL,
 
   // OPERATORS
   ASSIGNMENT,
@@ -118,9 +116,6 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"case",
     L"as",
 
-    L"true",
-    L"false",
-
     // IDENTIFIER
     L"identifier",
 
@@ -129,6 +124,7 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"float_literal",
     L"char_literal",
     L"string_literal",
+    L"bool_literal",
 
     // OPERATORS
     L"assignment",
@@ -170,9 +166,9 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
 
 static const int KEYWORDS_OFFSET = (int)TokenType::VAR_KWRD;
 static const std::vector<std::wstring> KEYWORDS = {
-    L"var",      L"const", L"void",   L"int",   L"float", L"char", L"bool", L"string", L"variant",
-    L"struct",   L"fn",    L"if",     L"elif",  L"else",  L"for",  L"in",   L"until",  L"while",
-    L"continue", L"break", L"return", L"match", L"case",  L"as",   L"true", L"false",
+    L"var",     L"const",  L"void",     L"int",   L"float",  L"char",  L"bool", L"string",
+    L"variant", L"struct", L"fn",       L"if",    L"elif",   L"else",  L"for",  L"in",
+    L"until",   L"while",  L"continue", L"break", L"return", L"match", L"case", L"as",
 };
 
 static const int OPERATORS_OFFSET = (int)TokenType::ASSIGNMENT;

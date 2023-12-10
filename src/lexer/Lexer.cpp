@@ -68,14 +68,22 @@ void Lexer::matchIdentifier() {
   for (uint i = 0; i < KEYWORDS.size(); i++) {
     if (m_token.readValue == KEYWORDS[i]) {
       m_token.type = TokenType(i + KEYWORDS_OFFSET);
-      if (m_token.type == TokenType::TRUE_KWRD) m_token.value = true;
-      if (m_token.type == TokenType::FALSE_KWRD) m_token.value = false;
       return;
     }
   }
 
+  // Bool
+  if (m_token.readValue == L"true") {
+    m_token.value = true;
+    m_token.type = TokenType::BOOL;
+  } else if (m_token.readValue == L"false") {
+    m_token.value = false;
+    m_token.type = TokenType::BOOL;
+  }
   // User defined identifier
-  m_token.type = TokenType::IDENTIFIER;
+  else {
+    m_token.type = TokenType::IDENTIFIER;
+  }
 }
 
 /* -------------------------------------------------------------------------- */

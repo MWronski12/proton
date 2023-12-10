@@ -1,6 +1,6 @@
-#include "TokenType.h"
-
 #include <gtest/gtest.h>
+
+#include "TokenType.h"
 
 TEST(TokenTypeTest, UnexpectedTokenIsFirst) { EXPECT_EQ(int(TokenType::UNEXPECTED), 0); }
 
@@ -11,7 +11,7 @@ TEST(TokenTypeTest, KeywordsOffset) {
 }
 
 TEST(TokenTypeTest, OperatorsOffset) {
-  EXPECT_EQ(OPERATORS_OFFSET, static_cast<int>(TokenType::STRING) + 1);
+  EXPECT_EQ(OPERATORS_OFFSET, static_cast<int>(TokenType::BOOL) + 1);
 }
 
 TEST(TokenTypeTest, PunctuationOffset) {

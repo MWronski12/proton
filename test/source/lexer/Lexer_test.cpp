@@ -276,12 +276,12 @@ TEST_F(LexerTest, LexerHandlesBooleanLiterals) {
   m_reader.load(L"true false");
 
   auto token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::TRUE_KWRD);
+  EXPECT_EQ(token.type, TokenType::BOOL);
   EXPECT_EQ(token.readValue, L"true");
   EXPECT_EQ(std::get<bool>(token.value), true);
 
   token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::FALSE_KWRD);
+  EXPECT_EQ(token.type, TokenType::BOOL);
   EXPECT_EQ(token.readValue, L"false");
   EXPECT_EQ(std::get<bool>(token.value), false);
 }

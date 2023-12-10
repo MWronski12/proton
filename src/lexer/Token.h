@@ -11,5 +11,5 @@ struct Token {
   TokenType type = TokenType::NO_TOKEN_YET;
   Position position;
   std::wstring readValue;
-  std::variant<std::wstring, wchar_t, int, float, bool> value;
+  std::variant<int, float, wchar_t, std::wstring, bool> value;
 };
