@@ -6,6 +6,12 @@
 
 class Lexer {
  public:
+  Lexer(const Lexer&) = delete;
+  Lexer(Lexer&&) = delete;
+  Lexer& operator=(const Lexer&) = delete;
+  Lexer& operator=(Lexer&&) = delete;
+  ~Lexer() = default;
+
   explicit Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler);
   Token getNextToken();
   std::string getInputFilename() const;

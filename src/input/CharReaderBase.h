@@ -9,6 +9,11 @@ const wchar_t NO_CHAR_YET = std::numeric_limits<wchar_t>::max();
 
 class CharReaderBase {
  public:
+  CharReaderBase(const CharReaderBase&) = delete;
+  CharReaderBase(CharReaderBase&&) = delete;
+  CharReaderBase& operator=(const CharReaderBase&) = delete;
+  CharReaderBase& operator=(CharReaderBase&&) = delete;
+
   CharReaderBase() = default;
   virtual ~CharReaderBase() = default;
 

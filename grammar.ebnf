@@ -22,11 +22,11 @@ primitiveType                           (* RETURNED BY LEXER *)
 
 literal
     = primitiveLiteral
-    | compositeLiteral;
+    | objectLiteral;
 
 primitiveLiteral                        (* RETURNED BY LEXER *)
     = integerLiteral 
-    | floatLiteral 
+    | floatLiteral
     | charLiteral
     | boolLiteral 
     | stringLiteral;

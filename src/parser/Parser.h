@@ -13,33 +13,33 @@
 class Parser {
  public:
   Parser(Lexer& lexer, ErrorHandlerBase& errorHandler);
-
+  std::optional<Program> parseProgram();
   void consumeToken();
-  void skipSyntaxError();
+
+ private:
+  void skipError();
 
   /* --------------------------------- Program -------------------------------- */
-  std::optional<Program> parseProgram();
 
   /* ------------------------------- Definition ------------------------------- */
 
-  std::optional<std::unique_ptr<Definition>> parseDefinition() { return std::nullopt; }
+  std::unique_ptr<Definition> parseDefinition();
 
-  std::optional<VarDef> parseVarDef() { return std::nullopt; }
+  std::unique_ptr<Definition> parseVarDef();
 
-  std::optional<ConstDef> parseConstDef() { return std::nullopt; }
+  std::unique_ptr<Definition> parseConstDef();
 
-  std::optional<StructDef> parseStructDef() { return std::nullopt; }
-  std::optional<StructDef::Members> parseStructMembers() { return std::nullopt; }
-  std::optional<StructDef::Member> parseStructMember() { return std::nullopt; }
+  std::unique_ptr<Definition> parseStructDef();
+  std::optional<StructDef::Members> parseStructMembers();
+  std::optional<StructDef::Member> parseStructMember();
 
-  std::optional<VariantDef> parseVariantDef() { return std::nullopt; }
-  std::optional<VariantDef::Types> parseVariantTypes() { return std::nullopt; }
-  std::optional<VariantDef::Type> parseVariantType() { return std::nullopt; }
+  std::unique_ptr<Definition> parseVariantDef();
+  std::optional<VariantDef::Types> parseVariantTypes();
 
-  std::optional<FnDef> parseFnDef() { return std::nullopt; }
-  std::optional<FnDef::Params> parseFnParams() { return std::nullopt; }
-  std::optional<FnDef::Param> parseFnParam() { return std::nullopt; }
-  std::optional<FnDef::ReturnType> parseFnReturnType() { return std::nullopt; }
+  std::unique_ptr<Definition> parseFnDef();
+  std::optional<FnDef::Params> parseFnParams();
+  std::optional<FnDef::Param> parseFnParam();
+  std::optional<FnDef::ReturnType> parseFnReturnType();
 
   /* ------------------------------- Expression ------------------------------- */
   std::optional<std::unique_ptr<Expression>> parseExpression() { return std::nullopt; }

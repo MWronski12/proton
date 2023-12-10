@@ -4,8 +4,16 @@
 #include "ErrorHandlerBase.h"
 
 /*
- * @brief Throws runtime error to if internal error message is not empty. Must
- * be explicitly called at the end of compilation.
+ * @brief Calls handleError method of derived class. Just a convenience wrapper, which also allows
+ * for testing with mocks.
+ */
+void ErrorHandlerBase::operator()(const ErrorType type, const Position& position,
+                                  const std::string& sourceFile) {
+  handleError(type, position, sourceFile);
+}
+
+/*
+ * @brief Checks if there are any errors and exits if so.
  */
 void ErrorHandlerBase::exitIfErrors() {
   auto message = m_errors.str();

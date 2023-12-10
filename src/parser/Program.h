@@ -13,9 +13,9 @@
  */
 struct Program : public ASTNode {
  public:
-  using Definitions = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
+  using IdentifierToDefinitionPtrMap = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
 
-  Program(Definitions&& definitions) : definitions{std::move(definitions)} {}
+  Program(IdentifierToDefinitionPtrMap&& definitions) : definitions{std::move(definitions)} {}
 
-  Definitions definitions;
+  IdentifierToDefinitionPtrMap definitions;
 };

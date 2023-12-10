@@ -14,6 +14,7 @@ add_executable(test
   source/input/StringCharReader_test.cpp
   source/lexer/Lexer_test.cpp
   source/lexer/TokenType_test.cpp
+  source/parser/Parser_test.cpp
   source/parser/Block_test.cpp
   source/parser/Definition_test.cpp
   source/parser/Expression_test.cpp
@@ -26,6 +27,7 @@ target_include_directories(test PUBLIC
 
 target_link_libraries(test PUBLIC
   GTest::gtest_main
+  GTest::gmock_main
   
   errorslib
   inputlib

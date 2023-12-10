@@ -175,49 +175,6 @@ bool Lexer::isAllowedAfterNumber(const wchar_t c) const {
   return isAllowed;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               STRING LITERAL                               */
-/* -------------------------------------------------------------------------- */
-
-bool Lexer::isStringStart(wchar_t first) { return first == L'"'; }
-
-void Lexer::buildString() {
-  if (!isStringStart(m_reader.peek())) {
-    throw std::logic_error("String literal must start with L'\"' character!");
-  }
-
-  m_reader.get();  // Consume opening quote
-
-  while (true) {
-    auto next = m_reader.peek();
-
-    // Closing quote
-    if (next == L'"') {
-      m_reader.get();  // Consume closing quote
-      m_token.type = TokenType::STRING;
-      m_token.strValue = m_token.value;
-      return;
-    }
-    // Newline or WEOF
-    else if (next == L'\n' || next == wchar_t(WEOF)) {
-      m_token.type = TokenType::UNEXPECTED;
-      m_errorHandler(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
-                     m_reader.getInputFilename());
-      return;
-    }
-    // Escape sequence
-    else if (next == L'\\') {
-      m_reader.get();  // skip backslash
-      auto escapedChar = m_reader.get();
-      addEscapedChar(escapedChar);
-    }
-    // Valid string literal character
-    else {
-      m_token.value.push_back(m_reader.get());
-    }
-  }
-}
-
 void Lexer::addEscapedChar(const wchar_t c) {
   switch (c) {
     case L'n':
@@ -274,6 +231,49 @@ void Lexer::buildChar() {
       addEscapedChar(escapedChar);
     }
     // Valid char literal character
+    else {
+      m_token.value.push_back(m_reader.get());
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               STRING LITERAL                               */
+/* -------------------------------------------------------------------------- */
+
+bool Lexer::isStringStart(wchar_t first) { return first == L'"'; }
+
+void Lexer::buildString() {
+  if (!isStringStart(m_reader.peek())) {
+    throw std::logic_error("String literal must start with L'\"' character!");
+  }
+
+  m_reader.get();  // Consume opening quote
+
+  while (true) {
+    auto next = m_reader.peek();
+
+    // Closing quote
+    if (next == L'"') {
+      m_reader.get();  // Consume closing quote
+      m_token.type = TokenType::STRING;
+      m_token.strValue = m_token.value;
+      return;
+    }
+    // Newline or WEOF
+    else if (next == L'\n' || next == wchar_t(WEOF)) {
+      m_token.type = TokenType::UNEXPECTED;
+      m_errorHandler(ErrorType::MISSING_CLOSING_QUOTE, m_token.position,
+                     m_reader.getInputFilename());
+      return;
+    }
+    // Escape sequence
+    else if (next == L'\\') {
+      m_reader.get();  // skip backslash
+      auto escapedChar = m_reader.get();
+      addEscapedChar(escapedChar);
+    }
+    // Valid string literal character
     else {
       m_token.value.push_back(m_reader.get());
     }

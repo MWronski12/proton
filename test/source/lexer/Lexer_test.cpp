@@ -1,3 +1,4 @@
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -6,12 +7,14 @@
 #include "StringCharReader.h"
 #include "mocks/ErrorHandlerMock.h"
 
-class LexerTest : public ::testing::Test {
+using namespace ::testing;
+
+class LexerTest : public ::Test {
  public:
   LexerTest() : m_lexer{m_reader, m_errorHandler} {}
 
  protected:
-  ErrorHandlerMock m_errorHandler;
+  NiceMock<ErrorHandlerMock> m_errorHandler;
   StringCharReader m_reader;
   Lexer m_lexer;
 };
@@ -49,6 +52,8 @@ TEST_F(LexerTest, LexerHandlesWhitespaces) {
 
 TEST_F(LexerTest, LexerHandlesUnexpectedCharacters) {
   m_reader.load(L"\\ # ? `");
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::UNEXPECTED_CHARACTER, _, _)).Times(4);
 
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
@@ -156,6 +161,8 @@ TEST_F(LexerTest, LexerHandlesValidIntLiterals) {
 TEST_F(LexerTest, LexerHandlesInvalidIntLiterals) {
   m_reader.load(L"3x 5( 01");
 
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::INVALID_NUMBER_LITERAL, _, _)).Times(3);
+
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
   EXPECT_EQ(token.value, L"3x");
@@ -200,6 +207,8 @@ TEST_F(LexerTest, LexerHandlesValidFloatLiterals) {
 TEST_F(LexerTest, LexerHandlesInvalidFloatLiterals) {
   m_reader.load(L"00.0 00. 0.2x 3.14# 0.0.0.0");
 
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::INVALID_NUMBER_LITERAL, _, _)).Times(5);
+
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
   EXPECT_EQ(token.value, L"00.0");
@@ -232,16 +241,19 @@ TEST_F(LexerTest, LexerHandlesCharLiterals) {
   EXPECT_EQ(token.value, L"X");
   EXPECT_EQ(token.charValue, L'X');
 
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::INVALID_CHAR_LITERAL, _, _)).Times(1);
   m_reader.load(L"\'XXX\'");  // Multiple character char literal
   token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
   EXPECT_EQ(token.value, L"XXX");
 
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::MISSING_CLOSING_QUOTE, _, _)).Times(1);
   m_reader.load(L"\'c");  // WEOF before closing quote
   token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
   EXPECT_EQ(token.value, L"c");
 
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::MISSING_CLOSING_QUOTE, _, _)).Times(1);
   m_reader.load(L"\'s\n\'");  // Newline before closing quote
   token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::UNEXPECTED);
@@ -282,6 +294,8 @@ TEST_F(LexerTest, LexerHandlesStringLiterals) {
   EXPECT_EQ(token.type, TokenType::STRING);
   EXPECT_EQ(token.value, L"Hello World!");
   EXPECT_EQ(token.strValue.value(), L"Hello World!");
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::MISSING_CLOSING_QUOTE, _, _)).Times(2);
 
   m_reader.load(L"\" hello ");  // WEOF before closing quote
   token = m_lexer.getNextToken();
