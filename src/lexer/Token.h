@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <variant>
 
 #include "Position.h"
 #include "TokenType.h"
@@ -9,10 +10,6 @@
 struct Token {
   TokenType type = TokenType::NO_TOKEN_YET;
   Position position;
-  std::wstring value;
-
-  std::optional<std::wstring> strValue;
-  std::optional<wchar_t> charValue;
-  std::optional<int> intValue;
-  std::optional<float> floatValue;
+  std::wstring readValue;
+  std::variant<std::wstring, wchar_t, int, float, bool> value;
 };

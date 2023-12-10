@@ -3,7 +3,7 @@
 #include "lexer_utils.h"
 
 void printTokenInfo(const Token& token) {
-  std::wcout << '\"' << token.value << '\"' << L" -> " << token.type << L" at "
+  std::wcout << '\"' << token.readValue << '\"' << L" -> " << token.type << L" at "
              << token.position.line << ':' << token.position.column << ' ' << L"\n";
 }
 
