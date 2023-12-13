@@ -63,15 +63,10 @@ std::optional<Program> Parser::parseProgram() {
 
   Program::IdentifierToDefinitionPtrMap definitions;
 
-  while (m_token.type != TokenType::ETX) {
-    auto definition = parseDefinition();
-
-    // Parsing failed
-    if (definition == nullptr) {
-      continue;
-    }
+  auto definition = parseDefinition();
+  while (definition != nullptr) {
     // Redefinition
-    else if (definitions.find(definition->name) != definitions.end()) {
+    if (definitions.find(definition->name) != definitions.end()) {
       m_errorHandler(ErrorType::FUNCTION_REDEFINITION, m_token.position);
       continue;
     }
@@ -80,6 +75,8 @@ std::optional<Program> Parser::parseProgram() {
       auto entry = std::make_pair(definition->name, std::move(definition));
       definitions.insert(std::move(entry));
     }
+
+    definition = parseDefinition();
   }
 
   return Program{position, std::move(definitions)};
@@ -102,7 +99,6 @@ std::unique_ptr<Definition> Parser::parseDefinition() {
 
   auto it = map.find(m_token.readValue);
   if (it == map.end()) {
-    m_errorHandler(ErrorType::EXPECTED_DEFINITION, position);
     return nullptr;
   }
 
@@ -116,16 +112,12 @@ std::unique_ptr<Definition> Parser::parseDefinition() {
 std::unique_ptr<Definition> Parser::parseVarDef() {
   auto position = m_token.position;
 
-  if (m_token.type != TokenType::VAR_KWRD) {
-    throw std::logic_error("Parser::parseVarDef() called when m_token is not var keyword");
-  }
-
-  consumeToken();
   std::wstring name;
   std::wstring type;
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
+      [this]() { return expect(TokenType::VAR_KWRD, ErrorType::VARDEF_EXPECTED_VAR_KWRD); },
       [this, &name]() {
         return expect(name, TokenType::IDENTIFIER, ErrorType::VARDEF_EXPECTED_IDENTIFIER);
       },
@@ -142,7 +134,6 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
-    skipError(TokenType::SEMICOLON);
     return nullptr;
   }
 
@@ -156,16 +147,12 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
 std::unique_ptr<Definition> Parser::parseConstDef() {
   auto position = m_token.position;
 
-  if (m_token.type != TokenType::CONST_KWRD) {
-    throw std::logic_error("Parser::parseVarDef() called when m_token is not const keyword");
-  }
-
-  consumeToken();
   Identifier name;
   TypeIdentifier type;
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
+      [this]() { return expect(TokenType::CONST_KWRD, ErrorType::CONSTDEF_EXPECTED_CONST_KWRD); },
       [this, &name]() {
         return expect(name, TokenType::IDENTIFIER, ErrorType::CONSTDEF_EXPECTED_IDENTIFIER);
       },
@@ -174,15 +161,11 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
         return expect(type, isTypeIdentifier, ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER);
       },
       [this]() { return expect(TokenType::ASSIGNMENT, ErrorType::CONSTDEF_EXPECTED_ASSIGNMENT); },
-      [this, &expr]() {
-        expr = parseExpression();
-        return expr == nullptr ? false : true;
-      },
+      [this, &expr]() { return (expr = parseExpression()) != nullptr; },
       [this]() { return expect(TokenType::SEMICOLON, ErrorType::CONSTDEF_EXPECTED_SEMICOLON); },
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
-    skipError(TokenType::SEMICOLON);
     return nullptr;
   }
 
@@ -196,33 +179,27 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
 std::unique_ptr<Definition> Parser::parseStructDef() {
   auto position = m_token.position;
 
-  if (m_token.type != TokenType::STRUCT_KWRD) {
-    throw std::logic_error("Parser::parseStructDef() called when m_token is not struct keyword");
-  }
-
-  consumeToken();
   Identifier name;
   StructDef::Members members;
 
   std::vector<std::function<bool()>> steps = {
+      [this]() {
+        return expect(TokenType::STRUCT_KWRD, ErrorType::STRUCTDEF_EXPECTED_STRUCT_KWRD);
+      },
       [this, &name]() {
         return expect(name, TokenType::IDENTIFIER, ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER);
       },
       [this]() { return expect(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
       [this, &members]() {
-        auto result = parseStructMembers();
-        if (result.has_value()) {
-          members = std::move(result.value());
-          return true;
-        }
-        return false;
+        // If something goes wrong, we'll just end up with an empty members list
+        members = parseStructMembers();
+        return true;
       },
       [this]() { return expect(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE); },
       [this]() { return expect(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON); },
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
-    skipError(TokenType::SEMICOLON);
     return nullptr;
   }
 
@@ -233,20 +210,17 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
  * structMembers
  *  = structMember, { structMember };
  */
-std::optional<StructDef::Members> Parser::parseStructMembers() {
-  auto member = parseStructMember();
-  if (!member.has_value()) {
-    return std::nullopt;
-  }
-
+StructDef::Members Parser::parseStructMembers() {
   StructDef::Members members{};
-  while (m_token.readValue != L"}" && m_token.type != TokenType::ETX) {
-    if (member.has_value()) {
-      members.push_back(std::move(member.value()));
-      member = parseStructMember();
-      continue;
+
+  auto member = parseStructMember();
+  while (member != std::nullopt) {
+    if (members.find(member->name) != members.end()) {
+      m_errorHandler(ErrorType::STRUCTMEMBER_REDEFINITION, m_token.position);
+    } else {
+      members.insert(std::make_pair(member->name, std::move(*member)));
     }
-    return std::nullopt;
+    member = parseStructMember();
   }
 
   return members;
@@ -256,6 +230,10 @@ std::optional<StructDef::Members> Parser::parseStructMembers() {
  *  = identifier, ":", typeIdentifier, ";";
  */
 std::optional<StructDef::Member> Parser::parseStructMember() {
+  if (m_token.type != TokenType::IDENTIFIER) {
+    return std::nullopt;
+  }
+
   auto position = m_token.position;
 
   Identifier name;
@@ -273,7 +251,6 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
-    skipError(TokenType::SEMICOLON);
     return std::nullopt;
   }
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 #include "ASTNode.h"
@@ -79,12 +80,15 @@ struct StructDef : public Definition {
   /* structMember
    *  = identifier, ":", typeIdentifier, ";";
    */
-  using Member = std::pair<Identifier, TypeIdentifier>;
+  struct Member {
+    Identifier name;
+    TypeIdentifier type;
+  };
   /*
    * structMembers
    *  = structMember, { structMember };
    */
-  using Members = std::vector<Member>;
+  using Members = std::unordered_map<Identifier, Member>;
 
   StructDef(const Position& position, Identifier&& structName, Members&& structMembers)
       : Definition{position, std::move(structName)}, members{std::move(structMembers)} {}
@@ -96,7 +100,7 @@ struct StructDef : public Definition {
 
 /*
  * VariantDef
- *     = "variant", identifier, "{", variantTypes, "}", ";";
+ *     = "variant", identifier, "{", [ variantTypes ], "}", ";";
  */
 struct VariantDef : public Definition {
  public:

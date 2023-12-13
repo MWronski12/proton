@@ -30,14 +30,6 @@ class Parser {
   bool expect(TokenType expectedType, ErrorType error);
   bool expect(std::wstring &out, TokenType expectedType, ErrorType error);
 
-  template <typename NodeType, typename... Args,
-            typename = std::enable_if_t<std::is_move_constructible_v<NodeType> &&
-                                        std::is_base_of_v<ASTNode, NodeType> &&
-                                        std::is_constructible_v<NodeType, Args...> > >
-  std::unique_ptr<NodeType> make(Args &&... args) {
-    return std::make_unique<NodeType>(std::forward<Args>(args)...);
-  }
-
   /* ------------------------------- Definition ------------------------------- */
 
   std::unique_ptr<Definition> parseDefinition();
@@ -45,7 +37,7 @@ class Parser {
   std::unique_ptr<Definition> parseConstDef();
 
   std::unique_ptr<Definition> parseStructDef();
-  std::optional<StructDef::Members> parseStructMembers();
+  StructDef::Members parseStructMembers();
   std::optional<StructDef::Member> parseStructMember();
 
   std::unique_ptr<Definition> parseVariantDef();

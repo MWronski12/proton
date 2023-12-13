@@ -12,10 +12,8 @@ enum class ErrorType {
 
   /* ------------------------------ Syntax Errors ----------------------------- */
 
-  // Definition
-  EXPECTED_DEFINITION,
-
   // Variable Definition
+  VARDEF_EXPECTED_VAR_KWRD,
   VARDEF_EXPECTED_IDENTIFIER,
   VARDEF_EXPECTED_COLON,
   VARDEF_EXPECTED_TYPE_IDENTIFIER,
@@ -24,6 +22,7 @@ enum class ErrorType {
   VARDEF_EXPECTED_SEMICOLON,
 
   // Const Definition
+  CONSTDEF_EXPECTED_CONST_KWRD,
   CONSTDEF_EXPECTED_IDENTIFIER,
   CONSTDEF_EXPECTED_COLON,
   CONSTDEF_EXPECTED_TYPE_IDENTIFIER,
@@ -32,6 +31,7 @@ enum class ErrorType {
   CONSTDEF_EXPECTED_SEMICOLON,
 
   // Struct Definition
+  STRUCTDEF_EXPECTED_STRUCT_KWRD,
   STRUCTDEF_EXPECTED_IDENTIFIER,
   STRUCTDEF_EXPECTED_LBRACE,
   STRUCTDEF_EXPECTED_RBRACE,
@@ -40,6 +40,7 @@ enum class ErrorType {
   STRUCTMEMBER_EXPECTED_COLON,
   STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER,
   STRUCTMEMBER_EXPECTED_SEMICOLON,
+  STRUCTMEMBER_REDEFINITION,
 
   // Semantic Errors
   MISSING_MAIN_FUNCTION,
@@ -49,6 +50,7 @@ enum class ErrorType {
 const auto LEXICAL_ERROR = std::string("Lexical Error");
 const auto SYNTAX_ERROR = std::string("Syntax Error");
 const auto SEMANTIC_ERROR = std::string("Semantic Error");
+const auto INTERNAL_ERROR = std::string("Internal Error");
 
 using ErrorInfo = std::pair<std::string, std::string>;  // pairs of <ErrorTypeStr, ErrorMsg>
 
@@ -64,11 +66,8 @@ static const std::vector<ErrorInfo> ERROR_MESSAGES = {
 
     /* ------------------------------ Syntax Errors ----------------------------- */
 
-    // Definition
-    {SYNTAX_ERROR, "Definition expected!"},
-
     // Variable Definition
-    {SYNTAX_ERROR, "Error parsing variable definition!"},
+    {INTERNAL_ERROR, "Tried to parse variable definition, but 'var' keyword was not found!"},
     {SYNTAX_ERROR, "Expected identifier in variable definition!"},
     {SYNTAX_ERROR, "Expected colon in variable definition!"},
     {SYNTAX_ERROR, "Expected type identifier in variable definition!"},
@@ -77,7 +76,7 @@ static const std::vector<ErrorInfo> ERROR_MESSAGES = {
     {SYNTAX_ERROR, "Missing semicolon at the end of variable definition!"},
 
     // Const Definition
-    {SYNTAX_ERROR, "Error parsing const definition!"},
+    {INTERNAL_ERROR, "Tried to parse const definition, but 'const' keyword was not found!"},
     {SYNTAX_ERROR, "Expected identifier in const definition!"},
     {SYNTAX_ERROR, "Expected colon in const definition!"},
     {SYNTAX_ERROR, "Expected type identifier in const definition!"},
@@ -86,7 +85,7 @@ static const std::vector<ErrorInfo> ERROR_MESSAGES = {
     {SYNTAX_ERROR, "Missing semicolon at the end of const definition!"},
 
     // Struct Definition
-    {SYNTAX_ERROR, "Error parsing struct definition!"},
+    {INTERNAL_ERROR, "Tried to parsee struct definition, but 'struct' keyword was not found!"},
     {SYNTAX_ERROR, "Expected identifier in struct definition!"},
     {SYNTAX_ERROR, "Expected opening brace in struct definition!"},
     {SYNTAX_ERROR, "Expected closing brace in struct definition!"},
@@ -95,6 +94,7 @@ static const std::vector<ErrorInfo> ERROR_MESSAGES = {
     {SYNTAX_ERROR, "Expected colon in struct member definition!"},
     {SYNTAX_ERROR, "Expected type identifier in struct member definition!"},
     {SYNTAX_ERROR, "Missing semicolon at the end of struct member definition!"},
+    {SEMANTIC_ERROR, "Struct member redefinition!"},
 
     // Semantic Errors
     {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"},

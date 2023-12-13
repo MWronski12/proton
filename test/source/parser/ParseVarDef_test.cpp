@@ -25,7 +25,6 @@ TEST_F(ParserTest, ParserHandlesVarDefMissingName) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARDEF_EXPECTED_IDENTIFIER, _)).Times(1);
   auto def = parseVarDef();
   ASSERT_EQ(def, nullptr);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesVarDefMissingColon) {
@@ -35,7 +34,6 @@ TEST_F(ParserTest, ParserHandlesVarDefMissingColon) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARDEF_EXPECTED_COLON, _)).Times(1);
   auto def = parseVarDef();
   ASSERT_EQ(def, nullptr);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesVarDefMissingType) {
@@ -45,7 +43,6 @@ TEST_F(ParserTest, ParserHandlesVarDefMissingType) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER, _)).Times(1);
   auto def = parseVarDef();
   ASSERT_EQ(def, nullptr);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesVarDefMissingAssignment) {
@@ -55,7 +52,6 @@ TEST_F(ParserTest, ParserHandlesVarDefMissingAssignment) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARDEF_EXPECTED_ASSIGNMENT, _)).Times(1);
   auto def = parseVarDef();
   ASSERT_EQ(def, nullptr);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesVarDefMissingExpr) {
@@ -65,7 +61,6 @@ TEST_F(ParserTest, ParserHandlesVarDefMissingExpr) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARDEF_EXPECTED_EXPRESSION, _)).Times(1);
   auto def = parseVarDef();
   ASSERT_EQ(def, nullptr);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesVarDefMissingSemicolon) {
@@ -75,5 +70,4 @@ TEST_F(ParserTest, ParserHandlesVarDefMissingSemicolon) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARDEF_EXPECTED_SEMICOLON, _)).Times(1);
   auto def = parseVarDef();
   ASSERT_EQ(def, nullptr);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }

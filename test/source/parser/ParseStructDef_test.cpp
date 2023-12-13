@@ -5,13 +5,11 @@
 /* -------------------------------------------------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyStructMember) {
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTMEMBER_EXPECTED_IDENTIFIER, _)).Times(1);
   m_reader.load(L"");
   consumeToken();
 
   auto result = parseStructMember();
   EXPECT_EQ(result, std::nullopt);
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesStructMember) {
@@ -21,9 +19,8 @@ TEST_F(ParserTest, ParserHandlesStructMember) {
 
   auto result = parseStructMember();
   ASSERT_TRUE(result != std::nullopt);
-  EXPECT_EQ(result->first, Identifier(L"x"));
-  EXPECT_EQ(result->second, TypeIdentifier(L"int"));
-  EXPECT_EQ(currentToken().readValue, L"y");
+  EXPECT_EQ(result->name, Identifier(L"x"));
+  EXPECT_EQ(result->type, TypeIdentifier(L"int"));
 }
 
 TEST_F(ParserTest, ParserHandlesStructMemberMissingName) {
@@ -31,10 +28,9 @@ TEST_F(ParserTest, ParserHandlesStructMemberMissingName) {
   m_reader.load(L": int; y : int;");
   consumeToken();
 
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTMEMBER_EXPECTED_IDENTIFIER, _)).Times(1);
   auto result = parseStructMember();
+  // Without error recovery we cannot do anything more here
   ASSERT_TRUE(result == std::nullopt);
-  EXPECT_EQ(currentToken().readValue, L"y");
 }
 
 TEST_F(ParserTest, ParserHandlesStructMemberMissingColon) {
@@ -45,7 +41,6 @@ TEST_F(ParserTest, ParserHandlesStructMemberMissingColon) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTMEMBER_EXPECTED_COLON, _)).Times(1);
   auto result = parseStructMember();
   ASSERT_TRUE(result == std::nullopt);
-  EXPECT_EQ(currentToken().readValue, L"y");
 }
 
 TEST_F(ParserTest, ParserHandlesStructMemberMissingType) {
@@ -57,7 +52,6 @@ TEST_F(ParserTest, ParserHandlesStructMemberMissingType) {
       .Times(1);
   auto result = parseStructMember();
   ASSERT_TRUE(result == std::nullopt);
-  EXPECT_EQ(currentToken().readValue, L"y");
 }
 
 TEST_F(ParserTest, ParserHandlesStructMemberMissingSemicolon) {
@@ -68,8 +62,6 @@ TEST_F(ParserTest, ParserHandlesStructMemberMissingSemicolon) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON, _)).Times(1);
   auto result = parseStructMember();
   ASSERT_TRUE(result == std::nullopt);
-  // From parsing struct member we recover by skipping passed the next semicolon
-  EXPECT_EQ(currentToken().readValue, L"}");
 }
 
 /* -------------------------------------------------------------------------- */
@@ -77,13 +69,11 @@ TEST_F(ParserTest, ParserHandlesStructMemberMissingSemicolon) {
 /* -------------------------------------------------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyStructMembers) {
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTMEMBER_EXPECTED_IDENTIFIER, _)).Times(1);
   m_reader.load(L"");
   consumeToken();
 
-  auto result = parseStructMembers().value();
+  auto result = parseStructMembers();
   EXPECT_TRUE(result.empty());
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesStructMembers) {
@@ -91,15 +81,19 @@ TEST_F(ParserTest, ParserHandlesStructMembers) {
   m_reader.load(L" x: int; y : int; z : int; }");
   consumeToken();
 
-  auto result = parseStructMembers().value();
-  EXPECT_EQ(result.size(), 3);
-  EXPECT_EQ(result.at(0).first, Identifier(L"x"));
-  EXPECT_EQ(result.at(0).second, TypeIdentifier(L"int"));
-  EXPECT_EQ(result.at(1).first, Identifier(L"y"));
-  EXPECT_EQ(result.at(1).second, TypeIdentifier(L"int"));
-  EXPECT_EQ(result.at(2).first, Identifier(L"z"));
-  EXPECT_EQ(result.at(2).second, TypeIdentifier(L"int"));
-  EXPECT_EQ(currentToken().readValue, L"}");
+  StructDef::Members result = parseStructMembers();
+
+  ASSERT_TRUE(result.find(L"x") != result.end());
+  EXPECT_EQ(result[L"x"].name, Identifier(L"x"));
+  EXPECT_EQ(result[L"x"].type, TypeIdentifier(L"int"));
+
+  ASSERT_TRUE(result.find(L"y") != result.end());
+  EXPECT_EQ(result[L"y"].name, Identifier(L"y"));
+  EXPECT_EQ(result[L"y"].type, TypeIdentifier(L"int"));
+
+  ASSERT_TRUE(result.find(L"z") != result.end());
+  EXPECT_EQ(result[L"z"].name, Identifier(L"z"));
+  EXPECT_EQ(result[L"z"].type, TypeIdentifier(L"int"));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -109,7 +103,10 @@ TEST_F(ParserTest, ParserHandlesStructMembers) {
 TEST_F(ParserTest, ParserHandlesEmptyStructDef) {
   m_reader.load(L"");
   consumeToken();
-  EXPECT_ANY_THROW(parseStructDef());
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_STRUCT_KWRD, _)).Times(1);
+  auto result = parseStructDef();
+  ASSERT_TRUE(result == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesStructDefMissingName) {
@@ -119,7 +116,6 @@ TEST_F(ParserTest, ParserHandlesStructDefMissingName) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER, _)).Times(1);
   auto result = parseStructDef();
   ASSERT_TRUE(result == nullptr);
-  EXPECT_EQ(currentToken().readValue, L"next");
 }
 
 TEST_F(ParserTest, ParserHandlesStructDefMissingLBrace) {
@@ -129,7 +125,6 @@ TEST_F(ParserTest, ParserHandlesStructDefMissingLBrace) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_LBRACE, _)).Times(1);
   auto result = parseStructDef();
   ASSERT_TRUE(result == nullptr);
-  EXPECT_EQ(currentToken().readValue, L"next");
 }
 
 TEST_F(ParserTest, ParserHandlesStructDefMissingRBrace) {
@@ -139,6 +134,4 @@ TEST_F(ParserTest, ParserHandlesStructDefMissingRBrace) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_RBRACE, _)).Times(1);
   auto result = parseStructDef();
   ASSERT_TRUE(result == nullptr);
-  // From parsing struct def we recover by skipping passed "};" which is StructDef delimitter
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }

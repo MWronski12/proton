@@ -139,7 +139,7 @@ structMember
     = identifier, ":", typeIdentifier, ";";
 
 VariantDef
-    = "variant", identifier, "{", variantTypes, "}", ";";
+    = "variant", identifier, "{", [ variantTypes ], "}", ";";
 variantTypes
     = variantType, { ",", variantType };
 variantType
