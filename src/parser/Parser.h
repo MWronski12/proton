@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <variant>
 
 #include "Block.h"
@@ -28,6 +29,14 @@ class Parser {
   bool expect(std::wstring &out, std::function<bool(const Token &token)> predicate, ErrorType err);
   bool expect(TokenType expectedType, ErrorType error);
   bool expect(std::wstring &out, TokenType expectedType, ErrorType error);
+
+  template <typename NodeType, typename... Args,
+            typename = std::enable_if_t<std::is_move_constructible_v<NodeType> &&
+                                        std::is_base_of_v<ASTNode, NodeType> &&
+                                        std::is_constructible_v<NodeType, Args...> > >
+  std::unique_ptr<NodeType> make(Args &&... args) {
+    return std::make_unique<NodeType>(std::forward<Args>(args)...);
+  }
 
   /* ------------------------------- Definition ------------------------------- */
 

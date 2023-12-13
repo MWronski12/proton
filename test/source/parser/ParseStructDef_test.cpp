@@ -81,7 +81,7 @@ TEST_F(ParserTest, ParserHandlesEmptyStructMembers) {
   m_reader.load(L"");
   consumeToken();
 
-  auto result = parseStructMembers();
+  auto result = parseStructMembers().value();
   EXPECT_TRUE(result.empty());
   EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
@@ -91,7 +91,7 @@ TEST_F(ParserTest, ParserHandlesStructMembers) {
   m_reader.load(L" x: int; y : int; z : int; }");
   consumeToken();
 
-  auto result = parseStructMembers();
+  auto result = parseStructMembers().value();
   EXPECT_EQ(result.size(), 3);
   EXPECT_EQ(result.at(0).first, Identifier(L"x"));
   EXPECT_EQ(result.at(0).second, TypeIdentifier(L"int"));

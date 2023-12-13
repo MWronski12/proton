@@ -204,7 +204,7 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
 
   consumeToken();
   Identifier name;
-  std::optional<StructDef::Members> members;
+  StructDef::Members members;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
@@ -212,8 +212,12 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
       },
       [this]() { return expect(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
       [this, &members]() {
-        members = (m_token.readValue == L"}") ? std::nullopt : parseStructMembers();
-        return true;
+        auto result = parseStructMembers();
+        if (result.has_value()) {
+          members = std::move(result.value());
+          return true;
+        }
+        return false;
       },
       [this]() { return expect(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE); },
       [this]() { return expect(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON); },
