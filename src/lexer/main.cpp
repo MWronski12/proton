@@ -2,9 +2,9 @@
 #include <sstream>
 #include <string>
 
+#include "ErrorHandler.h"
 #include "FileCharReader.h"
 #include "Lexer.h"
-#include "StrictErrorHandler.h"
 #include "lexer_utils.h"
 
 int main(int argc, char** argv) {
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   }
   std::string file = argv[1];
 
-  StrictErrorHandler errorHandler;
+  ErrorHandler errorHandler;
   FileCharReader reader{file};
   Lexer lexer{reader, errorHandler};
 

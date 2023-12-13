@@ -1,12 +1,12 @@
+#include "ErrorHandler.h"
 #include "Lexer.h"
-#include "StrictErrorHandler.h"
 #include "StringCharReader.h"
 #include "lexer_utils.h"
 
 int main() {
   std::wstring src = L"fn main() -> int { return 1; }";
   StringCharReader reader(src);
-  StrictErrorHandler errorHandler;
+  ErrorHandler errorHandler;
 
   Lexer lexer(reader, errorHandler);
 

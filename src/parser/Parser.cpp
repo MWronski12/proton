@@ -3,7 +3,7 @@
 #include "Parser.h"
 #include "parser_utils.h"
 
-Parser::Parser(Lexer& lexer, ErrorHandlerBase& errorHandler)
+Parser::Parser(Lexer& lexer, ErrorHandler& errorHandler)
     : m_lexer{lexer}, m_errorHandler{errorHandler} {
   consumeToken();
 }
@@ -81,8 +81,6 @@ std::optional<Program> Parser::parseProgram() {
       definitions.insert(std::move(entry));
     }
   }
-
-  m_errorHandler.exitIfErrors();
 
   return Program{position, std::move(definitions)};
 }

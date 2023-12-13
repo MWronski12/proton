@@ -1,12 +1,12 @@
 #include "Definition.h"
+#include "ErrorHandler.h"
 #include "Expression.h"
 #include "Lexer.h"
 #include "Parser.h"
-#include "StrictErrorHandler.h"
 #include "StringCharReader.h"
 
 int main() {
-  StrictErrorHandler errorHandler;
+  ErrorHandler errorHandler;
   StringCharReader reader{L"2 + 2 * 3;"};
   Lexer lexer{reader, errorHandler};
   Parser parser{lexer, errorHandler};

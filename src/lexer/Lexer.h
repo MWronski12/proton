@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CharReaderBase.h"
-#include "ErrorHandlerBase.h"
+#include "ErrorHandler.h"
 #include "Token.h"
 
 class Lexer {
@@ -12,7 +12,7 @@ class Lexer {
   Lexer& operator=(Lexer&&) = delete;
   ~Lexer() = default;
 
-  explicit Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler);
+  explicit Lexer(CharReaderBase& reader, ErrorHandler& errorHandler);
   Token getNextToken();
 
  private:
@@ -47,7 +47,7 @@ class Lexer {
   void buildOther();
 
   CharReaderBase& m_reader;
-  ErrorHandlerBase& m_errorHandler;
+  ErrorHandler& m_errorHandler;
 
   Token m_token;
 };

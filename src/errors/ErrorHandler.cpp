@@ -1,20 +1,37 @@
 #include <iostream>
 #include <sstream>
 
-#include "ErrorHandlerBase.h"
+#include "ErrorHandler.h"
+
+ErrorHandler::ErrorHandler() : m_numToleratedErrors(1) {}
+
+ErrorHandler::ErrorHandler(const int numToleratedErrors)
+    : m_numToleratedErrors(numToleratedErrors) {}
+
+ErrorHandler::~ErrorHandler() { exitIfErrors(); }
 
 /*
  * @brief Calls handleError method of derived class. Just a convenience wrapper, which also allows
  * for testing with mocks.
  */
-void ErrorHandlerBase::operator()(const ErrorType type, const Position& position) {
+void ErrorHandler::operator()(const ErrorType type, const Position& position) {
   handleError(type, position);
 }
 
 /*
- * @brief Checks if there are any errors and exits if so.
+ * @brief method for signaling errors. If error is not tolerated, exits the program.
  */
-void ErrorHandlerBase::exitIfErrors() {
+void ErrorHandler::handleError(const ErrorType type, const Position& position) {
+  append(type, position);
+  if (--m_numToleratedErrors <= 0) {
+    exitIfErrors();
+  }
+}
+
+/*
+ * @brief Prints error message and exits if there are any errors.
+ */
+void ErrorHandler::exitIfErrors() {
   auto message = m_errors.str();
   if (!message.empty()) {
     std::cerr << message << std::endl;
@@ -25,14 +42,14 @@ void ErrorHandlerBase::exitIfErrors() {
 /*
  * @brief Appends formatted error message. Designed to be called from derived.
  */
-void ErrorHandlerBase::append(const ErrorType type, const Position& position) {
+void ErrorHandler::append(const ErrorType type, const Position& position) {
   m_errors << format(type, position);
 }
 
 /*
  * @brief Formats error message including ErorType, position and sourceFile.
  */
-std::string ErrorHandlerBase::format(const ErrorType type, const Position& position) const {
+std::string ErrorHandler::format(const ErrorType type, const Position& position) const {
   std::stringstream message;
 
   message << "\n"

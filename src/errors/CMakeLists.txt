@@ -1,6 +1,5 @@
 add_library(errorslib STATIC
-    ErrorHandlerBase.cpp
-    StrictErrorHandler.cpp
+    ErrorHandler.cpp
 )
 
 target_link_libraries(errorslib PUBLIC 

@@ -9,7 +9,7 @@
 #include "Token.h"
 #include "lexer_utils.h"
 
-Lexer::Lexer(CharReaderBase& reader, ErrorHandlerBase& errorHandler)
+Lexer::Lexer(CharReaderBase& reader, ErrorHandler& errorHandler)
     : m_reader{reader}, m_errorHandler{errorHandler} {}
 
 Token Lexer::getNextToken() {

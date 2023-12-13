@@ -8,14 +8,14 @@
 
 #include "Block.h"
 #include "Definition.h"
-#include "ErrorHandlerBase.h"
+#include "ErrorHandler.h"
 #include "Expression.h"
 #include "Lexer.h"
 #include "Program.h"
 
 class Parser {
  public:
-  Parser(Lexer &lexer, ErrorHandlerBase &errorHandler);
+  Parser(Lexer &lexer, ErrorHandler &errorHandler);
   std::optional<Program> parseProgram();
 
   friend class ParserTest;
@@ -68,7 +68,7 @@ class Parser {
 
  private:
   Lexer &m_lexer;
-  ErrorHandlerBase &m_errorHandler;
+  ErrorHandler &m_errorHandler;
 
   Token m_token;
 };
