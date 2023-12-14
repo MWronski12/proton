@@ -1,0 +1,106 @@
+#include "Definition.h"
+#include "ParserTest.h"
+
+/* ------------------------------- VariantType ------------------------------ */
+
+TEST_F(ParserTest, ParserHandlesEmptyVariantType) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"");
+  consumeToken();
+
+  auto result = parseVariantType();
+  EXPECT_EQ(result, std::nullopt);
+}
+
+TEST_F(ParserTest, ParserHandlesVariantType) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"int float");
+  consumeToken();
+
+  EXPECT_EQ(parseVariantType(), TypeIdentifier(L"int"));
+  EXPECT_EQ(parseVariantType(), TypeIdentifier(L"float"));
+}
+
+/* ------------------------------ VariantTypes ------------------------------ */
+
+TEST_F(ParserTest, ParserHandlesEmptyVariantTypes) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"");
+  consumeToken();
+
+  auto result = parseVariantTypes();
+  EXPECT_EQ(result.empty(), true);
+}
+
+TEST_F(ParserTest, ParserHandlesVariantTypes) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"int, float, string");
+  consumeToken();
+
+  auto result = parseVariantTypes();
+  ASSERT_EQ(result.size(), 3);
+  EXPECT_EQ(result[0], TypeIdentifier(L"int"));
+  EXPECT_EQ(result[1], TypeIdentifier(L"float"));
+  EXPECT_EQ(result[2], TypeIdentifier(L"string"));
+}
+
+/* ------------------------------- VariantDef ------------------------------- */
+
+TEST_F(ParserTest, ParserHandlesEmptyVariantDef) {
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTDEF_EXPECTED_VARIANT_KWRD, _)).Times(1);
+  m_reader.load(L"");
+  consumeToken();
+
+  auto result = parseVariantDef();
+  EXPECT_EQ(result, nullptr);
+}
+
+TEST_F(ParserTest, ParserHandlesVariantDef) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"variant Foo { int, float, string };");
+  consumeToken();
+
+  auto result = parseVariantDef();
+  ASSERT_TRUE(result != nullptr);
+  VariantDef* def = dynamic_cast<VariantDef*>(result.get());
+  ASSERT_TRUE(def != nullptr);
+  ASSERT_TRUE(def->types.size() == 3);
+  EXPECT_EQ(def->types[0], TypeIdentifier(L"int"));
+  EXPECT_EQ(def->types[1], TypeIdentifier(L"float"));
+  EXPECT_EQ(def->types[2], TypeIdentifier(L"string"));
+}
+
+TEST_F(ParserTest, ParserHandlesVariantDefAllowsEmptyVariant) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"variant Foo { };");
+  consumeToken();
+
+  auto result = parseVariantDef();
+  ASSERT_TRUE(result != nullptr);
+  VariantDef* def = dynamic_cast<VariantDef*>(result.get());
+  ASSERT_TRUE(def != nullptr);
+  ASSERT_TRUE(def->types.size() == 0);
+}
+
+TEST_F(ParserTest, ParserHandlesVariantDefAllowsTrailingComma) {
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  m_reader.load(L"variant Foo { int, float, };");
+  consumeToken();
+
+  auto result = parseVariantDef();
+  ASSERT_TRUE(result != nullptr);
+  VariantDef* def = dynamic_cast<VariantDef*>(result.get());
+  ASSERT_TRUE(def != nullptr);
+  ASSERT_TRUE(def->types.size() == 2);
+  EXPECT_EQ(def->types[0], TypeIdentifier(L"int"));
+  EXPECT_EQ(def->types[1], TypeIdentifier(L"float"));
+}
+
+TEST_F(ParserTest, ParserHandlesVariantDefDoesntAllowCommaOnly) {
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTDEF_EXPECTED_RBRACE, _)).Times(1);
+  m_reader.load(L"variant Foo { , };");
+  consumeToken();
+
+  auto result = parseVariantDef();
+  ASSERT_TRUE(result == nullptr);
+}

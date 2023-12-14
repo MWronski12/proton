@@ -55,31 +55,32 @@ void Lexer::buildIdentifier() {
 
   while (isIdentifierChar(m_reader.peek())) {
     auto next = m_reader.get();
-    m_token.readValue.push_back(next);
+    m_token.representation.push_back(next);
   }
 
   matchIdentifier();
 }
 
-bool Lexer::isIdentifierChar(const wchar_t c) const { return iswalnum(c); }
+bool Lexer::isIdentifierChar(const wchar_t c) const { return iswalnum(c) || c == L'_'; }
 
 void Lexer::matchIdentifier() {
   // Keyword
   for (uint i = 0; i < KEYWORDS.size(); i++) {
-    if (m_token.readValue == KEYWORDS[i]) {
+    if (m_token.representation == KEYWORDS[i]) {
       m_token.type = TokenType(i + KEYWORDS_OFFSET);
       return;
     }
   }
 
   // Bool
-  if (m_token.readValue == L"true") {
+  if (m_token.representation == L"true") {
     m_token.value = true;
     m_token.type = TokenType::BOOL;
-  } else if (m_token.readValue == L"false") {
+  } else if (m_token.representation == L"false") {
     m_token.value = false;
     m_token.type = TokenType::BOOL;
   }
+
   // User defined identifier
   else {
     m_token.type = TokenType::IDENTIFIER;
@@ -99,7 +100,7 @@ void Lexer::buildNumber() {
 
   while (isNumberChar(m_reader.peek())) {
     auto next = m_reader.get();
-    m_token.readValue.push_back(next);
+    m_token.representation.push_back(next);
   }
 
   // Tokens like: "3x", "3(" etc. are not allowed
@@ -112,7 +113,7 @@ void Lexer::buildNumber() {
   else {
     while (!isAllowedAfterNumber(m_reader.peek())) {
       auto next = m_reader.get();
-      m_token.readValue.push_back(next);
+      m_token.representation.push_back(next);
     }
     m_token.type = TokenType::UNEXPECTED;
     m_errorHandler(ErrorType::INVALID_NUMBER_LITERAL, m_token.position);
@@ -122,28 +123,28 @@ void Lexer::buildNumber() {
 }
 
 void Lexer::matchNumber() {
-  if (m_token.readValue.find('.') != std::wstring::npos) {
+  if (m_token.representation.find('.') != std::wstring::npos) {
     m_token.type = TokenType::FLOAT;
-    m_token.value = std::stof(m_token.readValue);
+    m_token.value = std::stof(m_token.representation);
   } else {
     m_token.type = TokenType::INTEGER;
-    m_token.value = std::stoi(m_token.readValue);
+    m_token.value = std::stoi(m_token.representation);
   }
 }
 
 void Lexer::validateBuiltNumber() {
   if (m_token.type == TokenType::UNEXPECTED) return;
-  if (m_token.readValue.length() == 0) throw std::logic_error("Built token is empty!");
+  if (m_token.representation.length() == 0) throw std::logic_error("Built token is empty!");
 
   // Number starting with 0 must be either int 0 or float 0.xxx
-  if (m_token.readValue.front() == L'0' && m_token.readValue.length() > 1 &&
-      m_token.readValue[1] != L'.') {
+  if (m_token.representation.front() == L'0' && m_token.representation.length() > 1 &&
+      m_token.representation[1] != L'.') {
     m_token.type = TokenType::UNEXPECTED;
     m_errorHandler(ErrorType::INVALID_NUMBER_LITERAL, m_token.position);
   }
 
   // Number literal can have 0 or 1 '.'
-  else if (std::count(m_token.readValue.cbegin(), m_token.readValue.cend(), L'.') > 1) {
+  else if (std::count(m_token.representation.cbegin(), m_token.representation.cend(), L'.') > 1) {
     m_token.type = TokenType::UNEXPECTED;
     m_errorHandler(ErrorType::INVALID_NUMBER_LITERAL, m_token.position);
   }
@@ -184,13 +185,13 @@ bool Lexer::isAllowedAfterNumber(const wchar_t c) const {
 void Lexer::addEscapedChar(const wchar_t c) {
   switch (c) {
     case L'n':
-      m_token.readValue.push_back(L'\n');
+      m_token.representation.push_back(L'\n');
       break;
     case L't':
-      m_token.readValue.push_back(L'\t');
+      m_token.representation.push_back(L'\t');
       break;
     default:
-      m_token.readValue.push_back(c);
+      m_token.representation.push_back(c);
   }
 }
 
@@ -213,9 +214,9 @@ void Lexer::buildChar() {
     // Closing quote
     if (next == L'\'') {
       m_reader.get();
-      if (m_token.readValue.length() == 1) {
+      if (m_token.representation.length() == 1) {
         m_token.type = TokenType::CHAR;
-        m_token.value = m_token.readValue.front();
+        m_token.value = m_token.representation.front();
       } else {
         m_token.type = TokenType::UNEXPECTED;
         m_errorHandler(ErrorType::INVALID_CHAR_LITERAL, m_token.position);
@@ -236,7 +237,7 @@ void Lexer::buildChar() {
     }
     // Valid char literal character
     else {
-      m_token.readValue.push_back(m_reader.get());
+      m_token.representation.push_back(m_reader.get());
     }
   }
 }
@@ -261,7 +262,7 @@ void Lexer::buildString() {
     if (next == L'"') {
       m_reader.get();  // Consume closing quote
       m_token.type = TokenType::STRING;
-      m_token.value = m_token.readValue;
+      m_token.value = m_token.representation;
       return;
     }
     // Newline or WEOF
@@ -278,7 +279,7 @@ void Lexer::buildString() {
     }
     // Valid string literal character
     else {
-      m_token.readValue.push_back(m_reader.get());
+      m_token.representation.push_back(m_reader.get());
     }
   }
 }
@@ -294,10 +295,10 @@ void Lexer::buildComment() {
     throw std::logic_error("Comment must start with L'$' character!");
   }
 
-  m_token.readValue.push_back(m_reader.get());
+  m_token.representation.push_back(m_reader.get());
 
   if (m_reader.peek() == L'$') {
-    m_token.readValue.push_back(m_reader.get());
+    m_token.representation.push_back(m_reader.get());
     matchMultiLineComment();
   } else {
     matchSingleLineComment();
@@ -315,12 +316,12 @@ void Lexer::matchMultiLineComment() {
     }
 
     if (next == L'$' && m_reader.get() == L'$') {
-      m_token.readValue.push_back('$');
-      m_token.readValue.push_back('$');
+      m_token.representation.push_back('$');
+      m_token.representation.push_back('$');
       break;
     }
 
-    m_token.readValue.push_back(next);
+    m_token.representation.push_back(next);
   }
 
   m_token.type = TokenType::MULTI_LINE_COMMENT;
@@ -328,7 +329,7 @@ void Lexer::matchMultiLineComment() {
 
 void Lexer::matchSingleLineComment() {
   while (m_reader.peek() != L'\n' && m_reader.peek() != wchar_t(WEOF)) {
-    m_token.readValue.push_back(m_reader.get());
+    m_token.representation.push_back(m_reader.get());
   }
 
   m_token.type = TokenType::SINGLE_LINE_COMMENT;
@@ -340,12 +341,12 @@ void Lexer::matchSingleLineComment() {
 
 void Lexer::buildOther() {
   auto next = m_reader.get();
-  m_token.readValue.push_back(next);
+  m_token.representation.push_back(next);
 
   switch (next) {  // Cases where first char doesnt uniquely identify the token
     case L'-':
       if (m_reader.peek() == L'>') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::ARROW;
       } else {
         m_token.type = TokenType::MINUS;
@@ -354,7 +355,7 @@ void Lexer::buildOther() {
 
     case L'=':
       if (m_reader.peek() == L'=') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::EQUALITY;
       } else {
         m_token.type = TokenType::ASSIGNMENT;
@@ -363,10 +364,10 @@ void Lexer::buildOther() {
 
     case L'<':
       if (m_reader.peek() == L'=') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::LESS_THAN_EQUAL;
       } else if (m_reader.peek() == L'<') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::INSERTION_OP;
       } else {
         m_token.type = TokenType::LESS_THAN;
@@ -375,10 +376,10 @@ void Lexer::buildOther() {
 
     case L'>':
       if (m_reader.peek() == L'=') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::GREATER_THAN_EQUAL;
       } else if (m_reader.peek() == L'>') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::EXTRACTION_OP;
       } else {
         m_token.type = TokenType::GREATER_THAN;
@@ -387,7 +388,7 @@ void Lexer::buildOther() {
 
     case L'!':
       if (m_reader.peek() == L'=') {
-        m_token.readValue.push_back(m_reader.get());
+        m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::INEQUALITY;
       } else {
         m_token.type = TokenType::LOGIC_NOT;
@@ -408,11 +409,11 @@ void Lexer::buildOther() {
       m_token.type = TokenType::PERCENT;
       return;
     case L'&':
-      m_token.readValue.push_back(m_reader.get());
+      m_token.representation.push_back(m_reader.get());
       m_token.type = TokenType::LOGIC_AND;
       return;
     case L'|':
-      m_token.readValue.push_back(m_reader.get());
+      m_token.representation.push_back(m_reader.get());
       m_token.type = TokenType::LOGIC_OR;
       return;
     case L'.':

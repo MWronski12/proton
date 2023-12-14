@@ -55,8 +55,7 @@ std::string ErrorHandler::format(const ErrorType type, const Position& position)
   message << "\n"
           << "ERROR in line " << position.line << " col " << position.column << " of "
           << position.sourceFile << "\n"
-          << "WHAT? " << ERROR_MESSAGES[int(type)].first << ": " << ERROR_MESSAGES[int(type)].second
-          << "\n";
+          << "WHAT? " << Errors.at(type).first << ": " << Errors.at(type).second << "\n";
 
   return message.str();
 }

@@ -19,8 +19,6 @@ class ParserTest : public ::Test {
         } {}
 
  protected:
-  Token currentToken() { return m_parser.m_token; }
-
   auto consumeToken() { return m_parser.consumeToken(); }
 
   auto parseVarDef() { return m_parser.parseVarDef(); }
@@ -31,6 +29,10 @@ class ParserTest : public ::Test {
   auto parseStructMember() { return m_parser.parseStructMember(); }
   auto parseStructMembers() { return m_parser.parseStructMembers(); }
   auto parseStructDef() { return m_parser.parseStructDef(); }
+
+  auto parseVariantType() { return m_parser.parseVariantType(); }
+  auto parseVariantTypes() { return m_parser.parseVariantTypes(); }
+  auto parseVariantDef() { return m_parser.parseVariantDef(); }
 
   auto parseProgram() { return m_parser.parseProgram(); }
 

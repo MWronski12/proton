@@ -19,27 +19,12 @@ void Parser::skipError(const TokenType delimiter) {
   consumeToken();
 }
 
-bool Parser::expect(std::function<bool(const Token& token)> predicate, ErrorType err) {
-  if (predicate(m_token)) {
-    consumeToken();
-    return true;
-  }
-  m_errorHandler(err, m_token.position);
-  return false;
+void Parser::extractAndConsume(Identifier& out) {
+  out = m_token.representation;
+  consumeToken();
 }
 
-bool Parser::expect(std::wstring& out, std::function<bool(const Token& token)> predicate,
-                    ErrorType err) {
-  if (predicate(m_token)) {
-    out = m_token.readValue;
-    consumeToken();
-    return true;
-  }
-  m_errorHandler(err, m_token.position);
-  return false;
-}
-
-bool Parser::expect(TokenType expectedType, ErrorType error) {
+bool Parser::consumeIf(TokenType expectedType, ErrorType error) {
   if (m_token.type == expectedType) {
     consumeToken();
     return true;
@@ -48,9 +33,30 @@ bool Parser::expect(TokenType expectedType, ErrorType error) {
   return false;
 }
 
-bool Parser::expect(std::wstring& out, TokenType expectedType, ErrorType error) {
+bool Parser::consumeIf(const std::function<bool(TokenType tokenType)>& predicate, ErrorType err) {
+  if (predicate(m_token.type)) {
+    consumeToken();
+    return true;
+  }
+  m_errorHandler(err, m_token.position);
+  return false;
+}
+
+bool Parser::consumeAndExtractIf(Identifier& out,
+                                 const std::function<bool(TokenType tokenType)>& predicate,
+                                 ErrorType err) {
+  if (predicate(m_token.type)) {
+    out = m_token.representation;
+    consumeToken();
+    return true;
+  }
+  m_errorHandler(err, m_token.position);
+  return false;
+}
+
+bool Parser::consumeAndExtractIf(Identifier& out, TokenType expectedType, ErrorType error) {
   if (m_token.type == expectedType) {
-    out = m_token.readValue;
+    out = m_token.representation;
     consumeToken();
     return true;
   }
@@ -67,7 +73,7 @@ std::optional<Program> Parser::parseProgram() {
   while (definition != nullptr) {
     // Redefinition
     if (definitions.find(definition->name) != definitions.end()) {
-      m_errorHandler(ErrorType::FUNCTION_REDEFINITION, m_token.position);
+      m_errorHandler(ErrorType::REDEFINITION, definition->position);
       continue;
     }
     // Success, add to map
@@ -89,15 +95,15 @@ std::optional<Program> Parser::parseProgram() {
 std::unique_ptr<Definition> Parser::parseDefinition() {
   auto position = m_token.position;
 
-  const std::unordered_map<Identifier, std::function<std::unique_ptr<Definition>()>> map = {
-      {std::wstring(L"var"), [this]() { return parseVarDef(); }},
-      {std::wstring(L"const"), [this]() { return parseConstDef(); }},
-      {std::wstring(L"struct"), [this]() { return parseStructDef(); }},
-      {std::wstring(L"variant"), [this]() { return parseVariantDef(); }},
-      {std::wstring(L"fn"), [this]() { return parseFnDef(); }},
+  static const std::unordered_map<TokenType, std::function<std::unique_ptr<Definition>()>> map = {
+      {TokenType::VAR_KWRD, [this]() { return parseVarDef(); }},
+      {TokenType::CONST_KWRD, [this]() { return parseConstDef(); }},
+      {TokenType::STRUCT_KWRD, [this]() { return parseStructDef(); }},
+      {TokenType::VARIANT_KWRD, [this]() { return parseVariantDef(); }},
+      {TokenType::FN_KWRD, [this]() { return parseFnDef(); }},
   };
 
-  auto it = map.find(m_token.readValue);
+  auto it = map.find(m_token.type);
   if (it == map.end()) {
     return nullptr;
   }
@@ -109,6 +115,7 @@ std::unique_ptr<Definition> Parser::parseDefinition() {
  * VarDef
  *     = "var", identifier, ":", typeIdentifier, "=", expression, ";";
  */
+#include <iostream>
 std::unique_ptr<Definition> Parser::parseVarDef() {
   auto position = m_token.position;
 
@@ -117,20 +124,22 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
-      [this]() { return expect(TokenType::VAR_KWRD, ErrorType::VARDEF_EXPECTED_VAR_KWRD); },
+      [this]() { return consumeIf(TokenType::VAR_KWRD, ErrorType::VARDEF_EXPECTED_VAR_KWRD); },
       [this, &name]() {
-        return expect(name, TokenType::IDENTIFIER, ErrorType::VARDEF_EXPECTED_IDENTIFIER);
+        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::VARDEF_EXPECTED_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::COLON, ErrorType::VARDEF_EXPECTED_COLON); },
+      [this]() { return consumeIf(TokenType::COLON, ErrorType::VARDEF_EXPECTED_COLON); },
       [this, &type]() {
-        return expect(type, isTypeIdentifier, ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER);
+        return consumeAndExtractIf(type, isTypeIdentifier,
+                                   ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::ASSIGNMENT, ErrorType::VARDEF_EXPECTED_ASSIGNMENT); },
+      [this]() { return consumeIf(TokenType::ASSIGNMENT, ErrorType::VARDEF_EXPECTED_ASSIGNMENT); },
       [this, &expr]() {
         expr = parseExpression();
         return expr == nullptr ? false : true;
       },
-      [this]() { return expect(TokenType::SEMICOLON, ErrorType::VARDEF_EXPECTED_SEMICOLON); },
+      [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::VARDEF_EXPECTED_SEMICOLON); },
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
@@ -152,17 +161,23 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
-      [this]() { return expect(TokenType::CONST_KWRD, ErrorType::CONSTDEF_EXPECTED_CONST_KWRD); },
+      [this]() {
+        return consumeIf(TokenType::CONST_KWRD, ErrorType::CONSTDEF_EXPECTED_CONST_KWRD);
+      },
       [this, &name]() {
-        return expect(name, TokenType::IDENTIFIER, ErrorType::CONSTDEF_EXPECTED_IDENTIFIER);
+        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::CONSTDEF_EXPECTED_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::COLON, ErrorType::CONSTDEF_EXPECTED_COLON); },
+      [this]() { return consumeIf(TokenType::COLON, ErrorType::CONSTDEF_EXPECTED_COLON); },
       [this, &type]() {
-        return expect(type, isTypeIdentifier, ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER);
+        return consumeAndExtractIf(type, isTypeIdentifier,
+                                   ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::ASSIGNMENT, ErrorType::CONSTDEF_EXPECTED_ASSIGNMENT); },
+      [this]() {
+        return consumeIf(TokenType::ASSIGNMENT, ErrorType::CONSTDEF_EXPECTED_ASSIGNMENT);
+      },
       [this, &expr]() { return (expr = parseExpression()) != nullptr; },
-      [this]() { return expect(TokenType::SEMICOLON, ErrorType::CONSTDEF_EXPECTED_SEMICOLON); },
+      [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::CONSTDEF_EXPECTED_SEMICOLON); },
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
@@ -184,19 +199,20 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
 
   std::vector<std::function<bool()>> steps = {
       [this]() {
-        return expect(TokenType::STRUCT_KWRD, ErrorType::STRUCTDEF_EXPECTED_STRUCT_KWRD);
+        return consumeIf(TokenType::STRUCT_KWRD, ErrorType::STRUCTDEF_EXPECTED_STRUCT_KWRD);
       },
       [this, &name]() {
-        return expect(name, TokenType::IDENTIFIER, ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER);
+        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
+      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
       [this, &members]() {
         // If something goes wrong, we'll just end up with an empty members list
         members = parseStructMembers();
         return true;
       },
-      [this]() { return expect(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE); },
-      [this]() { return expect(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON); },
+      [this]() { return consumeIf(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE); },
+      [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON); },
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
@@ -241,13 +257,17 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return expect(name, TokenType::IDENTIFIER, ErrorType::STRUCTMEMBER_EXPECTED_IDENTIFIER);
+        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::STRUCTMEMBER_EXPECTED_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON); },
+      [this]() { return consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON); },
       [this, &type]() {
-        return expect(type, isTypeIdentifier, ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER);
+        return consumeAndExtractIf(type, isTypeIdentifier,
+                                   ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER);
       },
-      [this]() { return expect(TokenType::SEMICOLON, ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON); },
+      [this]() {
+        return consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON);
+      },
   };
 
   if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
@@ -257,8 +277,76 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
   return StructDef::Member{std::move(name), std::move(type)};
 }
 
-std::unique_ptr<Definition> Parser::parseVariantDef() { return nullptr; }
-std::optional<VariantDef::Types> Parser::parseVariantTypes() { return std::nullopt; }
+/*
+ *VariantDef
+ *     = "variant", identifier, "{", [ variantTypes ], "}", ";";
+ */
+std::unique_ptr<Definition> Parser::parseVariantDef() {
+  auto position = m_token.position;
+
+  Identifier name;
+  VariantDef::Types types;
+
+  std::vector<std::function<bool()>> steps = {
+      [this]() {
+        return consumeIf(TokenType::VARIANT_KWRD, ErrorType::VARIANTDEF_EXPECTED_VARIANT_KWRD);
+      },
+      [this, &name]() {
+        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER);
+      },
+      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE); },
+      [this, &types]() {
+        // If something goes wrong, we'll just end up with an empty types list
+        types = parseVariantTypes();
+        return true;
+      },
+      [this]() { return consumeIf(TokenType::RBRACE, ErrorType::VARIANTDEF_EXPECTED_RBRACE); },
+      [this]() {
+        return consumeIf(TokenType::SEMICOLON, ErrorType::VARIANTDEF_EXPECTED_SEMICOLON);
+      },
+  };
+
+  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+    return nullptr;
+  }
+
+  return std::make_unique<VariantDef>(position, std::move(name), std::move(types));
+}
+
+/*
+ * variantTypes
+ *     = variantType, { ",", variantType };
+ */
+VariantDef::Types Parser::parseVariantTypes() {
+  VariantDef::Types types{};
+
+  auto type = parseVariantType();
+  if (type == std::nullopt) return types;
+  types.push_back(std::move(*type));
+
+  while (m_token.type == TokenType::COMMA) {
+    consumeToken();
+    type = parseVariantType();
+    if (type == std::nullopt) return types;
+    types.push_back(std::move(*type));
+  }
+
+  return types;
+}
+
+/*
+ * variantType
+ *     = typeIdentifier
+ */
+std::optional<VariantDef::Type> Parser::parseVariantType() {
+  if (!isTypeIdentifier(m_token.type)) {
+    return std::nullopt;
+  }
+  TypeIdentifier type;
+  extractAndConsume(type);
+  return type;
+}
 
 std::unique_ptr<Definition> Parser::parseFnDef() { return nullptr; }
 std::optional<FnDef::Params> Parser::parseFnParams() { return std::nullopt; }

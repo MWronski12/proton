@@ -2,17 +2,16 @@
 
 #include "parser_utils.h"
 
-static const std::vector<std::wstring> primitiveTypes = {
-    L"int", L"float", L"bool", L"char", L"string",
-};
+bool isPrimitiveType(TokenType tokenType) {
+  static const std::vector<TokenType> primitiveTypes = {
+      TokenType::INT_KWRD,  TokenType::FLOAT_KWRD,  TokenType::CHAR_KWRD,
+      TokenType::BOOL_KWRD, TokenType::STRING_KWRD,
+  };
 
-Identifier getIdentifier(const Token& token) { return token.readValue; }
-TypeIdentifier getTypeIdentifier(const Token& token) { return token.readValue; }
-
-bool isPrimitiveType(const Token& token) {
-  return std::find(primitiveTypes.cbegin(), primitiveTypes.cend(), token.readValue) !=
+  return std::find(primitiveTypes.cbegin(), primitiveTypes.cend(), tokenType) !=
          primitiveTypes.cend();
 }
-bool isTypeIdentifier(const Token& token) {
-  return isPrimitiveType(token) || token.type == TokenType::IDENTIFIER;
+
+bool isTypeIdentifier(TokenType tokenType) {
+  return isPrimitiveType(tokenType) || tokenType == TokenType::IDENTIFIER;
 }

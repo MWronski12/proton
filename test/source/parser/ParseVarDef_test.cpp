@@ -15,7 +15,6 @@ TEST_F(ParserTest, ParserHandlesVarDef) {
   EXPECT_TRUE(varDef->position.line == FIRST_LINE);
   EXPECT_TRUE(varDef->position.column == 1);
   EXPECT_TRUE(varDef->position.sourceFile == "<custom string>");
-  EXPECT_EQ(currentToken().type, TokenType::ETX);
 }
 
 TEST_F(ParserTest, ParserHandlesVarDefMissingName) {

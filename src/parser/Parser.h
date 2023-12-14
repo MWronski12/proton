@@ -25,10 +25,13 @@ class Parser {
 
   void consumeToken();
   void skipError(const TokenType delimiter);
-  bool expect(std::function<bool(const Token &token)> predicate, ErrorType err);
-  bool expect(std::wstring &out, std::function<bool(const Token &token)> predicate, ErrorType err);
-  bool expect(TokenType expectedType, ErrorType error);
-  bool expect(std::wstring &out, TokenType expectedType, ErrorType error);
+  bool consumeIf(TokenType expectedType, ErrorType error);
+  bool consumeIf(const std::function<bool(TokenType tokenType)> &predicate, ErrorType err);
+  void extractAndConsume(Identifier &out);
+  bool consumeAndExtractIf(Identifier &out,
+                           const std::function<bool(TokenType tokenType)> &predicate,
+                           ErrorType err);
+  bool consumeAndExtractIf(Identifier &out, TokenType expectedType, ErrorType error);
 
   /* ------------------------------- Definition ------------------------------- */
 
@@ -41,7 +44,8 @@ class Parser {
   std::optional<StructDef::Member> parseStructMember();
 
   std::unique_ptr<Definition> parseVariantDef();
-  std::optional<VariantDef::Types> parseVariantTypes();
+  VariantDef::Types parseVariantTypes();
+  std::optional<VariantDef::Type> parseVariantType();
 
   std::unique_ptr<Definition> parseFnDef();
   std::optional<FnDef::Params> parseFnParams();
