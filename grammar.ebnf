@@ -59,12 +59,12 @@ multiplicativeExpr
 unaryOpExpr
     = [ unaryOp ], functionalExpr;
 functionalExpr
-    = primaryExpr, { functionalOp };
+    = primaryExpr, { functionalOpExpr };
 
 primaryExpr
     = identifier
     | literal
-    | parenExpr 
+    | parenExpr
     | castExpr;
 
 parenExpr 
@@ -104,7 +104,7 @@ unaryOp                     (* prio 6 r-l *)
     = "!"
     | "-";
 
-functionalOp                (* prio 7 l-r *)
+functionalOpExpr            (* prio 7 l-r *)
     = fnCallOp 
     | memberAccessOp 
     | variantAccessOp;
