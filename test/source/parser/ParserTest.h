@@ -25,6 +25,7 @@ class ParserTest : public ::Test {
   auto parseConstDef() { return m_parser.parseConstDef(); }
 
   auto parseExpression() { return m_parser.parseExpression(); }
+  auto parseBlock() { return m_parser.parseBlock(); }
 
   auto parseStructMember() { return m_parser.parseStructMember(); }
   auto parseStructMembers() { return m_parser.parseStructMembers(); }
@@ -33,6 +34,11 @@ class ParserTest : public ::Test {
   auto parseVariantType() { return m_parser.parseVariantType(); }
   auto parseVariantTypes() { return m_parser.parseVariantTypes(); }
   auto parseVariantDef() { return m_parser.parseVariantDef(); }
+
+  auto parseFnReturnType() { return m_parser.parseFnReturnType(); }
+  auto parseFnParam() { return m_parser.parseFnParam(); }
+  auto parseFnParams() { return m_parser.parseFnParams(); }
+  auto parseFnDef() { return m_parser.parseFnDef(); }
 
   auto parseProgram() { return m_parser.parseProgram(); }
 

@@ -6,4 +6,7 @@
  * Block
  *     = "{", { Statement }, "}";
  */
-struct Block : public ASTNode {};
+struct Block : public ASTNode {
+ public:
+  Block(Position &&position) : ASTNode{std::move(position)} {}
+};

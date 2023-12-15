@@ -12,10 +12,15 @@ using TypeIdentifier = std::wstring;
  */
 struct ASTNode {
  public:
+  ASTNode(const ASTNode &) = delete;
+  ASTNode &operator=(const ASTNode &) = delete;
   ASTNode() = delete;
+
+  ASTNode(ASTNode &&) = default;
+  ASTNode &operator=(ASTNode &&) = default;
   virtual ~ASTNode() = default;
 
-  ASTNode(const Position &pos) : position{pos} {}
+  ASTNode(Position &&pos) : position{pos} {}
 
   Position position;
 };

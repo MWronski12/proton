@@ -104,7 +104,7 @@ TEST_F(ParserTest, ParserHandlesEmptyStructDef) {
   m_reader.load(L"");
   consumeToken();
 
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_STRUCT_KWRD, _)).Times(1);
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseStructDef();
   ASSERT_TRUE(result == nullptr);
 }

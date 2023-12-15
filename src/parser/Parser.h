@@ -27,11 +27,11 @@ class Parser {
   void skipError(const TokenType delimiter);
   bool consumeIf(TokenType expectedType, ErrorType error);
   bool consumeIf(const std::function<bool(TokenType tokenType)> &predicate, ErrorType err);
-  void extractAndConsume(Identifier &out);
-  bool consumeAndExtractIf(Identifier &out,
+  bool extractAndConsume(Identifier &out);
+  bool extractAndConsumeIf(Identifier &out,
                            const std::function<bool(TokenType tokenType)> &predicate,
                            ErrorType err);
-  bool consumeAndExtractIf(Identifier &out, TokenType expectedType, ErrorType error);
+  bool extractAndConsumeIf(Identifier &out, TokenType expectedType, ErrorType error);
 
   /* ------------------------------- Definition ------------------------------- */
 
@@ -48,7 +48,7 @@ class Parser {
   std::optional<VariantDef::Type> parseVariantType();
 
   std::unique_ptr<Definition> parseFnDef();
-  std::optional<FnDef::Params> parseFnParams();
+  FnDef::Params parseFnParams();
   std::optional<FnDef::Param> parseFnParam();
   std::optional<FnDef::ReturnType> parseFnReturnType();
 
@@ -56,11 +56,24 @@ class Parser {
   std::unique_ptr<Expression> parseExpression() {
     auto position = m_token.position;
     consumeToken();
-    return std::make_unique<Expression>(position);
+    return std::make_unique<Expression>(std::move(position));
   }
 
   /* --------------------------------- Block ---------------------------------- */
-  std::optional<Block> parseBlock() { return std::nullopt; }
+  std::optional<Block> parseBlock() {
+    if (m_token.type != TokenType::LBRACE) {
+      return std::nullopt;
+    }
+    auto position = m_token.position;
+    consumeToken();
+
+    while (m_token.type != TokenType::RBRACE) {
+      consumeToken();
+    }
+    consumeToken();
+
+    return Block{std::move(position)};
+  }
 
  private:
   Lexer &m_lexer;

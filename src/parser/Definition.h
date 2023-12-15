@@ -27,8 +27,8 @@ struct Definition : public ASTNode {
   Definition& operator=(Definition&&) = default;
   virtual ~Definition() override = default;
 
-  Definition(const Position& position, Identifier&& defName)
-      : ASTNode{position}, name{std::move(defName)} {}
+  Definition(Position&& position, Identifier&& defName)
+      : ASTNode{std::move(position)}, name{std::move(defName)} {}
 
   Identifier name;
 };
@@ -41,9 +41,9 @@ struct Definition : public ASTNode {
  */
 struct VarDef : public Definition {
  public:
-  VarDef(const Position& position, Identifier&& varName, TypeIdentifier&& varType,
+  VarDef(Position&& position, Identifier&& varName, TypeIdentifier&& varType,
          std::unique_ptr<Expression>&& varValue)
-      : Definition{position, std::move(varName)},
+      : Definition{std::move(position), std::move(varName)},
         type{std::move(varType)},
         value{std::move(varValue)} {}
 
@@ -59,9 +59,9 @@ struct VarDef : public Definition {
  */
 struct ConstDef : public Definition {
  public:
-  ConstDef(const Position& position, Identifier&& varName, TypeIdentifier&& varType,
+  ConstDef(Position&& position, Identifier&& varName, TypeIdentifier&& varType,
            std::unique_ptr<Expression>&& varValue)
-      : Definition{position, std::move(varName)},
+      : Definition{std::move(position), std::move(varName)},
         type{std::move(varType)},
         value{std::move(varValue)} {}
 
@@ -90,8 +90,8 @@ struct StructDef : public Definition {
    */
   using Members = std::unordered_map<Identifier, Member>;
 
-  StructDef(const Position& position, Identifier&& structName, Members&& structMembers)
-      : Definition{position, std::move(structName)}, members{std::move(structMembers)} {}
+  StructDef(Position&& position, Identifier&& structName, Members&& structMembers)
+      : Definition{std::move(position), std::move(structName)}, members{std::move(structMembers)} {}
 
   Members members;
 };
@@ -115,8 +115,8 @@ struct VariantDef : public Definition {
    */
   using Types = std::vector<Type>;
 
-  VariantDef(const Position& position, Identifier&& variantName, Types&& variantTypes)
-      : Definition{position, std::move(variantName)}, types{std::move(variantTypes)} {}
+  VariantDef(Position&& position, Identifier&& variantName, Types&& variantTypes)
+      : Definition{std::move(position), std::move(variantName)}, types{std::move(variantTypes)} {}
 
   Types types;
 };
@@ -154,9 +154,9 @@ struct FnDef : public Definition {
    */
   using ReturnType = TypeIdentifier;
 
-  FnDef(const Position& position, Identifier&& fnName, Params&& fnParams,
-        TypeIdentifier&& fnReturnType, Block&& fnBody)
-      : Definition{position, std::move(fnName)},
+  FnDef(Position&& position, Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType,
+        Block&& fnBody)
+      : Definition{std::move(position), std::move(fnName)},
         parameters{std::move(fnParams)},
         returnType{std::move(fnReturnType)},
         body{std::move(fnBody)} {}

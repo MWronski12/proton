@@ -47,7 +47,7 @@ TEST_F(ParserTest, ParserHandlesVariantTypes) {
 /* ------------------------------- VariantDef ------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyVariantDef) {
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTDEF_EXPECTED_VARIANT_KWRD, _)).Times(1);
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   m_reader.load(L"");
   consumeToken();
 
@@ -97,10 +97,10 @@ TEST_F(ParserTest, ParserHandlesVariantDefAllowsTrailingComma) {
 }
 
 TEST_F(ParserTest, ParserHandlesVariantDefDoesntAllowCommaOnly) {
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTDEF_EXPECTED_RBRACE, _)).Times(1);
   m_reader.load(L"variant Foo { , };");
   consumeToken();
 
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTDEF_EXPECTED_RBRACE, _)).Times(1);
   auto result = parseVariantDef();
   ASSERT_TRUE(result == nullptr);
 }

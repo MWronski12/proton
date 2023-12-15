@@ -19,9 +19,15 @@ void Parser::skipError(const TokenType delimiter) {
   consumeToken();
 }
 
-void Parser::extractAndConsume(Identifier& out) {
-  out = m_token.representation;
-  consumeToken();
+bool Parser::extractAndConsume(Identifier& out) {
+  try {
+    out = m_token.representation;
+    consumeToken();
+    return true;
+  } catch (std::exception& e) {
+    m_errorHandler(ErrorType::INTERNAL_ERROR, m_token.position);
+    return false;
+  }
 }
 
 bool Parser::consumeIf(TokenType expectedType, ErrorType error) {
@@ -42,7 +48,7 @@ bool Parser::consumeIf(const std::function<bool(TokenType tokenType)>& predicate
   return false;
 }
 
-bool Parser::consumeAndExtractIf(Identifier& out,
+bool Parser::extractAndConsumeIf(Identifier& out,
                                  const std::function<bool(TokenType tokenType)>& predicate,
                                  ErrorType err) {
   if (predicate(m_token.type)) {
@@ -54,7 +60,7 @@ bool Parser::consumeAndExtractIf(Identifier& out,
   return false;
 }
 
-bool Parser::consumeAndExtractIf(Identifier& out, TokenType expectedType, ErrorType error) {
+bool Parser::extractAndConsumeIf(Identifier& out, TokenType expectedType, ErrorType error) {
   if (m_token.type == expectedType) {
     out = m_token.representation;
     consumeToken();
@@ -74,7 +80,6 @@ std::optional<Program> Parser::parseProgram() {
     // Redefinition
     if (definitions.find(definition->name) != definitions.end()) {
       m_errorHandler(ErrorType::REDEFINITION, definition->position);
-      continue;
     }
     // Success, add to map
     else {
@@ -85,7 +90,7 @@ std::optional<Program> Parser::parseProgram() {
     definition = parseDefinition();
   }
 
-  return Program{position, std::move(definitions)};
+  return Program{std::move(position), std::move(definitions)};
 }
 
 /* -------------------------------------------------------------------------- */
@@ -115,23 +120,24 @@ std::unique_ptr<Definition> Parser::parseDefinition() {
  * VarDef
  *     = "var", identifier, ":", typeIdentifier, "=", expression, ";";
  */
-#include <iostream>
 std::unique_ptr<Definition> Parser::parseVarDef() {
+  if (m_token.type != TokenType::VAR_KWRD) {
+    return nullptr;
+  }
   auto position = m_token.position;
-
+  consumeToken();
   std::wstring name;
   std::wstring type;
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
-      [this]() { return consumeIf(TokenType::VAR_KWRD, ErrorType::VARDEF_EXPECTED_VAR_KWRD); },
       [this, &name]() {
-        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
                                    ErrorType::VARDEF_EXPECTED_IDENTIFIER);
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::VARDEF_EXPECTED_COLON); },
       [this, &type]() {
-        return consumeAndExtractIf(type, isTypeIdentifier,
+        return extractAndConsumeIf(type, isTypeIdentifier,
                                    ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER);
       },
       [this]() { return consumeIf(TokenType::ASSIGNMENT, ErrorType::VARDEF_EXPECTED_ASSIGNMENT); },
@@ -146,7 +152,8 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
     return nullptr;
   }
 
-  return std::make_unique<VarDef>(position, std::move(name), std::move(type), std::move(expr));
+  return std::make_unique<VarDef>(std::move(position), std::move(name), std::move(type),
+                                  std::move(expr));
 }
 
 /*
@@ -154,23 +161,24 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
  *     = "const", identifier, ":", typeIdentifier, "=", expression, ";";
  */
 std::unique_ptr<Definition> Parser::parseConstDef() {
+  if (m_token.type != TokenType::CONST_KWRD) {
+    return nullptr;
+  }
   auto position = m_token.position;
+  consumeToken();
 
   Identifier name;
   TypeIdentifier type;
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
-      [this]() {
-        return consumeIf(TokenType::CONST_KWRD, ErrorType::CONSTDEF_EXPECTED_CONST_KWRD);
-      },
       [this, &name]() {
-        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
                                    ErrorType::CONSTDEF_EXPECTED_IDENTIFIER);
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::CONSTDEF_EXPECTED_COLON); },
       [this, &type]() {
-        return consumeAndExtractIf(type, isTypeIdentifier,
+        return extractAndConsumeIf(type, isTypeIdentifier,
                                    ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER);
       },
       [this]() {
@@ -184,7 +192,8 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
     return nullptr;
   }
 
-  return std::make_unique<ConstDef>(position, std::move(name), std::move(type), std::move(expr));
+  return std::make_unique<ConstDef>(std::move(position), std::move(name), std::move(type),
+                                    std::move(expr));
 }
 
 /*
@@ -192,17 +201,18 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
  *     = "struct", identifier, "{", [ structMembers ], "}", ";";
  */
 std::unique_ptr<Definition> Parser::parseStructDef() {
+  if (m_token.type != TokenType::STRUCT_KWRD) {
+    return nullptr;
+  }
   auto position = m_token.position;
+  consumeToken();
 
   Identifier name;
   StructDef::Members members;
 
   std::vector<std::function<bool()>> steps = {
-      [this]() {
-        return consumeIf(TokenType::STRUCT_KWRD, ErrorType::STRUCTDEF_EXPECTED_STRUCT_KWRD);
-      },
       [this, &name]() {
-        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
                                    ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER);
       },
       [this]() { return consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
@@ -219,7 +229,7 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
     return nullptr;
   }
 
-  return std::make_unique<StructDef>(position, std::move(name), std::move(members));
+  return std::make_unique<StructDef>(std::move(position), std::move(name), std::move(members));
 }
 
 /*
@@ -257,12 +267,13 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::STRUCTMEMBER_EXPECTED_IDENTIFIER);
+        name = m_token.representation;
+        consumeToken();
+        return true;
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON); },
       [this, &type]() {
-        return consumeAndExtractIf(type, isTypeIdentifier,
+        return extractAndConsumeIf(type, isTypeIdentifier,
                                    ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER);
       },
       [this]() {
@@ -282,17 +293,18 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
  *     = "variant", identifier, "{", [ variantTypes ], "}", ";";
  */
 std::unique_ptr<Definition> Parser::parseVariantDef() {
+  if (m_token.type != TokenType::VARIANT_KWRD) {
+    return nullptr;
+  }
   auto position = m_token.position;
+  consumeToken();
 
   Identifier name;
   VariantDef::Types types;
 
   std::vector<std::function<bool()>> steps = {
-      [this]() {
-        return consumeIf(TokenType::VARIANT_KWRD, ErrorType::VARIANTDEF_EXPECTED_VARIANT_KWRD);
-      },
       [this, &name]() {
-        return consumeAndExtractIf(name, TokenType::IDENTIFIER,
+        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
                                    ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER);
       },
       [this]() { return consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE); },
@@ -311,7 +323,7 @@ std::unique_ptr<Definition> Parser::parseVariantDef() {
     return nullptr;
   }
 
-  return std::make_unique<VariantDef>(position, std::move(name), std::move(types));
+  return std::make_unique<VariantDef>(std::move(position), std::move(name), std::move(types));
 }
 
 /*
@@ -348,7 +360,134 @@ std::optional<VariantDef::Type> Parser::parseVariantType() {
   return type;
 }
 
-std::unique_ptr<Definition> Parser::parseFnDef() { return nullptr; }
-std::optional<FnDef::Params> Parser::parseFnParams() { return std::nullopt; }
-std::optional<FnDef::Param> Parser::parseFnParam() { return std::nullopt; }
-std::optional<FnDef::ReturnType> Parser::parseFnReturnType() { return std::nullopt; }
+/*
+ * FnDef
+ *    = "fn", identifier, "(", [ fnParams ], ")", returnTypeAnnotation, Block;
+ */
+std::unique_ptr<Definition> Parser::parseFnDef() {
+  if (m_token.type != TokenType::FN_KWRD) {
+    return nullptr;
+  }
+  consumeToken();
+  auto position = m_token.position;
+
+  Identifier name;
+  FnDef::Params params;
+  std::optional<FnDef::ReturnType> returnType;
+  std::optional<Block> body;
+
+  std::vector<std::function<bool()>> steps = {
+      [this, &name]() {
+        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::FNDEF_EXPECTED_IDENTIFIER);
+      },
+      [this]() { return consumeIf(TokenType::LPAREN, ErrorType::FNDEF_EXPECTED_LPAREN); },
+      [this, &params]() {
+        params = parseFnParams();
+        return true;
+      },
+      [this]() { return consumeIf(TokenType::RPAREN, ErrorType::FNDEF_EXPECTED_RPAREN); },
+      [this, &returnType]() {
+        auto result = parseFnReturnType();
+        if (result == std::nullopt) {
+          m_errorHandler(ErrorType::FNDEF_EXPECTED_RETURN_TYPE, m_token.position);
+          return false;
+        }
+        returnType = std::move(*result);
+        return true;
+      },
+      [this, &body]() {
+        auto result = parseBlock();
+        if (result == std::nullopt) {
+          m_errorHandler(ErrorType::FNDEF_EXPECTED_BLOCK, m_token.position);
+          return false;
+        }
+        body = std::move(*result);
+        return true;
+      },
+  };
+
+  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+    return nullptr;
+  }
+
+  return std::make_unique<FnDef>(std::move(position), std::move(name), std::move(params),
+                                 std::move(*returnType), std::move(*body));
+}
+
+/*
+ * fnParams
+ *    = fnParam, { ",", fnParam };
+ */
+FnDef::Params Parser::parseFnParams() {
+  FnDef::Params params{};
+
+  auto param = parseFnParam();
+  if (param == std::nullopt) return params;
+
+  params.push_back(std::move(*param));
+  while (m_token.type == TokenType::COMMA) {
+    consumeToken();
+    param = parseFnParam();
+    if (param == std::nullopt) return params;
+    params.push_back(std::move(*param));
+  }
+
+  return params;
+}
+
+/*
+ * fnParam
+ *    = [ "const" ], identifier, ":", typeIdentifier;
+ */
+std::optional<FnDef::Param> Parser::parseFnParam() {
+  if (m_token.type != TokenType::CONST_KWRD && m_token.type != TokenType::IDENTIFIER) {
+    return std::nullopt;
+  }
+
+  bool isConst = false;
+  Identifier name;
+  TypeIdentifier type;
+
+  std::vector<std::function<bool()>> steps = {
+      [this, &isConst]() {
+        if (m_token.type == TokenType::CONST_KWRD) {
+          isConst = true;
+          consumeToken();
+        }
+        return true;
+      },
+      [this, &name]() {
+        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
+                                   ErrorType::FNPARAM_EXPECTED_IDENTIFIER);
+      },
+      [this]() { return consumeIf(TokenType::COLON, ErrorType::FNPARAM_EXPECTED_COLON); },
+      [this, &type]() {
+        return extractAndConsumeIf(type, isTypeIdentifier,
+                                   ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER);
+      },
+  };
+
+  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+    return std::nullopt;
+  }
+
+  return FnDef::Param{isConst, std::move(name), std::move(type)};
+}
+
+/*
+ * fnReturnType
+ *    = "->", typeIdentifier;
+ */
+std::optional<FnDef::ReturnType> Parser::parseFnReturnType() {
+  if (m_token.type != TokenType::ARROW) {
+    return std::nullopt;
+  }
+  consumeToken();
+  TypeIdentifier type;
+  if (!extractAndConsumeIf(type, isTypeIdentifier,
+                           ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER)) {
+    return std::nullopt;
+  };
+  return type;
+}
