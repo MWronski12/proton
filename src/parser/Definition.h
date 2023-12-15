@@ -146,7 +146,7 @@ struct FnDef : public Definition {
    * fnParams
    *    = fnParam, { ",", fnParam };
    */
-  using Params = std::vector<Param>;
+  using Params = std::unordered_map<Identifier, Param>;
 
   /*
    * fnReturnType

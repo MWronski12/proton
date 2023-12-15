@@ -33,6 +33,10 @@ class Parser {
                            ErrorType err);
   bool extractAndConsumeIf(Identifier &out, TokenType expectedType, ErrorType error);
 
+  /* ------------------------------- Identifier ------------------------------- */
+  std::optional<Identifier> getIdentifier();
+  std::optional<TypeIdentifier> getTypeIdentifier();
+
   /* ------------------------------- Definition ------------------------------- */
 
   std::unique_ptr<Definition> parseDefinition();
@@ -40,15 +44,15 @@ class Parser {
   std::unique_ptr<Definition> parseConstDef();
 
   std::unique_ptr<Definition> parseStructDef();
-  StructDef::Members parseStructMembers();
+  std::optional<StructDef::Members> parseStructMembers();
   std::optional<StructDef::Member> parseStructMember();
 
   std::unique_ptr<Definition> parseVariantDef();
-  VariantDef::Types parseVariantTypes();
+  std::optional<VariantDef::Types> parseVariantTypes();
   std::optional<VariantDef::Type> parseVariantType();
 
   std::unique_ptr<Definition> parseFnDef();
-  FnDef::Params parseFnParams();
+  std::optional<FnDef::Params> parseFnParams();
   std::optional<FnDef::Param> parseFnParam();
   std::optional<FnDef::ReturnType> parseFnReturnType();
 

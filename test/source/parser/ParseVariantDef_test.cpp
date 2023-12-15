@@ -29,7 +29,8 @@ TEST_F(ParserTest, ParserHandlesEmptyVariantTypes) {
   consumeToken();
 
   auto result = parseVariantTypes();
-  EXPECT_EQ(result.empty(), true);
+  ASSERT_TRUE(result != std::nullopt);
+  ASSERT_TRUE(result->empty());
 }
 
 TEST_F(ParserTest, ParserHandlesVariantTypes) {
@@ -38,10 +39,20 @@ TEST_F(ParserTest, ParserHandlesVariantTypes) {
   consumeToken();
 
   auto result = parseVariantTypes();
-  ASSERT_EQ(result.size(), 3);
-  EXPECT_EQ(result[0], TypeIdentifier(L"int"));
-  EXPECT_EQ(result[1], TypeIdentifier(L"float"));
-  EXPECT_EQ(result[2], TypeIdentifier(L"string"));
+  ASSERT_TRUE(result != std::nullopt);
+  ASSERT_EQ(result->size(), 3);
+  EXPECT_EQ(result->at(0), TypeIdentifier(L"int"));
+  EXPECT_EQ(result->at(1), TypeIdentifier(L"float"));
+  EXPECT_EQ(result->at(2), TypeIdentifier(L"string"));
+}
+
+TEST_F(ParserTest, ParserHandlesVariantTypeRedefintion) {
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTTYPE_REDEFINITION, _)).Times(1);
+  m_reader.load(L"int, int");
+  consumeToken();
+
+  auto result = parseVariantTypes();
+  ASSERT_TRUE(result == std::nullopt);
 }
 
 /* ------------------------------- VariantDef ------------------------------- */

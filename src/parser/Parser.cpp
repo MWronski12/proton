@@ -19,17 +19,6 @@ void Parser::skipError(const TokenType delimiter) {
   consumeToken();
 }
 
-bool Parser::extractAndConsume(Identifier& out) {
-  try {
-    out = m_token.representation;
-    consumeToken();
-    return true;
-  } catch (std::exception& e) {
-    m_errorHandler(ErrorType::INTERNAL_ERROR, m_token.position);
-    return false;
-  }
-}
-
 bool Parser::consumeIf(TokenType expectedType, ErrorType error) {
   if (m_token.type == expectedType) {
     consumeToken();
@@ -48,27 +37,25 @@ bool Parser::consumeIf(const std::function<bool(TokenType tokenType)>& predicate
   return false;
 }
 
-bool Parser::extractAndConsumeIf(Identifier& out,
-                                 const std::function<bool(TokenType tokenType)>& predicate,
-                                 ErrorType err) {
-  if (predicate(m_token.type)) {
-    out = m_token.representation;
-    consumeToken();
-    return true;
+std::optional<Identifier> Parser::getIdentifier() {
+  if (m_token.type != TokenType::IDENTIFIER) {
+    return std::nullopt;
   }
-  m_errorHandler(err, m_token.position);
-  return false;
+  Identifier identifier = m_token.representation;
+  consumeToken();
+  return identifier;
 }
 
-bool Parser::extractAndConsumeIf(Identifier& out, TokenType expectedType, ErrorType error) {
-  if (m_token.type == expectedType) {
-    out = m_token.representation;
-    consumeToken();
-    return true;
+std::optional<TypeIdentifier> Parser::getTypeIdentifier() {
+  if (!isTypeIdentifier(m_token.type)) {
+    return std::nullopt;
   }
-  m_errorHandler(error, m_token.position);
-  return false;
+  TypeIdentifier identifier = m_token.representation;
+  consumeToken();
+  return identifier;
 }
+
+/* --------------------------------- Program -------------------------------- */
 
 std::optional<Program> Parser::parseProgram() {
   auto position = m_token.position;
@@ -126,33 +113,44 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
   }
   auto position = m_token.position;
   consumeToken();
-  std::wstring name;
-  std::wstring type;
+
+  std::optional<Identifier> name;
+  std::optional<TypeIdentifier> type;
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::VARDEF_EXPECTED_IDENTIFIER);
+        if ((name = getIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::VARDEF_EXPECTED_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::VARDEF_EXPECTED_COLON); },
       [this, &type]() {
-        return extractAndConsumeIf(type, isTypeIdentifier,
-                                   ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER);
+        if ((type = getTypeIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() { return consumeIf(TokenType::ASSIGNMENT, ErrorType::VARDEF_EXPECTED_ASSIGNMENT); },
       [this, &expr]() {
-        expr = parseExpression();
-        return expr == nullptr ? false : true;
+        if ((expr = parseExpression()) == nullptr) {
+          m_errorHandler(ErrorType::VARDEF_EXPECTED_EXPRESSION, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::VARDEF_EXPECTED_SEMICOLON); },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return nullptr;
   }
 
-  return std::make_unique<VarDef>(std::move(position), std::move(name), std::move(type),
+  return std::make_unique<VarDef>(std::move(position), std::move(*name), std::move(*type),
                                   std::move(expr));
 }
 
@@ -167,32 +165,45 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
   auto position = m_token.position;
   consumeToken();
 
-  Identifier name;
-  TypeIdentifier type;
+  std::optional<Identifier> name;
+  std::optional<TypeIdentifier> type;
   std::unique_ptr<Expression> expr;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::CONSTDEF_EXPECTED_IDENTIFIER);
+        if ((name = getIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::CONSTDEF_EXPECTED_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::CONSTDEF_EXPECTED_COLON); },
       [this, &type]() {
-        return extractAndConsumeIf(type, isTypeIdentifier,
-                                   ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER);
+        if ((type = getTypeIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() {
         return consumeIf(TokenType::ASSIGNMENT, ErrorType::CONSTDEF_EXPECTED_ASSIGNMENT);
       },
-      [this, &expr]() { return (expr = parseExpression()) != nullptr; },
+      [this, &expr]() {
+        if ((expr = parseExpression()) == nullptr) {
+          m_errorHandler(ErrorType::CONSTDEF_EXPECTED_EXPRESSION, m_token.position);
+          return false;
+        }
+        return true;
+      },
       [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::CONSTDEF_EXPECTED_SEMICOLON); },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return nullptr;
   }
 
-  return std::make_unique<ConstDef>(std::move(position), std::move(name), std::move(type),
+  return std::make_unique<ConstDef>(std::move(position), std::move(*name), std::move(*type),
                                     std::move(expr));
 }
 
@@ -207,42 +218,43 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
   auto position = m_token.position;
   consumeToken();
 
-  Identifier name;
-  StructDef::Members members;
+  std::optional<Identifier> name;
+  std::optional<StructDef::Members> members;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER);
-      },
-      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
-      [this, &members]() {
-        // If something goes wrong, we'll just end up with an empty members list
-        members = parseStructMembers();
+        if ((name = getIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER, m_token.position);
+          return false;
+        }
         return true;
       },
+      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
+      [this, &members]() { return ((members = parseStructMembers()) != std::nullopt); },
       [this]() { return consumeIf(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE); },
       [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON); },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return nullptr;
   }
 
-  return std::make_unique<StructDef>(std::move(position), std::move(name), std::move(members));
+  return std::make_unique<StructDef>(std::move(position), std::move(*name), std::move(*members));
 }
 
 /*
  * structMembers
  *  = structMember, { structMember };
  */
-StructDef::Members Parser::parseStructMembers() {
+std::optional<StructDef::Members> Parser::parseStructMembers() {
   StructDef::Members members{};
 
   auto member = parseStructMember();
   while (member != std::nullopt) {
     if (members.find(member->name) != members.end()) {
       m_errorHandler(ErrorType::STRUCTMEMBER_REDEFINITION, m_token.position);
+      return std::nullopt;
     } else {
       members.insert(std::make_pair(member->name, std::move(*member)));
     }
@@ -262,30 +274,35 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
 
   auto position = m_token.position;
 
-  Identifier name;
-  TypeIdentifier type;
+  std::optional<Identifier> name;
+  std::optional<TypeIdentifier> type;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        name = m_token.representation;
-        consumeToken();
+        if ((name = getIdentifier()) == std::nullopt) {
+          return false;
+        }
         return true;
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON); },
       [this, &type]() {
-        return extractAndConsumeIf(type, isTypeIdentifier,
-                                   ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER);
+        if ((type = getTypeIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() {
         return consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON);
       },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return std::nullopt;
   }
 
-  return StructDef::Member{std::move(name), std::move(type)};
+  return StructDef::Member{std::move(*name), std::move(*type)};
 }
 
 /*
@@ -299,38 +316,38 @@ std::unique_ptr<Definition> Parser::parseVariantDef() {
   auto position = m_token.position;
   consumeToken();
 
-  Identifier name;
-  VariantDef::Types types;
+  std::optional<Identifier> name;
+  std::optional<VariantDef::Types> types;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER);
-      },
-      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE); },
-      [this, &types]() {
-        // If something goes wrong, we'll just end up with an empty types list
-        types = parseVariantTypes();
+        if ((name = getIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER, m_token.position);
+          return false;
+        }
         return true;
       },
+      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE); },
+      [this, &types]() { return ((types = parseVariantTypes()) != std::nullopt); },
       [this]() { return consumeIf(TokenType::RBRACE, ErrorType::VARIANTDEF_EXPECTED_RBRACE); },
       [this]() {
         return consumeIf(TokenType::SEMICOLON, ErrorType::VARIANTDEF_EXPECTED_SEMICOLON);
       },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return nullptr;
   }
 
-  return std::make_unique<VariantDef>(std::move(position), std::move(name), std::move(types));
+  return std::make_unique<VariantDef>(std::move(position), std::move(*name), std::move(*types));
 }
 
 /*
  * variantTypes
  *     = variantType, { ",", variantType };
  */
-VariantDef::Types Parser::parseVariantTypes() {
+std::optional<VariantDef::Types> Parser::parseVariantTypes() {
   VariantDef::Types types{};
 
   auto type = parseVariantType();
@@ -341,6 +358,10 @@ VariantDef::Types Parser::parseVariantTypes() {
     consumeToken();
     type = parseVariantType();
     if (type == std::nullopt) return types;
+    if (std::find(types.begin(), types.end(), *type) != types.end()) {
+      m_errorHandler(ErrorType::VARIANTTYPE_REDEFINITION, m_token.position);
+      return std::nullopt;
+    }
     types.push_back(std::move(*type));
   }
 
@@ -351,14 +372,7 @@ VariantDef::Types Parser::parseVariantTypes() {
  * variantType
  *     = typeIdentifier
  */
-std::optional<VariantDef::Type> Parser::parseVariantType() {
-  if (!isTypeIdentifier(m_token.type)) {
-    return std::nullopt;
-  }
-  TypeIdentifier type;
-  extractAndConsume(type);
-  return type;
-}
+std::optional<VariantDef::Type> Parser::parseVariantType() { return getTypeIdentifier(); }
 
 /*
  * FnDef
@@ -371,47 +385,44 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
   consumeToken();
   auto position = m_token.position;
 
-  Identifier name;
-  FnDef::Params params;
+  std::optional<Identifier> name;
+  std::optional<FnDef::Params> params;
   std::optional<FnDef::ReturnType> returnType;
   std::optional<Block> body;
 
   std::vector<std::function<bool()>> steps = {
       [this, &name]() {
-        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::FNDEF_EXPECTED_IDENTIFIER);
-      },
-      [this]() { return consumeIf(TokenType::LPAREN, ErrorType::FNDEF_EXPECTED_LPAREN); },
-      [this, &params]() {
-        params = parseFnParams();
+        if ((name = getIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::FNDEF_EXPECTED_IDENTIFIER, m_token.position);
+          return false;
+        }
         return true;
       },
+      [this]() { return consumeIf(TokenType::LPAREN, ErrorType::FNDEF_EXPECTED_LPAREN); },
+      [this, &params]() { return ((params = parseFnParams()) != std::nullopt); },
       [this]() { return consumeIf(TokenType::RPAREN, ErrorType::FNDEF_EXPECTED_RPAREN); },
       [this, &returnType]() {
-        auto result = parseFnReturnType();
-        if (result == std::nullopt) {
+        if ((returnType = parseFnReturnType()) == std::nullopt) {
           m_errorHandler(ErrorType::FNDEF_EXPECTED_RETURN_TYPE, m_token.position);
           return false;
         }
-        returnType = std::move(*result);
         return true;
       },
       [this, &body]() {
-        auto result = parseBlock();
-        if (result == std::nullopt) {
+        if ((body = parseBlock()) == std::nullopt) {
           m_errorHandler(ErrorType::FNDEF_EXPECTED_BLOCK, m_token.position);
           return false;
         }
-        body = std::move(*result);
         return true;
       },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return nullptr;
   }
 
-  return std::make_unique<FnDef>(std::move(position), std::move(name), std::move(params),
+  return std::make_unique<FnDef>(std::move(position), std::move(*name), std::move(*params),
                                  std::move(*returnType), std::move(*body));
 }
 
@@ -419,18 +430,22 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
  * fnParams
  *    = fnParam, { ",", fnParam };
  */
-FnDef::Params Parser::parseFnParams() {
+std::optional<FnDef::Params> Parser::parseFnParams() {
   FnDef::Params params{};
 
   auto param = parseFnParam();
   if (param == std::nullopt) return params;
 
-  params.push_back(std::move(*param));
+  params.insert(std::make_pair(param->name, std::move(*param)));
   while (m_token.type == TokenType::COMMA) {
     consumeToken();
     param = parseFnParam();
     if (param == std::nullopt) return params;
-    params.push_back(std::move(*param));
+    if (params.find(param->name) != params.end()) {
+      m_errorHandler(ErrorType::FNPARAM_REDEFINITION, m_token.position);
+      return std::nullopt;
+    }
+    params.insert(std::make_pair(param->name, std::move(*param)));
   }
 
   return params;
@@ -446,8 +461,8 @@ std::optional<FnDef::Param> Parser::parseFnParam() {
   }
 
   bool isConst = false;
-  Identifier name;
-  TypeIdentifier type;
+  std::optional<Identifier> name;
+  std::optional<TypeIdentifier> type;
 
   std::vector<std::function<bool()>> steps = {
       [this, &isConst]() {
@@ -458,21 +473,28 @@ std::optional<FnDef::Param> Parser::parseFnParam() {
         return true;
       },
       [this, &name]() {
-        return extractAndConsumeIf(name, TokenType::IDENTIFIER,
-                                   ErrorType::FNPARAM_EXPECTED_IDENTIFIER);
+        if ((name = getIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::FNPARAM_EXPECTED_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
       [this]() { return consumeIf(TokenType::COLON, ErrorType::FNPARAM_EXPECTED_COLON); },
       [this, &type]() {
-        return extractAndConsumeIf(type, isTypeIdentifier,
-                                   ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER);
+        if ((type = getTypeIdentifier()) == std::nullopt) {
+          m_errorHandler(ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+          return false;
+        }
+        return true;
       },
   };
 
-  if (!std::all_of(steps.begin(), steps.end(), [](auto&& step) { return step(); })) {
+  if (!std::all_of(steps.begin(), steps.end(),
+                   [](const std::function<bool()>& step) { return step(); })) {
     return std::nullopt;
   }
 
-  return FnDef::Param{isConst, std::move(name), std::move(type)};
+  return FnDef::Param{isConst, std::move(*name), std::move(*type)};
 }
 
 /*
@@ -484,10 +506,10 @@ std::optional<FnDef::ReturnType> Parser::parseFnReturnType() {
     return std::nullopt;
   }
   consumeToken();
-  TypeIdentifier type;
-  if (!extractAndConsumeIf(type, isTypeIdentifier,
-                           ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER)) {
+  auto type = getTypeIdentifier();
+  if (type == std::nullopt) {
+    m_errorHandler(ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER, m_token.position);
     return std::nullopt;
-  };
+  }
   return type;
 }

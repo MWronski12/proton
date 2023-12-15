@@ -73,7 +73,7 @@ TEST_F(ParserTest, ParserHandlesEmptyStructMembers) {
   consumeToken();
 
   auto result = parseStructMembers();
-  EXPECT_TRUE(result.empty());
+  EXPECT_TRUE(result->empty());
 }
 
 TEST_F(ParserTest, ParserHandlesStructMembers) {
@@ -81,19 +81,29 @@ TEST_F(ParserTest, ParserHandlesStructMembers) {
   m_reader.load(L" x: int; y : int; z : int; }");
   consumeToken();
 
-  StructDef::Members result = parseStructMembers();
+  auto result = parseStructMembers();
+  auto members = result.value();
 
-  ASSERT_TRUE(result.find(L"x") != result.end());
-  EXPECT_EQ(result[L"x"].name, Identifier(L"x"));
-  EXPECT_EQ(result[L"x"].type, TypeIdentifier(L"int"));
+  ASSERT_TRUE(members.find(L"x") != members.end());
+  EXPECT_EQ(members[L"x"].name, Identifier(L"x"));
+  EXPECT_EQ(members[L"x"].type, TypeIdentifier(L"int"));
 
-  ASSERT_TRUE(result.find(L"y") != result.end());
-  EXPECT_EQ(result[L"y"].name, Identifier(L"y"));
-  EXPECT_EQ(result[L"y"].type, TypeIdentifier(L"int"));
+  ASSERT_TRUE(members.find(L"y") != members.end());
+  EXPECT_EQ(members[L"y"].name, Identifier(L"y"));
+  EXPECT_EQ(members[L"y"].type, TypeIdentifier(L"int"));
 
-  ASSERT_TRUE(result.find(L"z") != result.end());
-  EXPECT_EQ(result[L"z"].name, Identifier(L"z"));
-  EXPECT_EQ(result[L"z"].type, TypeIdentifier(L"int"));
+  ASSERT_TRUE(members.find(L"z") != members.end());
+  EXPECT_EQ(members[L"z"].name, Identifier(L"z"));
+  EXPECT_EQ(members[L"z"].type, TypeIdentifier(L"int"));
+}
+
+TEST_F(ParserTest, ParserHandlesStructMemberRedefinition) {
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTMEMBER_REDEFINITION, _)).Times(1);
+  m_reader.load(L"x: int; x : float; }");
+  consumeToken();
+
+  auto result = parseStructMembers();
+  ASSERT_TRUE(result == std::nullopt);
 }
 
 /* -------------------------------------------------------------------------- */

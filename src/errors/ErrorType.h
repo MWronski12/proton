@@ -43,6 +43,7 @@ enum class ErrorType {
   VARIANTDEF_EXPECTED_LBRACE,
   VARIANTDEF_EXPECTED_RBRACE,
   VARIANTDEF_EXPECTED_SEMICOLON,
+  VARIANTTYPE_REDEFINITION,
 
   // Fn Definition
   FNDEF_EXPECTED_IDENTIFIER,
@@ -53,6 +54,7 @@ enum class ErrorType {
   FNPARAM_EXPECTED_IDENTIFIER,
   FNPARAM_EXPECTED_COLON,
   FNPARAM_EXPECTED_TYPE_IDENTIFIER,
+  FNPARAM_REDEFINITION,
   FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
 
   // Semantic Errors
@@ -137,6 +139,7 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected closing brace in variant definition!"}},
     {ErrorType::VARIANTDEF_EXPECTED_SEMICOLON,
      {SYNTAX_ERROR, "Missing semicolon at the end of variant definition!"}},
+    {ErrorType::VARIANTTYPE_REDEFINITION, {SEMANTIC_ERROR, "Variant type redefinition!"}},
 
     // Fn Definition
     {ErrorType::FNDEF_EXPECTED_IDENTIFIER,
@@ -154,6 +157,7 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected colon in function parameter definition!"}},
     {ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in function parameter definition!"}},
+    {ErrorType::FNPARAM_REDEFINITION, {SEMANTIC_ERROR, "Function parameter redefinition!"}},
     {ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in function return type definition!"}},
 

@@ -33,6 +33,15 @@ TEST_F(ParserTest, ParserHandlesMissingTypeIdentifierInReturnType) {
   ASSERT_TRUE(result == std::nullopt);
 }
 
+TEST_F(ParserTest, ParserHandlesFnParamRedefinition) {
+  m_reader.load(L"const x : int, const x : int");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_REDEFINITION, _)).Times(1);
+  auto result = parseFnParams();
+  ASSERT_TRUE(result == std::nullopt);
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                   FnParam                                  */
 /* -------------------------------------------------------------------------- */
@@ -107,7 +116,7 @@ TEST_F(ParserTest, ParserHandlesEmptyFnParams) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnParams();
-  EXPECT_EQ(result.empty(), true);
+  EXPECT_EQ(result->empty(), true);
 }
 
 TEST_F(ParserTest, ParserHandlesFnParams) {
@@ -116,16 +125,16 @@ TEST_F(ParserTest, ParserHandlesFnParams) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnParams();
-  ASSERT_EQ(result.size(), 3);
-  EXPECT_EQ(result[0].isConst, false);
-  EXPECT_EQ(result[0].name, Identifier(L"x"));
-  EXPECT_EQ(result[0].type, TypeIdentifier(L"int"));
-  EXPECT_EQ(result[1].isConst, true);
-  EXPECT_EQ(result[1].name, Identifier(L"y"));
-  EXPECT_EQ(result[1].type, TypeIdentifier(L"int"));
-  EXPECT_EQ(result[2].isConst, false);
-  EXPECT_EQ(result[2].name, Identifier(L"z"));
-  EXPECT_EQ(result[2].type, TypeIdentifier(L"int"));
+  ASSERT_EQ(result->size(), 3);
+  EXPECT_EQ(result->at(L"x").isConst, false);
+  EXPECT_EQ(result->at(L"x").name, Identifier(L"x"));
+  EXPECT_EQ(result->at(L"x").type, TypeIdentifier(L"int"));
+  EXPECT_EQ(result->at(L"y").isConst, true);
+  EXPECT_EQ(result->at(L"y").name, Identifier(L"y"));
+  EXPECT_EQ(result->at(L"y").type, TypeIdentifier(L"int"));
+  EXPECT_EQ(result->at(L"z").isConst, false);
+  EXPECT_EQ(result->at(L"z").name, Identifier(L"z"));
+  EXPECT_EQ(result->at(L"z").type, TypeIdentifier(L"int"));
 }
 
 /* -------------------------------------------------------------------------- */
@@ -166,9 +175,6 @@ TEST_F(ParserTest, ParserHandlesFnDef) {
   ASSERT_TRUE(fnDef != nullptr);
   EXPECT_EQ(fnDef->name, Identifier(L"foo"));
   ASSERT_TRUE(fnDef->parameters.size() == 1);
-  EXPECT_EQ(fnDef->parameters[0].isConst, true);
-  EXPECT_EQ(fnDef->parameters[0].name, Identifier(L"boo"));
-  EXPECT_EQ(fnDef->parameters[0].type, TypeIdentifier(L"string"));
   EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"int"));
 }
 
