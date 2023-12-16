@@ -21,11 +21,24 @@ class ParserTest : public ::Test {
  protected:
   auto consumeToken() { return m_parser.consumeToken(); }
 
+  /* ------------------------------- Expressions ------------------------------ */
+  auto parseExpression() { return m_parser.parseExpression(); }
+
+  auto parseIdentifierExpr() { return m_parser.parseIdentifierExpr(); }
+  auto parsePrimaryExpr() { return m_parser.parsePrimaryExpr(); }
+  template <typename T>
+  auto parseLiteral() {
+    return m_parser.parseLiteral<T>();
+  }
+  auto parseObject() { return m_parser.parseObject(); }
+  auto parseObjectMember() { return m_parser.parseObjectMember(); }
+  auto parseObjectMembers() { return m_parser.parseObjectMembers(); }
+  auto parseParenExpr() { return m_parser.parseParenExpr(); }
+  auto parseCastExpr() { return m_parser.parseCastExpr(); }
+
+  /* ------------------------------- Definitions ------------------------------ */
   auto parseVarDef() { return m_parser.parseVarDef(); }
   auto parseConstDef() { return m_parser.parseConstDef(); }
-
-  auto parseExpression() { return m_parser.parseExpression(); }
-  auto parseBlock() { return m_parser.parseBlock(); }
 
   auto parseStructMember() { return m_parser.parseStructMember(); }
   auto parseStructMembers() { return m_parser.parseStructMembers(); }
@@ -39,6 +52,8 @@ class ParserTest : public ::Test {
   auto parseFnParam() { return m_parser.parseFnParam(); }
   auto parseFnParams() { return m_parser.parseFnParams(); }
   auto parseFnDef() { return m_parser.parseFnDef(); }
+
+  /* ------------------------------- Statements ------------------------------- */
 
   auto parseProgram() { return m_parser.parseProgram(); }
 

@@ -1,12 +1,17 @@
 #pragma once
 
-#include "ASTNode.h"
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
-/* ---------------------------------- Base ---------------------------------- */
+#include "ASTNode.h"
+#include "TokenType.h"
+
+/* -------------------------------- Abstract -------------------------------- */
 
 /*
- * expression
- *    = logicOrExpr;
+ * Expression
+ *    = ? Any expression ?;
  */
 struct Expression : public ASTNode {
  public:
@@ -15,8 +20,15 @@ struct Expression : public ASTNode {
   Expression(Position&& position) : ASTNode{std::move(position)} {}
 };
 
-/* -------------------------------- Abstract -------------------------------- */
-
+/*
+ * BinaryExpression
+ *    = LogicalOrExpr
+ *    | LogicAndExpr
+ *    | EqualityExpr
+ *    | RelationalExpr
+ *    | AdditiveExpr
+ *    | MultiplicativeExpr;
+ */
 struct BinaryExpression : public Expression {
  public:
   BinaryExpression(Position&& position, std::unique_ptr<Expression>&& left,
@@ -27,12 +39,55 @@ struct BinaryExpression : public Expression {
   std::unique_ptr<Expression> right;
 };
 
+/*
+ * UnaryExpression
+ *    = UnaryOpExpr;
+ */
 struct UnaryExpression : public Expression {
  public:
   UnaryExpression(Position&& position, std::unique_ptr<Expression>&& expr)
       : Expression{std::move(position)}, expr{std::move(expr)} {}
 
   std::unique_ptr<Expression> expr;
+};
+
+/* FunctionalPostfix
+ *    = FnCallOp
+ *    | MemberAccessOp
+ *    | VariantAccessOp;
+ */
+struct FunctionalPostfix : public ASTNode {
+ public:
+  FunctionalPostfix(Position&& position) : ASTNode{std::move(position)} {}
+};
+
+/*
+ * FunctionalExpression
+ *    = FnCallExpr
+ *    | MemberAccessExpr
+ *    | VariantAccessExpr;
+ */
+struct FunctionalExpression : public Expression {
+ public:
+  FunctionalExpression(Position&& position, std::unique_ptr<Expression>&& expr,
+                       std::unique_ptr<FunctionalPostfix>&& postfix)
+      : Expression{std::move(position)}, expr{std::move(expr)}, postfix{std::move(postfix)} {}
+
+  std::unique_ptr<Expression> expr;
+  std::unique_ptr<FunctionalPostfix> postfix;
+};
+
+/*
+ * primaryExpr
+ *    = identifierExpr
+ *    | literal
+ *    | object
+ *    | parenExpr
+ *    | castExpr;
+ */
+struct PrimaryExpression : public Expression {
+ public:
+  PrimaryExpression(Position&& position) : Expression{std::move(position)} {}
 };
 
 /* ---------------------------------- Logic --------------------------------- */
@@ -153,7 +208,7 @@ struct MultiplicativeModExpr : public BinaryExpression {
   using BinaryExpression::BinaryExpression;
 };
 
-/* --------------------------------- UnaryOp -------------------------------- */
+/* ---------------------------------- Unary --------------------------------- */
 
 /*
  * unaryOpExpr
@@ -161,13 +216,13 @@ struct MultiplicativeModExpr : public BinaryExpression {
  */
 
 /* ! */
-struct UnaryOpLogicNegExpr : public UnaryExpression {
+struct LogicNegExpr : public UnaryExpression {
  public:
   using UnaryExpression::UnaryExpression;
 };
 
 /* - */
-struct UnaryOpArithmNegExpr : public UnaryExpression {
+struct ArithmNegExpr : public UnaryExpression {
  public:
   using UnaryExpression::UnaryExpression;
 };
@@ -176,126 +231,147 @@ struct UnaryOpArithmNegExpr : public UnaryExpression {
 
 /*
  * functionalExpr
- *    = primaryExpr, { functionalOpExpr };
- *
- * functionalOpExpr
- *    = fnCallOp
- *    | memberAccessOp
- *    | variantAccessOp;
+ *   = primaryExpr, { functionalPostfix };
  */
-
-/* foo() */
-struct FnCallExpr : public Expression {
- public:
-  FnCallExpr(Position&& position, std::unique_ptr<Expression>&& expr,
-             std::unique_ptr<FnCallOp>&& fnCallOp)
-      : Expression{std::move(position)}, fnCallOp{std::move(fnCallOp)} {}
-
-  std::unique_ptr<Expression> expr;
-  std::unique_ptr<FnCallOp> fnCallOp;
-};
 
 /*
  * fnCallOp
  *    = "(", [ expression, { ",", expression } ], ")";
  */
-struct FnCallOp : public Expression {
+struct FnCallOp : public FunctionalPostfix {
  public:
   FnCallOp(Position&& position, std::vector<std::unique_ptr<Expression>>&& args)
-      : Expression{std::move(position)}, args{std::move(args)} {}
+      : FunctionalPostfix{std::move(position)}, args{std::move(args)} {}
 
   std::vector<std::unique_ptr<Expression>> args;
 };
 
-/* foo.bar */
-struct MemberAccessExpr : public BinaryExpression {
+/* foo(x, y, z) */
+struct FnCallExpr : public FunctionalExpression {
  public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* foo as int */
-struct VariantAccessExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/*
- * functionalOpExpr
- *    = fnCallOpExpr
- *    | memberAccessOpExpr
- *    | variantAccessOpExpr;
- */
-
-struct FunctionalOpExpr : public Expression {
- public:
-  FunctionalOpExpr(Position&& position, std::unique_ptr<Expression>&& expr)
-      : Expression{std::move(position)}, expr{std::move(expr)} {}
-
-  std::unique_ptr<Expression> expr;
+  FnCallExpr(Position&& position, std::unique_ptr<Expression>&& expr,
+             std::unique_ptr<FnCallOp>&& fnCallOp)
+      : FunctionalExpression{std::move(position), std::move(expr), std::move(fnCallOp)} {}
 };
 
 /*
  * memberAccessOp
  *    = ".", identifier;
  */
-struct MemberAccessOp : public Expression {
+struct MemberAccessOp : public FunctionalPostfix {
  public:
   MemberAccessOp(Position&& position, Identifier&& member)
-      : Expression{std::move(position)}, member{std::move(member)} {}
+      : FunctionalPostfix{std::move(position)}, member{std::move(member)} {}
 
   Identifier member;
+};
+
+/* foo.bar */
+struct MemberAccessExpr : public FunctionalExpression {
+ public:
+  MemberAccessExpr(Position&& position, std::unique_ptr<Expression>&& expr,
+                   std::unique_ptr<MemberAccessOp>&& memberAccessOp)
+      : FunctionalExpression{std::move(position), std::move(expr), std::move(memberAccessOp)} {}
 };
 
 /*
  * variantAccessOp
  *    = "as", typeIdentifier;
  */
-struct VariantAccessOp : public Expression {
+struct VariantAccessOp : public FunctionalPostfix {
  public:
   VariantAccessOp(Position&& position, TypeIdentifier&& variant)
-      : Expression{std::move(position)}, variant{std::move(variant)} {}
+      : FunctionalPostfix{std::move(position)}, variant{std::move(variant)} {}
 
   TypeIdentifier variant;
+};
+
+/* foo as int */
+struct VariantAccessExpr : public FunctionalExpression {
+ public:
+  VariantAccessExpr(Position&& position, std::unique_ptr<Expression>&& expr,
+                    std::unique_ptr<VariantAccessOp>&& variantAccessOp)
+      : FunctionalExpression{std::move(position), std::move(expr), std::move(variantAccessOp)} {}
 };
 
 /* --------------------------------- Primary -------------------------------- */
 
 /*
  * primaryExpr
- *    = identifier
+ *    = identifierExpr
  *    | literal
+ *    | object
  *    | parenExpr
  *    | castExpr;
  */
 
-struct PrimaryExpr : public Expression {
+/*
+ * identifierExpr
+ *    = identifier;
+ */
+struct IdentifierExpr : public PrimaryExpression {
  public:
-  PrimaryExpr(Position&& position, std::unique_ptr<Expression>&& expr)
-      : Expression{std::move(position)}, expr{std::move(expr)} {}
+  IdentifierExpr(Position&& position, Identifier&& name)
+      : PrimaryExpression{std::move(position)}, name{std::move(name)} {}
 
-  std::unique_ptr<Expression> expr;
+  Identifier name;
 };
 
 /*
- * identifier
- *    = [_a-zA-Z][_a-zA-Z0-9]*;
+ * literal
+ *    = int
+ *    | float
+ *    | bool
+ *    | char
+ *    | string;
  */
-struct IdentifierExpr : public Expression {
- public:
-  IdentifierExpr(Position&& position, Identifier&& name)
-      : Expression{std::move(position)}, name{std::move(name)} {}
 
-  Identifier name;
+template <typename T>
+struct Literal : public PrimaryExpression {
+ public:
+  Literal(Position&& position, T&& value)
+      : PrimaryExpression{std::move(position)}, value(std::move(value)) {}
+  T value;
+};
+
+/*
+ * object
+ *    = "{", [ memberValues ], "}";
+ */
+struct Object : public PrimaryExpression {
+ public:
+  struct Member {
+    /*
+     * memberValue
+     *    = identifier, ":", expression;
+     */
+    Member(Identifier&& name, std::unique_ptr<Expression>&& value)
+        : name{std::move(name)}, value{std::move(value)} {}
+
+    Identifier name;
+    std::unique_ptr<Expression> value;
+  };
+
+  /*
+   * memberValues
+   *    = memberValue, { ",", memberValue };
+   */
+  using Members = std::unordered_map<Identifier, Member>;
+
+  Object(Position&& position, Members&& members)
+      : PrimaryExpression{std::move(position)}, members{std::move(members)} {}
+
+  Members members;
 };
 
 /*
  * parenExpr
  *    = "(", expression, ")";
  */
-struct ParenExpr : public Expression {
+struct ParenExpr : public PrimaryExpression {
  public:
   ParenExpr(Position&& position, std::unique_ptr<Expression>&& expr)
-      : Expression{std::move(position)}, expr{std::move(expr)} {}
+      : PrimaryExpression{std::move(position)}, expr{std::move(expr)} {}
 
   std::unique_ptr<Expression> expr;
 };
@@ -304,11 +380,11 @@ struct ParenExpr : public Expression {
  * castExpr
  *    = primitiveType, "(", expression, ")";
  */
-struct CastExpr : public Expression {
+struct CastExpr : public PrimaryExpression {
  public:
-  CastExpr(Position&& position, TypeIdentifier&& type, std::unique_ptr<Expression>&& expr)
-      : Expression{std::move(position)}, type{std::move(type)}, expr{std::move(expr)} {}
+  CastExpr(Position&& position, TokenType type, std::unique_ptr<Expression>&& expr)
+      : PrimaryExpression{std::move(position)}, type{type}, expr{std::move(expr)} {}
 
-  TypeIdentifier type;
+  TokenType type;
   std::unique_ptr<Expression> expr;
 };

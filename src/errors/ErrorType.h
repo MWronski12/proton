@@ -57,12 +57,28 @@ enum class ErrorType {
   FNPARAM_REDEFINITION,
   FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
 
+  // Cast Expression
+  CASTEXPR_EXPECTED_LPAREN,
+  CASTEXPR_EXPECTED_EXPRESSION,
+  CASTEXPR_EXPECTED_RPAREN,
+
+  // Paren Expression
+  PARENEXPR_EXPECTED_EXPRESSION,
+  PARENEXPR_EXPECTED_RPAREN,
+
+  // Object
+  OBJECT_EXPECTED_RBRACE,
+  OBJECTMEMBER_EXPECTED_COLON,
+  OBJECTMEMBER_EXPECTED_EXPRESSION,
+  OBJECTMEMBER_REDEFINITION,
+
   // Semantic Errors
-  MISSING_MAIN_FUNCTION,
+  EXPECTED_MAIN_FUNCTION_DEF,
   REDEFINITION,
 
   // Internal Errors
   INTERNAL_ERROR,
+  TOKEN_INVARIANT_VIOLATION,
 };
 
 const auto LEXICAL_ERROR = std::string("Lexical Error");
@@ -74,6 +90,7 @@ using ErrorInfo = std::pair<std::string, std::string>;  // pairs of <ErrorTypeSt
 
 static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     {ErrorType::INTERNAL_ERROR, {INTERNAL_ERROR, "Internal Error!"}},
+    {ErrorType::TOKEN_INVARIANT_VIOLATION, {INTERNAL_ERROR, "Token data is not integral!"}},
 
     /* ----------------------------- Lexical Errors ----------------------------- */
     {ErrorType::INVALID_NUMBER_LITERAL, {LEXICAL_ERROR, "Invalid number literal!"}},
@@ -161,8 +178,28 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     {ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in function return type definition!"}},
 
+    // Cast Expression
+    {ErrorType::CASTEXPR_EXPECTED_LPAREN,
+     {SYNTAX_ERROR, "Missing opening parenthesis in cast expression!"}},
+    {ErrorType::CASTEXPR_EXPECTED_EXPRESSION,
+     {SYNTAX_ERROR, "Expected expression in cast expression!"}},
+    {ErrorType::CASTEXPR_EXPECTED_RPAREN,
+     {SYNTAX_ERROR, "Missing closing parenthesis in cast expression!"}},
+
+    // Paren Expression
+    {ErrorType::PARENEXPR_EXPECTED_RPAREN,
+     {SYNTAX_ERROR, "Missing closing parenthesis in parenthesized expression!"}},
+
+    // Object
+    {ErrorType::OBJECT_EXPECTED_RBRACE, {SYNTAX_ERROR, "Expected closing brace in object!"}},
+    {ErrorType::OBJECTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Object member redefinition!"}},
+    {ErrorType::OBJECTMEMBER_EXPECTED_EXPRESSION,
+     {SYNTAX_ERROR, "Expected expression in object member definition!"}},
+    {ErrorType::OBJECTMEMBER_EXPECTED_COLON,
+     {SYNTAX_ERROR, "Expected colon in object member definition!"}},
+
     /* ----------------------------- Semantic Errors ---------------------------- */
-    {ErrorType::MISSING_MAIN_FUNCTION,
+    {ErrorType::EXPECTED_MAIN_FUNCTION_DEF,
      {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"}},
     {ErrorType::REDEFINITION, {SEMANTIC_ERROR, "Redefinition!"}},
 };

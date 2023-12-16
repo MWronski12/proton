@@ -20,22 +20,18 @@ primitiveType                           (* RETURNED BY LEXER *)
 
 (* LITERALS *)
 
-literal
-    = primitiveLiteral
-    | objectLiteral;
+literal                       (* RETURNED BY LEXER *)
+    = int
+    | float
+    | bool 
+    | char
+    | string;
 
-primitiveLiteral                        (* RETURNED BY LEXER *)
-    = integerLiteral 
-    | floatLiteral
-    | charLiteral
-    | boolLiteral 
-    | stringLiteral;
-
-objectLiteral
-    = "{", [ memberValues ], "}";
-memberValues
-    =  memberValue, {",", memberValue };
-memberValue
+object
+    = "{", [ objectMembers ], "}";
+objectMembers
+    =  objectMember, {",", objectMember };
+objectMember
     = identifier, ":", expression;
 
 
@@ -59,13 +55,17 @@ multiplicativeExpr
 unaryOpExpr
     = [ unaryOp ], functionalExpr;
 functionalExpr
-    = primaryExpr, { functionalOpExpr };
+    = primaryExpr, { functionalPostfix };
 
 primaryExpr
-    = identifier
+    = identifierExpr
     | literal
+    | object
     | parenExpr
     | castExpr;
+
+identifierExpr
+    = identifier;
 
 parenExpr 
     = "(", expression, ")";
@@ -104,14 +104,14 @@ unaryOp                     (* prio 6 r-l *)
     = "!"
     | "-";
 
-functionalOpExpr            (* prio 7 l-r *)
-    = fnCallOp 
+functionalPostfix           (* prio 7 l-r *)
+    = fnCallOp
     | memberAccessOp 
     | variantAccessOp;
 
 fnCallOp
     = "(", [ expression, { ",", expression } ], ")"; 
-memberAccessOp 
+memberAccessOp
     = ".", identifier;
 variantAccessOp
     = "as", typeIdentifier;

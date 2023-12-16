@@ -19,6 +19,7 @@ add_executable(test
   source/parser/ParseStructDef_test.cpp
   source/parser/ParseVariantDef_test.cpp
   source/parser/ParseFnDef_test.cpp
+  source/parser/ParsePrimaryExpr_test.cpp
 )
 
 target_include_directories(test PUBLIC
