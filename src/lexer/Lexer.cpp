@@ -365,7 +365,7 @@ void Lexer::buildOther() {
     case L'<':
       if (m_reader.peek() == L'=') {
         m_token.representation.push_back(m_reader.get());
-        m_token.type = TokenType::LESS_THAN_EQUAL;
+        m_token.type = TokenType::LESS_OR_EQUAL;
       } else if (m_reader.peek() == L'<') {
         m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::INSERTION_OP;
@@ -377,7 +377,7 @@ void Lexer::buildOther() {
     case L'>':
       if (m_reader.peek() == L'=') {
         m_token.representation.push_back(m_reader.get());
-        m_token.type = TokenType::GREATER_THAN_EQUAL;
+        m_token.type = TokenType::GREATER_OR_EQUAL;
       } else if (m_reader.peek() == L'>') {
         m_token.representation.push_back(m_reader.get());
         m_token.type = TokenType::EXTRACTION_OP;

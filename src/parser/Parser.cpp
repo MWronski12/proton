@@ -515,12 +515,12 @@ std::optional<FnDef::ReturnType> Parser::parseFnReturnType() {
 /*                                 Expressions                                */
 /* -------------------------------------------------------------------------- */
 
-std::unique_ptr<Expression> Parser::parseExpression() {
-  if (m_token.type == TokenType::ETX || m_token.type == TokenType::RPAREN) return nullptr;
-  auto position = m_token.position;
-  consumeToken();
-  return std::make_unique<Expression>(std::move(position));
-}
+// std::unique_ptr<Expression> Parser::parseExpression() {
+//   if (m_token.type == TokenType::ETX || m_token.type == TokenType::RPAREN) return nullptr;
+//   auto position = m_token.position;
+//   consumeToken();
+//   return std::make_unique<Expression>(std::move(position));
+// }
 
 /*
  * primaryExpr
@@ -657,7 +657,7 @@ std::unique_ptr<Expression> Parser::parseCastExpr() {
 }
 
 /*
- * functionalExpression
+ * functionalExpr
  *   = primaryExpression, { functionalPostfix };
  */
 std::unique_ptr<Expression> Parser::parseFunctionalExpression() {
@@ -780,6 +780,21 @@ std::unique_ptr<FunctionalExpression::Postfix> Parser::parseVariantAccessPostfix
 /*                                 Statements                                 */
 /* -------------------------------------------------------------------------- */
 
+/*
+ * Statement
+ *    = Definition
+ *    | BlockStmt
+ *    | ExpressionOrAssignmentStmt
+ *    | StdinExtractionStmt
+ *    | StdoutInsertionStmt
+ *    | VariantMatchStmt
+ *    | IfStmt
+ *    | ForStmt
+ *    | WhileStmt
+ *    | ContinueStmt
+ *    | BreakStmt
+ *    | ReturnStmt;
+ */
 std::unique_ptr<Statement> Parser::parseStatement() {
   return nullptr;
   // auto it = m_statementParsers.find(m_token.type);
@@ -790,6 +805,10 @@ std::unique_ptr<Statement> Parser::parseStatement() {
   // return std::move(it->second());
 }
 
+/*
+ * BlockStmt
+ *     = "{", { Statement }, "}";
+ */
 std::unique_ptr<Statement> Parser::parseBlockStmt() {
   if (m_token.type != TokenType::LBRACE) {
     return nullptr;
@@ -800,15 +819,345 @@ std::unique_ptr<Statement> Parser::parseBlockStmt() {
   BlockStmt::Statements statements{};
 
   while (m_token.type != TokenType::RBRACE) {
-    // if (auto statement = parseStatement(); statement != nullptr) {
-    //   statements.push_back(std::move(statement));
-    // } else {
-    //   return nullptr;
-    // }
-    consumeToken();
+    if (auto statement = parseStatement(); statement != nullptr) {
+      statements.push_back(std::move(statement));
+    } else {
+      return nullptr;
+    }
   }
 
   consumeToken();
 
   return std::make_unique<BlockStmt>(std::move(position), std::move(statements));
+}
+
+/*
+ * ExpressionOrAssignmentStatement
+ *     = Expression, [ "=", Expression ], ";";
+ */
+std::unique_ptr<Statement> Parser::parseExpressionOrAssignmentStmt() {
+  std::unique_ptr<Expression> expr;
+  std::unique_ptr<Expression> value;
+  auto position = m_token.position;
+
+  if ((expr = parseExpression()) == nullptr) return nullptr;
+
+  // Parse AssignmentStatement
+  if (m_token.type == TokenType::ASSIGNMENT) {
+    consumeToken();
+    if ((value = parseExpression()) == nullptr) {
+      m_errorHandler(ErrorType::ASSIGNMENTSTMT_EXPECTED_EXPRESSION, m_token.position);
+      return nullptr;
+    };
+
+    if (!consumeIf(TokenType::SEMICOLON, ErrorType::ASSIGNMENTSTMT_EXPECTED_SEMICOLON))
+      return nullptr;
+
+    return std::make_unique<AssignmentStmt>(std::move(position), std::move(expr), std::move(value));
+  }
+
+  // Parse ExpressionStatement
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::EXPRESSIONSTMT_EXPECTED_SEMICOLON))
+    return nullptr;
+
+  return std::make_unique<ExpressionStmt>(std::move(position), std::move(expr));
+}
+
+/*
+ * StdinExtractionStmt
+ *     = ">>", Expression, ";";
+ */
+std::unique_ptr<Statement> Parser::parseStdinExtractionStmt() {
+  if (m_token.type != TokenType::EXTRACTION_OP) {
+    return nullptr;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::unique_ptr<Expression> expr;
+  if ((expr = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::STDINEXTRACTION_EXPECTED_EXPRESSION, m_token.position);
+    return nullptr;
+  };
+
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::STDINEXTRACTION_EXPECTED_SEMICOLON))
+    return nullptr;
+
+  return std::make_unique<StdinExtractionStmt>(std::move(position), std::move(expr));
+}
+
+/*
+ * StdoutInsertionStmt
+ *     = "<<", Expression, ";";
+ */
+std::unique_ptr<Statement> Parser::parseStdoutInsertionStmt() {
+  if (m_token.type != TokenType::INSERTION_OP) {
+    return nullptr;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::unique_ptr<Expression> expr;
+  if ((expr = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::STDOUTINSERTION_EXPECTED_EXPRESSION, m_token.position);
+    return nullptr;
+  };
+
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::STDOUTINSERTION_EXPECTED_SEMICOLON))
+    return nullptr;
+
+  return std::make_unique<StdoutInsertionStmt>(std::move(position), std::move(expr));
+}
+
+/*
+ * VariantMatchStmt
+ *     = "match", Expression, "{", VariantMatchCases, "}";
+ */
+std::unique_ptr<Statement> Parser::parseVariantMatchStmt() {
+  if (m_token.type != TokenType::MATCH_KWRD) {
+    return nullptr;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::unique_ptr<Expression> expr;
+  std::optional<VariantMatchStmt::Cases> cases;
+
+  if ((expr = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::VARIANTMATCH_EXPECTED_EXPRESSION, m_token.position);
+    return nullptr;
+  };
+
+  if (!consumeIf(TokenType::LBRACE, ErrorType::VARIANTMATCH_EXPECTED_LBRACE)) return nullptr;
+  if ((cases = parseVariantMatchCases()) == std::nullopt) return nullptr;
+  if (!consumeIf(TokenType::RBRACE, ErrorType::VARIANTMATCH_EXPECTED_RBRACE)) return nullptr;
+
+  return std::make_unique<VariantMatchStmt>(std::move(position), std::move(expr),
+                                            std::move(*cases));
+}
+
+/*
+ * VariantMatchCases
+ *     = { variantMatchCases }
+ */
+std::optional<VariantMatchStmt::Cases> Parser::parseVariantMatchCases() {
+  VariantMatchStmt::Cases cases{};
+
+  auto position = m_token.position;
+
+  auto variantCase = parseVariantMatchCase();
+  while (variantCase != std::nullopt) {
+    if (cases.find(variantCase->variant) != cases.end()) {
+      m_errorHandler(ErrorType::VARIANTMATCHCASE_REDEFINITION, m_token.position);
+      return std::nullopt;
+    } else {
+      cases.insert(std::make_pair(variantCase->variant, std::move(*variantCase)));
+    }
+    variantCase = parseVariantMatchCase();
+  }
+
+  return cases;
+}
+
+/*
+ * variantMatchCase
+ *     = "case", typeIdentifier, "->", BlockStmt;
+ */
+std::optional<VariantMatchStmt::Case> Parser::parseVariantMatchCase() {
+  if (m_token.type != TokenType::CASE_KWRD) {
+    return std::nullopt;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::optional<TypeIdentifier> variant;
+  std::unique_ptr<Statement> block;
+
+  if ((variant = parseTypeIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::VARIANTMATCHCASE_EXPECTED_TYPE, m_token.position);
+    return std::nullopt;
+  }
+
+  if (!consumeIf(TokenType::ARROW, ErrorType::VARIANTMATCHCASE_EXPECTED_ARROW)) return std::nullopt;
+
+  if ((block = parseBlockStmt()) == nullptr) {
+    m_errorHandler(ErrorType::VARIANTMATCHCASE_EXPECTED_BLOCK, m_token.position);
+    return std::nullopt;
+  }
+
+  auto blockStmt = dynamic_cast<BlockStmt*>(block.get());
+  assert(blockStmt != nullptr && "Expected body to be a BlockStmt");
+  block.release();
+
+  return VariantMatchStmt::Case{std::move(position), std::move(*variant), std::move(*blockStmt)};
+}
+
+/*
+ * IfStmt
+ *     = "if", Expression, BlockStmt, { Elif }, [ Else ];
+ */
+std::unique_ptr<Statement> Parser::parseIfStmt() {
+  if (m_token.type != TokenType::IF_KWRD) {
+    return nullptr;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::unique_ptr<Expression> condition;
+  std::unique_ptr<Statement> body;
+  IfStmt::Elifs elifs;
+  std::optional<IfStmt::Else> elseClause;
+
+  if ((condition = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::IF_EXPECTED_CONDITION, m_token.position);
+    return nullptr;
+  }
+
+  if ((body = parseBlockStmt()) == nullptr) {
+    m_errorHandler(ErrorType::IF_EXPECTED_BLOCK, m_token.position);
+    return nullptr;
+  }
+
+  elifs = parseElifs();
+  elseClause = parseElse();
+
+  auto block = dynamic_cast<BlockStmt*>(body.get());
+  assert(block != nullptr && "Expected body to be a BlockStmt");
+  body.release();
+
+  return std::make_unique<IfStmt>(std::move(position), std::move(condition), std::move(*block),
+                                  std::move(elifs), std::move(elseClause));
+}
+
+/*
+ * Elifs
+ *     = { Elif };
+ */
+IfStmt::Elifs Parser::parseElifs() {
+  IfStmt::Elifs elifs{};
+
+  auto elif = parseElif();
+  while (elif != std::nullopt) {
+    elifs.push_back(std::move(*elif));
+    elif = parseElif();
+  }
+
+  return elifs;
+}
+
+/*
+ * Elif
+ *     = "elif", Expression, BlockStmt;
+ */
+std::optional<IfStmt::Elif> Parser::parseElif() {
+  if (m_token.type != TokenType::ELIF_KWRD) {
+    return std::nullopt;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::unique_ptr<Expression> condition;
+  std::unique_ptr<Statement> body;
+
+  if ((condition = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::ELIF_EXPECTED_CONDITION, m_token.position);
+    return std::nullopt;
+  }
+
+  if ((body = parseBlockStmt()) == nullptr) {
+    m_errorHandler(ErrorType::ELIF_EXPECTED_BLOCK, m_token.position);
+    return std::nullopt;
+  }
+
+  auto block = dynamic_cast<BlockStmt*>(body.get());
+  assert(block != nullptr && "Expected body to be a BlockStmt");
+  body.release();
+
+  return IfStmt::Elif{std::move(position), std::move(condition), std::move(*block)};
+}
+
+/*
+ * Else
+ *     = "else", BlockStmt;
+ */
+std::optional<IfStmt::Else> Parser::parseElse() {
+  if (m_token.type != TokenType::ELSE_KWRD) {
+    return std::nullopt;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::unique_ptr<Statement> body;
+
+  if ((body = parseBlockStmt()) == nullptr) {
+    m_errorHandler(ErrorType::ELSE_EXPECTED_BLOCK, m_token.position);
+    return std::nullopt;
+  }
+
+  auto block = dynamic_cast<BlockStmt*>(body.get());
+  assert(block != nullptr && "Expected body to be a BlockStmt");
+  body.release();
+
+  return IfStmt::Else{std::move(position), std::move(*block)};
+}
+
+/*
+ * ForStmt
+ *     = "for", Identifier, "in", Range, BlockStmt;
+ */
+std::unique_ptr<Statement> Parser::parseForStmt() {
+  if (m_token.type != TokenType::FOR_KWRD) {
+    return nullptr;
+  }
+  auto position = m_token.position;
+  consumeToken();
+
+  std::optional<Identifier> identifier;
+  std::optional<ForStmt::Range> range;
+  std::unique_ptr<Statement> body;
+
+  if ((identifier = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::FOR_EXPECTED_IDENTIFIER, m_token.position);
+    return nullptr;
+  }
+
+  if (!consumeIf(TokenType::IN_KWRD, ErrorType::FOR_EXPECTED_IN)) return nullptr;
+
+  if ((range = parseForRange()) == std::nullopt) {
+    m_errorHandler(ErrorType::FOR_EXPECTED_RANGE, m_token.position);
+    return nullptr;
+  }
+
+  if ((body = parseBlockStmt()) == nullptr) {
+    m_errorHandler(ErrorType::FOR_EXPECTED_BLOCK, m_token.position);
+    return nullptr;
+  }
+
+  auto block = dynamic_cast<BlockStmt*>(body.get());
+  assert(block != nullptr && "Expected body to be a BlockStmt");
+  body.release();
+
+  return std::make_unique<ForStmt>(std::move(position), std::move(*identifier), std::move(*range),
+                                   std::move(*block));
+}
+
+/*
+ * Range
+ *     = Expression, "until", Expression;
+ */
+std::optional<ForStmt::Range> Parser::parseForRange() {
+  std::unique_ptr<Expression> from;
+  std::unique_ptr<Expression> to;
+
+  auto position = m_token.position;
+
+  if ((from = parseExpression()) == nullptr) return std::nullopt;
+  if (!consumeIf(TokenType::UNTIL_KWRD, ErrorType::FORRANGE_EXPECTED_UNTIL)) return std::nullopt;
+
+  if ((to = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::FORRANGE_EXPECTED_END_EXPR, m_token.position);
+    return std::nullopt;
+  }
+
+  return ForStmt::Range{std::move(position), std::move(from), std::move(to)};
 }

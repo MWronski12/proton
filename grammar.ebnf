@@ -55,7 +55,7 @@ multiplicativeExpr
 unaryOpExpr
     = [ unaryOp ], functionalExpr;
 functionalExpr
-    = primaryExpr, { functionalPostfix };
+    = primaryExpr, { funcExprPostfix };
 
 primaryExpr
     = identifierExpr
@@ -104,7 +104,7 @@ unaryOp                     (* prio 6 r-l *)
     = "!"
     | "-";
 
-functionalPostfix           (* prio 7 l-r *)
+funcExprPostfix           (* prio 7 l-r *)
     = fnCallOp
     | memberAccessOp 
     | variantAccessOp;
@@ -180,8 +180,10 @@ ExpressionOrAssignmentStmt
     = expression, [ "=", expression ], ";";
 
 VariantMatchStmt
-    = "match", expression, "{", { variantCase }, "}";
-variantCase
+    = "match", expression, "{", variantMatchCases, "}";
+variantMatchCases
+    = { variantMatchCase };
+variantMatchCase
     = "case", typeIdentifier, "->", Block;
 
 IfStmt

@@ -29,15 +29,12 @@ class ParserTest : public ::Test {
 
   auto parseVarDef() { return m_parser.parseVarDef(); }
   auto parseConstDef() { return m_parser.parseConstDef(); }
-
   auto parseStructDef() { return m_parser.parseStructDef(); }
   auto parseStructMembers() { return m_parser.parseStructMembers(); }
   auto parseStructMember() { return m_parser.parseStructMember(); }
-
   auto parseVariantDef() { return m_parser.parseVariantDef(); }
   auto parseVariantTypes() { return m_parser.parseVariantTypes(); }
   auto parseVariantType() { return m_parser.parseVariantType(); }
-
   auto parseFnDef() { return m_parser.parseFnDef(); }
   auto parseFnParams() { return m_parser.parseFnParams(); }
   auto parseFnParam() { return m_parser.parseFnParam(); }
@@ -57,7 +54,6 @@ class ParserTest : public ::Test {
   auto parseObjectMembers() { return m_parser.parseObjectMembers(); }
   auto parseParenExpr() { return m_parser.parseParenExpr(); }
   auto parseCastExpr() { return m_parser.parseCastExpr(); }
-
   auto parseFunctionalExpression() { return m_parser.parseFunctionalExpression(); }
   auto parseFunctionalExpressionPostfix() { return m_parser.parseFunctionalExpressionPostfix(); }
   auto parseFnCallPostfix() { return m_parser.parseFnCallPostfix(); }
@@ -66,6 +62,25 @@ class ParserTest : public ::Test {
   auto parseVariantAccessPostfix() { return m_parser.parseVariantAccessPostfix(); }
 
   /* ------------------------------- Statements ------------------------------- */
+
+  auto parseStatement() { return m_parser.parseStatement(); }
+  auto parseBlockStmt() { return m_parser.parseBlockStmt(); }
+  auto parseExpressionOrAssignmentStmt() { return m_parser.parseExpressionOrAssignmentStmt(); }
+  auto parseStdinExtractionStmt() { return m_parser.parseStdinExtractionStmt(); }
+  auto parseStdoutInsertionStmt() { return m_parser.parseStdoutInsertionStmt(); }
+  auto parseVariantMatchStmt() { return m_parser.parseVariantMatchStmt(); }
+  auto parseVariantMatchCase() { return m_parser.parseVariantMatchCase(); }
+  auto parseVariantMatchCases() { return m_parser.parseVariantMatchCases(); }
+  auto parseIfStmt() { return m_parser.parseIfStmt(); }
+  auto parseElifs() { return m_parser.parseElifs(); }
+  auto parseElif() { return m_parser.parseElif(); }
+  auto parseElse() { return m_parser.parseElse(); }
+  auto parseForStmt() { return m_parser.parseForStmt(); }
+  auto parseForRange() { return m_parser.parseForRange(); }
+  auto parseWhileStmt() { return m_parser.parseWhileStmt(); }
+  auto parseContinueStmt() { return m_parser.parseContinueStmt(); }
+  auto parseBreakStmt() { return m_parser.parseBreakStmt(); }
+  auto parseReturnStmt() { return m_parser.parseReturnStmt(); }
 
   ::testing::StrictMock<ErrorHandlerMock> m_errorHandler;
   StringCharReader m_reader;

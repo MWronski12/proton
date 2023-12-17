@@ -230,8 +230,8 @@ struct ArithmNegExpr : public UnaryExpression {
 /* ------------------------------- Functional ------------------------------- */
 
 /*
- * FunctionalExpression
- *   = PrimaryExpr, { FunctionalPostfix };
+ * FunctionalExpr
+ *   = PrimaryExpr, { funcExprPostfix };
  */
 
 /* foo(x, y, z) */

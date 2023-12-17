@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "ASTNode.h"
@@ -91,7 +92,7 @@ struct StdoutInsertionStmt : public Statement {
 
 /*
  * VariantMatch
- *     = "match", Expression, "{", { variantMatchCase }, "}";
+ *     = "match", Expression, "{", variantMatchCases , "}";
  */
 struct VariantMatchStmt : public Statement {
  public:
@@ -106,8 +107,11 @@ struct VariantMatchStmt : public Statement {
     TypeIdentifier variant;
     BlockStmt block;
   };
-
-  using Cases = std::vector<Case>;
+  /*
+   * variantCases
+   *    = { variantCase };
+   */
+  using Cases = std::unordered_map<TypeIdentifier, Case>;
 
   VariantMatchStmt(Position &&position, std::unique_ptr<Expression> &&expr, Cases &&cases)
       : Statement{std::move(position)}, expr{std::move(expr)}, cases{std::move(cases)} {}
@@ -128,10 +132,10 @@ struct IfStmt : public Statement {
      * Elif
      *     = "elif", Expression, BlockStmt;
      */
-    Elif(Position &&position, std::unique_ptr<Expression> &&expr, BlockStmt &&block)
-        : ASTNode{std::move(position)}, expr{std::move(expr)}, block{std::move(block)} {}
+    Elif(Position &&position, std::unique_ptr<Expression> &&condition, BlockStmt &&block)
+        : ASTNode{std::move(position)}, condition{std::move(condition)}, block{std::move(block)} {}
 
-    std::unique_ptr<Expression> expr;
+    std::unique_ptr<Expression> condition;
     BlockStmt block;
   };
 
@@ -147,20 +151,24 @@ struct IfStmt : public Statement {
     BlockStmt block;
   };
 
+  /*
+   * Elifs
+   *     = { Elif };
+   */
   using Elifs = std::vector<Elif>;
 
-  IfStmt(Position &&position, std::unique_ptr<Expression> &&expr, BlockStmt &&block, Elifs &&elifs,
-         std::unique_ptr<Else> &&elseClause)
+  IfStmt(Position &&position, std::unique_ptr<Expression> &&condition, BlockStmt &&block,
+         Elifs &&elifs, std::optional<Else> &&elseClause)
       : Statement{std::move(position)},
-        expr{std::move(expr)},
+        condition{std::move(condition)},
         block{std::move(block)},
         elifs{std::move(elifs)},
         elseClause{std::move(elseClause)} {}
 
-  std::unique_ptr<Expression> expr;
+  std::unique_ptr<Expression> condition;
   BlockStmt block;
   Elifs elifs;
-  std::unique_ptr<Else> elseClause;
+  std::optional<Else> elseClause;
 };
 
 /*
@@ -183,15 +191,14 @@ struct ForStmt : public Statement {
     std::unique_ptr<Expression> end;
   };
 
-  ForStmt(Position &&position, Identifier &&identifier, std::unique_ptr<Range> &&range,
-          BlockStmt &&block)
+  ForStmt(Position &&position, Identifier &&identifier, Range &&range, BlockStmt &&block)
       : Statement{std::move(position)},
         identifier{std::move(identifier)},
         range{std::move(range)},
         block{std::move(block)} {}
 
   Identifier identifier;
-  std::unique_ptr<Range> range;
+  Range range;
   BlockStmt block;
 };
 

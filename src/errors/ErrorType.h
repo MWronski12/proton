@@ -57,6 +57,12 @@ enum class ErrorType {
   FNPARAM_REDEFINITION,
   FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
 
+  // Binary Expression
+  BINARYEXPRESSION_EXPECTED_RHS,
+
+  // Unary Expression
+  UNARYEXPRESSION_EXPECTED_EXPR,
+
   // Cast Expression
   CASTEXPR_EXPECTED_LPAREN,
   CASTEXPR_EXPECTED_EXPRESSION,
@@ -81,6 +87,41 @@ enum class ErrorType {
 
   // Variant Access
   VARIANTACCESS_EXPECTED_TYPE_IDENTIFIER,
+
+  // ExpressionOrAssignmentStmt
+  ASSIGNMENTSTMT_EXPECTED_EXPRESSION,
+  ASSIGNMENTSTMT_EXPECTED_SEMICOLON,
+  EXPRESSIONSTMT_EXPECTED_SEMICOLON,
+
+  // Insertion/Extraction
+  STDOUTINSERTION_EXPECTED_EXPRESSION,
+  STDOUTINSERTION_EXPECTED_SEMICOLON,
+  STDINEXTRACTION_EXPECTED_EXPRESSION,
+  STDINEXTRACTION_EXPECTED_SEMICOLON,
+
+  // Variant Match
+  VARIANTMATCHCASE_EXPECTED_TYPE,
+  VARIANTMATCHCASE_EXPECTED_ARROW,
+  VARIANTMATCHCASE_EXPECTED_BLOCK,
+  VARIANTMATCH_EXPECTED_EXPRESSION,
+  VARIANTMATCH_EXPECTED_LBRACE,
+  VARIANTMATCH_EXPECTED_RBRACE,
+  VARIANTMATCHCASE_REDEFINITION,
+
+  // IfStmt
+  ELIF_EXPECTED_CONDITION,
+  ELIF_EXPECTED_BLOCK,
+  ELSE_EXPECTED_BLOCK,
+  IF_EXPECTED_CONDITION,
+  IF_EXPECTED_BLOCK,
+
+  // ForStmt
+  FORRANGE_EXPECTED_UNTIL,
+  FORRANGE_EXPECTED_END_EXPR,
+  FOR_EXPECTED_IDENTIFIER,
+  FOR_EXPECTED_IN,
+  FOR_EXPECTED_RANGE,
+  FOR_EXPECTED_BLOCK,
 
   // Semantic Errors
   EXPECTED_MAIN_FUNCTION_DEF,
@@ -188,6 +229,14 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     {ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in function return type definition!"}},
 
+    // Binary Expression
+    {ErrorType::BINARYEXPRESSION_EXPECTED_RHS,
+     {SYNTAX_ERROR, "Expected right-hand side in binary expression!"}},
+
+    // Unary Expression
+    {ErrorType::UNARYEXPRESSION_EXPECTED_EXPR,
+     {SYNTAX_ERROR, "Expected expression in unary expression!"}},
+
     // Cast Expression
     {ErrorType::CASTEXPR_EXPECTED_LPAREN,
      {SYNTAX_ERROR, "Missing opening parenthesis in cast expression!"}},
@@ -220,6 +269,56 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     // Variant Access
     {ErrorType::VARIANTACCESS_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in variant access!"}},
+
+    // ExpressionOrAssignmentStmt
+    {ErrorType::ASSIGNMENTSTMT_EXPECTED_EXPRESSION,
+     {SYNTAX_ERROR, "Expected expression in assignment statement!"}},
+    {ErrorType::ASSIGNMENTSTMT_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of assignment statement!"}},
+    {ErrorType::EXPRESSIONSTMT_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of expression statement!"}},
+
+    // Insertion/Extraction
+    {ErrorType::STDOUTINSERTION_EXPECTED_EXPRESSION,
+     {SYNTAX_ERROR, "Expected expression in stdout insertion!"}},
+    {ErrorType::STDOUTINSERTION_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of stdout insertion!"}},
+    {ErrorType::STDINEXTRACTION_EXPECTED_EXPRESSION,
+     {SYNTAX_ERROR, "Expected expression in stdin extraction!"}},
+    {ErrorType::STDINEXTRACTION_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of stdin extraction!"}},
+
+    // Variant Match
+    {ErrorType::VARIANTMATCHCASE_EXPECTED_TYPE,
+     {SYNTAX_ERROR, "Expected type identifier in variant match case!"}},
+    {ErrorType::VARIANTMATCHCASE_EXPECTED_ARROW,
+     {SYNTAX_ERROR, "Expected arrow in variant match case!"}},
+    {ErrorType::VARIANTMATCHCASE_EXPECTED_BLOCK,
+     {SYNTAX_ERROR, "Expected block in variant match case!"}},
+    {ErrorType::VARIANTMATCH_EXPECTED_EXPRESSION,
+     {SYNTAX_ERROR, "Expected expression in variant match!"}},
+    {ErrorType::VARIANTMATCH_EXPECTED_LBRACE,
+     {SYNTAX_ERROR, "Expected opening brace in variant match!"}},
+    {ErrorType::VARIANTMATCH_EXPECTED_RBRACE,
+     {SYNTAX_ERROR, "Expected closing brace in variant match!"}},
+    {ErrorType::VARIANTMATCHCASE_REDEFINITION,
+     {SEMANTIC_ERROR, "Variant match case redefinition!"}},
+
+    // IfStmt
+    {ErrorType::ELIF_EXPECTED_CONDITION, {SYNTAX_ERROR, "Expected condition in elif statement!"}},
+    {ErrorType::ELIF_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in elif statement!"}},
+    {ErrorType::ELSE_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in else statement!"}},
+    {ErrorType::IF_EXPECTED_CONDITION, {SYNTAX_ERROR, "Expected condition in if statement!"}},
+    {ErrorType::IF_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in if statement!"}},
+
+    // ForStmt
+    {ErrorType::FORRANGE_EXPECTED_UNTIL, {SYNTAX_ERROR, "Expected 'until' in for statement!"}},
+    {ErrorType::FORRANGE_EXPECTED_END_EXPR,
+     {SYNTAX_ERROR, "Expected end expression in for statement!"}},
+    {ErrorType::FOR_EXPECTED_IDENTIFIER, {SYNTAX_ERROR, "Expected identifier in for statement!"}},
+    {ErrorType::FOR_EXPECTED_IN, {SYNTAX_ERROR, "Expected 'in' in for statement!"}},
+    {ErrorType::FOR_EXPECTED_RANGE, {SYNTAX_ERROR, "Expected range in for statement!"}},
+    {ErrorType::FOR_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in for statement!"}},
 
     /* ----------------------------- Semantic Errors ---------------------------- */
     {ErrorType::EXPECTED_MAIN_FUNCTION_DEF,
