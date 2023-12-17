@@ -57,15 +57,6 @@ bool Parser::consumeIf(TokenType expectedType, ErrorType error) {
   return false;
 }
 
-bool Parser::consumeIf(const std::function<bool(TokenType tokenType)>& predicate, ErrorType err) {
-  if (predicate(m_token.type)) {
-    consumeToken();
-    return true;
-  }
-  m_errorHandler(err, m_token.position);
-  return false;
-}
-
 std::optional<Identifier> Parser::parseIdentifier() {
   if (m_token.type != TokenType::IDENTIFIER) {
     return std::nullopt;

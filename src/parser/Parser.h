@@ -40,7 +40,6 @@ class Parser {
 
   void consumeToken();
   bool consumeIf(TokenType expectedType, ErrorType error);
-  bool consumeIf(const std::function<bool(TokenType tokenType)> &predicate, ErrorType err);
 
   std::optional<Identifier> parseIdentifier();
   std::optional<TypeIdentifier> parseTypeIdentifier();
