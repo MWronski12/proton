@@ -123,13 +123,13 @@ enum class ErrorType {
   RETURN_EXPECTED_SEMICOLON,
 
   // Semantic Errors
-  EXPECTED_MAIN_FUNCTION_DEF,  // t
-  FN_REDEFINITION,             // t
+  EXPECTED_MAIN_FUNCTION_DEF,
+  REDEFINITION,
   STRUCTMEMBER_REDEFINITION,
   VARIANTTYPE_REDEFINITION,
   FNPARAM_REDEFINITION,
-  OBJECTMEMBER_REDEFINITION,      // t
-  VARIANTMATCHCASE_REDEFINITION,  // t
+  OBJECTMEMBER_REDEFINITION,
+  VARIANTMATCHCASE_REDEFINITION,
 
   // Internal Errors
   TOKEN_INVARIANT_VIOLATION,
@@ -330,7 +330,8 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
 
     {ErrorType::EXPECTED_MAIN_FUNCTION_DEF,
      {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"}},
-    {ErrorType::FN_REDEFINITION, {SEMANTIC_ERROR, "Function redefinition!"}},
+    {ErrorType::REDEFINITION,
+     {SEMANTIC_ERROR, "Redefinition, identifier with that name already exists!"}},
     {ErrorType::STRUCTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Struct member redefinition!"}},
     {ErrorType::VARIANTMATCHCASE_REDEFINITION,
      {SEMANTIC_ERROR, "Variant match case redefinition!"}},

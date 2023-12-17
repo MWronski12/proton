@@ -39,7 +39,6 @@ class Parser {
   /* ----------------------------- Utility methods ---------------------------- */
 
   void consumeToken();
-  void skipError(const TokenType delimiter);
   bool consumeIf(TokenType expectedType, ErrorType error);
   bool consumeIf(const std::function<bool(TokenType tokenType)> &predicate, ErrorType err);
 

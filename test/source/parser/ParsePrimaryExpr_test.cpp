@@ -133,6 +133,16 @@ TEST_F(ParserTest, ParserAllowsForTrailingCommaInObjectMembers) {
   ASSERT_EQ(members->size(), 2);
 }
 
+TEST_F(ParserTest, ParserHandlesObjectMemberRedefinition) {
+  m_reader.load(L"foo: 666, foo: 777");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::OBJECTMEMBER_REDEFINITION, _)).Times(1);
+
+  auto members = parseObjectMembers();
+  ASSERT_TRUE(members == std::nullopt);
+}
+
 /* --------------------------------- Object --------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyObject) {

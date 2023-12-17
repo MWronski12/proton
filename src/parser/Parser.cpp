@@ -22,7 +22,8 @@ std::optional<Program> Parser::parseProgram() {
   while (definition != nullptr) {
     // Redefinition
     if (definitions.find(definition->name) != definitions.end()) {
-      m_errorHandler(ErrorType::FN_REDEFINITION, definition->position);
+      m_errorHandler(ErrorType::REDEFINITION, definition->position);
+      return std::nullopt;
     }
     // Success, add to map
     else {
@@ -33,6 +34,11 @@ std::optional<Program> Parser::parseProgram() {
     definition = parseDefinition();
   }
 
+  if (definitions.find(L"main") == definitions.end()) {
+    m_errorHandler(ErrorType::EXPECTED_MAIN_FUNCTION_DEF, position);
+    return std::nullopt;
+  }
+
   return Program{std::move(position), std::move(definitions)};
 }
 
@@ -41,13 +47,6 @@ std::optional<Program> Parser::parseProgram() {
 /* -------------------------------------------------------------------------- */
 
 void Parser::consumeToken() { m_token = m_lexer.getNextToken(); }
-
-void Parser::skipError(const TokenType delimiter) {
-  while (m_token.type != TokenType::ETX && m_token.type != delimiter) {
-    consumeToken();
-  }
-  consumeToken();
-}
 
 bool Parser::consumeIf(TokenType expectedType, ErrorType error) {
   if (m_token.type == expectedType) {
@@ -113,37 +112,21 @@ std::unique_ptr<Definition> Parser::parseVarDef() {
   std::optional<TypeIdentifier> type;
   std::unique_ptr<Expression> expr;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::VARDEF_EXPECTED_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::COLON, ErrorType::VARDEF_EXPECTED_COLON); },
-      [this, &type]() {
-        if ((type = parseTypeIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::ASSIGNMENT, ErrorType::VARDEF_EXPECTED_ASSIGNMENT); },
-      [this, &expr]() {
-        if ((expr = parseExpression()) == nullptr) {
-          m_errorHandler(ErrorType::VARDEF_EXPECTED_EXPRESSION, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::VARDEF_EXPECTED_SEMICOLON); },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  if ((name = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::VARDEF_EXPECTED_IDENTIFIER, m_token.position);
     return nullptr;
   }
+  if (!consumeIf(TokenType::COLON, ErrorType::VARDEF_EXPECTED_COLON)) return nullptr;
+  if ((type = parseTypeIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::VARDEF_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+    return nullptr;
+  }
+  if (!consumeIf(TokenType::ASSIGNMENT, ErrorType::VARDEF_EXPECTED_ASSIGNMENT)) return nullptr;
+  if ((expr = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::VARDEF_EXPECTED_EXPRESSION, m_token.position);
+    return nullptr;
+  }
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::VARDEF_EXPECTED_SEMICOLON)) return nullptr;
 
   return std::make_unique<VarDef>(std::move(position), std::move(*name), std::move(*type),
                                   std::move(expr));
@@ -164,39 +147,21 @@ std::unique_ptr<Definition> Parser::parseConstDef() {
   std::optional<TypeIdentifier> type;
   std::unique_ptr<Expression> expr;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::CONSTDEF_EXPECTED_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::COLON, ErrorType::CONSTDEF_EXPECTED_COLON); },
-      [this, &type]() {
-        if ((type = parseTypeIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() {
-        return consumeIf(TokenType::ASSIGNMENT, ErrorType::CONSTDEF_EXPECTED_ASSIGNMENT);
-      },
-      [this, &expr]() {
-        if ((expr = parseExpression()) == nullptr) {
-          m_errorHandler(ErrorType::CONSTDEF_EXPECTED_EXPRESSION, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::CONSTDEF_EXPECTED_SEMICOLON); },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  if ((name = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::CONSTDEF_EXPECTED_IDENTIFIER, m_token.position);
     return nullptr;
   }
+  if (!consumeIf(TokenType::COLON, ErrorType::CONSTDEF_EXPECTED_COLON)) return nullptr;
+  if ((type = parseTypeIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::CONSTDEF_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+    return nullptr;
+  }
+  if (!consumeIf(TokenType::ASSIGNMENT, ErrorType::CONSTDEF_EXPECTED_ASSIGNMENT)) return nullptr;
+  if ((expr = parseExpression()) == nullptr) {
+    m_errorHandler(ErrorType::CONSTDEF_EXPECTED_EXPRESSION, m_token.position);
+    return nullptr;
+  }
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::CONSTDEF_EXPECTED_SEMICOLON)) return nullptr;
 
   return std::make_unique<ConstDef>(std::move(position), std::move(*name), std::move(*type),
                                     std::move(expr));
@@ -216,24 +181,14 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
   std::optional<Identifier> name;
   std::optional<StructDef::Members> members;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE); },
-      [this, &members]() { return ((members = parseStructMembers()) != std::nullopt); },
-      [this]() { return consumeIf(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE); },
-      [this]() { return consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON); },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  if ((name = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER, m_token.position);
     return nullptr;
   }
+  if (!consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE)) return nullptr;
+  if ((members = parseStructMembers()) == std::nullopt) return nullptr;
+  if (!consumeIf(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE)) return nullptr;
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON)) return nullptr;
 
   return std::make_unique<StructDef>(std::move(position), std::move(*name), std::move(*members));
 }
@@ -272,28 +227,13 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
   std::optional<Identifier> name;
   std::optional<TypeIdentifier> type;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON); },
-      [this, &type]() {
-        if ((type = parseTypeIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() {
-        return consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON);
-      },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  name = parseIdentifier();
+  if (!consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON)) return std::nullopt;
+  if ((type = parseTypeIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER, m_token.position);
+    return std::nullopt;
+  }
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON)) {
     return std::nullopt;
   }
 
@@ -314,26 +254,14 @@ std::unique_ptr<Definition> Parser::parseVariantDef() {
   std::optional<Identifier> name;
   std::optional<VariantDef::Types> types;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE); },
-      [this, &types]() { return ((types = parseVariantTypes()) != std::nullopt); },
-      [this]() { return consumeIf(TokenType::RBRACE, ErrorType::VARIANTDEF_EXPECTED_RBRACE); },
-      [this]() {
-        return consumeIf(TokenType::SEMICOLON, ErrorType::VARIANTDEF_EXPECTED_SEMICOLON);
-      },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  if ((name = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER, m_token.position);
     return nullptr;
   }
+  if (!consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE)) return nullptr;
+  if ((types = parseVariantTypes()) == std::nullopt) return nullptr;
+  if (!consumeIf(TokenType::RBRACE, ErrorType::VARIANTDEF_EXPECTED_RBRACE)) return nullptr;
+  if (!consumeIf(TokenType::SEMICOLON, ErrorType::VARIANTDEF_EXPECTED_SEMICOLON)) return nullptr;
 
   return std::make_unique<VariantDef>(std::move(position), std::move(*name), std::move(*types));
 }
@@ -385,35 +313,19 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
   std::optional<FnDef::ReturnType> returnType;
   std::unique_ptr<Statement> body;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::FNDEF_EXPECTED_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::LPAREN, ErrorType::FNDEF_EXPECTED_LPAREN); },
-      [this, &params]() { return ((params = parseFnParams()) != std::nullopt); },
-      [this]() { return consumeIf(TokenType::RPAREN, ErrorType::FNDEF_EXPECTED_RPAREN); },
-      [this, &returnType]() {
-        if ((returnType = parseFnReturnType()) == std::nullopt) {
-          m_errorHandler(ErrorType::FNDEF_EXPECTED_RETURN_TYPE, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this, &body]() {
-        if ((body = parseBlockStmt()) == nullptr) {
-          m_errorHandler(ErrorType::FNDEF_EXPECTED_BLOCK, m_token.position);
-          return false;
-        }
-        return true;
-      },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  if ((name = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::FNDEF_EXPECTED_IDENTIFIER, m_token.position);
+    return nullptr;
+  }
+  if (!consumeIf(TokenType::LPAREN, ErrorType::FNDEF_EXPECTED_LPAREN)) return nullptr;
+  if ((params = parseFnParams()) == std::nullopt) return nullptr;
+  if (!consumeIf(TokenType::RPAREN, ErrorType::FNDEF_EXPECTED_RPAREN)) return nullptr;
+  if ((returnType = parseFnReturnType()) == std::nullopt) {
+    m_errorHandler(ErrorType::FNDEF_EXPECTED_RETURN_TYPE, m_token.position);
+    return nullptr;
+  }
+  if ((body = parseBlockStmt()) == nullptr) {
+    m_errorHandler(ErrorType::FNDEF_EXPECTED_BLOCK, m_token.position);
     return nullptr;
   }
 
@@ -463,33 +375,17 @@ std::optional<FnDef::Param> Parser::parseFnParam() {
   std::optional<Identifier> name;
   std::optional<TypeIdentifier> type;
 
-  std::vector<std::function<bool()>> steps = {
-      [this, &isConst]() {
-        if (m_token.type == TokenType::CONST_KWRD) {
-          isConst = true;
-          consumeToken();
-        }
-        return true;
-      },
-      [this, &name]() {
-        if ((name = parseIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::FNPARAM_EXPECTED_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-      [this]() { return consumeIf(TokenType::COLON, ErrorType::FNPARAM_EXPECTED_COLON); },
-      [this, &type]() {
-        if ((type = parseTypeIdentifier()) == std::nullopt) {
-          m_errorHandler(ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-          return false;
-        }
-        return true;
-      },
-  };
-
-  if (!std::all_of(steps.begin(), steps.end(),
-                   [](const std::function<bool()>& step) { return step(); })) {
+  if (m_token.type == TokenType::CONST_KWRD) {
+    isConst = true;
+    consumeToken();
+  }
+  if ((name = parseIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::FNPARAM_EXPECTED_IDENTIFIER, m_token.position);
+    return std::nullopt;
+  }
+  if (!consumeIf(TokenType::COLON, ErrorType::FNPARAM_EXPECTED_COLON)) return std::nullopt;
+  if ((type = parseTypeIdentifier()) == std::nullopt) {
+    m_errorHandler(ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER, m_token.position);
     return std::nullopt;
   }
 

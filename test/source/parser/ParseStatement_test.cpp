@@ -150,6 +150,15 @@ TEST_F(ParserTest, ParserHandlesVariantCases) {
   ASSERT_EQ(cases->size(), 2);
 }
 
+TEST_F(ParserTest, ParserHandlesVariantMatchCaseRedefinition) {
+  m_reader.load(L"case int -> {} case int -> {}");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTMATCHCASE_REDEFINITION, _)).Times(1);
+  auto cases = parseVariantMatchCases();
+  ASSERT_FALSE(cases.has_value());
+}
+
 /* ---------------------------- VariantMatchStmt ---------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyVariantMatchStmt) {
