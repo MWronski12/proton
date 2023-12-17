@@ -292,7 +292,7 @@ TEST_F(ParserTest, ParserHandlesEmptyPrimaryExpr) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
-  auto primaryExpr = parsePrimaryExpr();
+  auto primaryExpr = parsePrimaryExpression();
   ASSERT_TRUE(primaryExpr == nullptr);
 }
 
@@ -302,30 +302,30 @@ TEST_F(ParserTest, ParserHandlesPrimaryExpr) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
-  auto idExpr = parsePrimaryExpr();
+  auto idExpr = parsePrimaryExpression();
   ASSERT_TRUE(idExpr != nullptr);
 
-  auto integer = parsePrimaryExpr();
+  auto integer = parsePrimaryExpression();
   ASSERT_TRUE(integer != nullptr);
 
-  auto floating = parsePrimaryExpr();
+  auto floating = parsePrimaryExpression();
   ASSERT_TRUE(floating != nullptr);
 
-  auto boolean = parsePrimaryExpr();
+  auto boolean = parsePrimaryExpression();
   ASSERT_TRUE(boolean != nullptr);
 
-  auto character = parsePrimaryExpr();
+  auto character = parsePrimaryExpression();
   ASSERT_TRUE(character != nullptr);
 
-  auto string = parsePrimaryExpr();
+  auto string = parsePrimaryExpression();
   ASSERT_TRUE(string != nullptr);
 
-  auto object = parsePrimaryExpr();
+  auto object = parsePrimaryExpression();
   ASSERT_TRUE(object != nullptr);
 
-  auto parenExpr = parsePrimaryExpr();
+  auto parenExpr = parsePrimaryExpression();
   ASSERT_TRUE(parenExpr != nullptr);
 
-  auto castExpr = parsePrimaryExpr();
+  auto castExpr = parsePrimaryExpression();
   ASSERT_TRUE(castExpr != nullptr);
 }

@@ -72,6 +72,16 @@ enum class ErrorType {
   OBJECTMEMBER_EXPECTED_EXPRESSION,
   OBJECTMEMBER_REDEFINITION,
 
+  // Fn Call
+  FNCALL_EXPECTED_ARGUMENT,
+  FNCALL_EXPECTED_RPAREN,
+
+  // Member Access
+  MEMBERACCESS_EXPECTED_IDENTIFIER,
+
+  // Variant Access
+  VARIANTACCESS_EXPECTED_TYPE_IDENTIFIER,
+
   // Semantic Errors
   EXPECTED_MAIN_FUNCTION_DEF,
   REDEFINITION,
@@ -197,6 +207,19 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected expression in object member definition!"}},
     {ErrorType::OBJECTMEMBER_EXPECTED_COLON,
      {SYNTAX_ERROR, "Expected colon in object member definition!"}},
+
+    // Fn Call
+    {ErrorType::FNCALL_EXPECTED_ARGUMENT, {SYNTAX_ERROR, "Expected argument in function call!"}},
+    {ErrorType::FNCALL_EXPECTED_RPAREN,
+     {SYNTAX_ERROR, "Missing closing parenthesis in function call!"}},
+
+    // Member Access
+    {ErrorType::MEMBERACCESS_EXPECTED_IDENTIFIER,
+     {SYNTAX_ERROR, "Expected identifier in member access!"}},
+
+    // Variant Access
+    {ErrorType::VARIANTACCESS_EXPECTED_TYPE_IDENTIFIER,
+     {SYNTAX_ERROR, "Expected type identifier in variant access!"}},
 
     /* ----------------------------- Semantic Errors ---------------------------- */
     {ErrorType::EXPECTED_MAIN_FUNCTION_DEF,

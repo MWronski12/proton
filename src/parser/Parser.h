@@ -6,17 +6,31 @@
 #include <type_traits>
 #include <variant>
 
-#include "Block.h"
 #include "Definition.h"
 #include "ErrorHandler.h"
 #include "Expression.h"
 #include "Lexer.h"
-#include "Program.h"
+#include "Statement.h"
 #include "parser_utils.h"
+
+/*
+ * Program
+ *     = { Definition };
+ */
+struct Program : public ASTNode {
+ public:
+  using IdentifierToDefinitionPtrMap = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
+
+  Program(Position &&position, IdentifierToDefinitionPtrMap &&definitions)
+      : ASTNode{std::move(position)}, definitions{std::move(definitions)} {}
+
+  IdentifierToDefinitionPtrMap definitions;
+};
 
 class Parser {
  public:
   Parser(Lexer &lexer, ErrorHandler &errorHandler);
+
   std::optional<Program> parseProgram();
 
   friend class ParserTest;
@@ -29,10 +43,10 @@ class Parser {
   bool consumeIf(TokenType expectedType, ErrorType error);
   bool consumeIf(const std::function<bool(TokenType tokenType)> &predicate, ErrorType err);
 
-  std::optional<Identifier> getIdentifier();
-  std::optional<TypeIdentifier> getTypeIdentifier();
+  std::optional<Identifier> parseIdentifier();
+  std::optional<TypeIdentifier> parseTypeIdentifier();
 
-  /* ------------------------------- Definition ------------------------------- */
+  /* ------------------------------- Definitions ------------------------------ */
 
   std::unique_ptr<Definition> parseDefinition();
   std::unique_ptr<Definition> parseVarDef();
@@ -51,10 +65,11 @@ class Parser {
   std::optional<FnDef::Param> parseFnParam();
   std::optional<FnDef::ReturnType> parseFnReturnType();
 
-  /* ------------------------------- Expression ------------------------------- */
+  /* ------------------------------- Expressions ------------------------------ */
+
   std::unique_ptr<Expression> parseExpression();
 
-  std::unique_ptr<Expression> parsePrimaryExpr();
+  std::unique_ptr<Expression> parsePrimaryExpression();
   std::unique_ptr<Expression> parseIdentifierExpr();
   template <typename T>
   std::unique_ptr<Expression> parseLiteral() {
@@ -74,27 +89,44 @@ class Parser {
     consumeToken();
     return std::make_unique<Literal<T>>(std::move(position), std::move(value));
   }
+
   std::unique_ptr<Expression> parseObject();
   std::optional<Object::Members> parseObjectMembers();
   std::optional<Object::Member> parseObjectMember();
+
   std::unique_ptr<Expression> parseParenExpr();
   std::unique_ptr<Expression> parseCastExpr();
 
-  /* --------------------------------- Block ---------------------------------- */
-  std::optional<Block> parseBlock() {
-    if (m_token.type != TokenType::LBRACE) {
-      return std::nullopt;
-    }
-    auto position = m_token.position;
-    consumeToken();
+  std::unique_ptr<Expression> parseFunctionalExpression();
+  std::unique_ptr<FunctionalExpression::Postfix> parseFunctionalExpressionPostfix();
+  std::unique_ptr<FunctionalExpression::Postfix> parseMemberAccessPostfix();
+  std::unique_ptr<FunctionalExpression::Postfix> parseVariantAccessPostfix();
+  std::unique_ptr<FunctionalExpression::Postfix> parseFnCallPostfix();
+  std::optional<FnCall::Args> parseFnCallArgs();
 
-    while (m_token.type != TokenType::RBRACE) {
-      consumeToken();
-    }
-    consumeToken();
+  /* ------------------------------- Statements ------------------------------- */
 
-    return Block{std::move(position)};
-  }
+  std::unique_ptr<Statement> parseStatement();
+  std::unique_ptr<Statement> parseBlockStmt();
+  std::unique_ptr<Statement> parseExpressionOrAssignmentStmt();
+  std::unique_ptr<Statement> parseStdinExtractionStmt();
+  std::unique_ptr<Statement> parseStdoutInsertionStmt();
+
+  std::unique_ptr<Statement> parseVariantMatchStmt();
+  std::optional<VariantMatchStmt::Cases> parseVariantMatchCases();
+
+  std::unique_ptr<Statement> parseIfStmt();
+  std::optional<IfStmt::Elifs> parseElifs();
+  std::optional<IfStmt::Else> parseElif();
+  std::optional<IfStmt::Elif> parseElse();
+
+  std::unique_ptr<Statement> parseForStmt();
+  std::optional<ForStmt::Range> parseForRange();
+
+  std::unique_ptr<Statement> parseWhileStmt();
+  std::unique_ptr<Statement> parseContinueStmt();
+  std::unique_ptr<Statement> parseBreakStmt();
+  std::unique_ptr<Statement> parseReturnStmt();
 
  private:
   Lexer &m_lexer;
@@ -126,5 +158,16 @@ class Parser {
           {TokenType::BOOL, [this] { return parseLiteral<bool>(); }},
           {TokenType::CHAR, [this] { return parseLiteral<wchar_t>(); }},
           {TokenType::STRING, [this] { return parseLiteral<std::wstring>(); }},
+  };
+
+  std::unordered_map<TokenType, std::function<std::unique_ptr<FunctionalExpression::Postfix>()>>
+      m_functionalExprPostfixParsers = {
+          {TokenType::LPAREN, [this] { return parseFnCallPostfix(); }},          // FnCall
+          {TokenType::DOT, [this] { return parseMemberAccessPostfix(); }},       // MemberAccess
+          {TokenType::AS_KWRD, [this] { return parseVariantAccessPostfix(); }},  // VariantAccess
+  };
+
+  std::unordered_map<TokenType, std::function<std::unique_ptr<Statement>()>> m_statementParsers = {
+      {TokenType::LBRACE, [this] { return parseBlockStmt(); }},
   };
 };

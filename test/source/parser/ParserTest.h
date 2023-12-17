@@ -19,13 +19,35 @@ class ParserTest : public ::Test {
         } {}
 
  protected:
+  auto parseProgram() { return m_parser.parseProgram(); }
+
+  /* ----------------------------- Utility Methods ---------------------------- */
+
   auto consumeToken() { return m_parser.consumeToken(); }
+
+  /* ------------------------------- Definitions ------------------------------ */
+
+  auto parseVarDef() { return m_parser.parseVarDef(); }
+  auto parseConstDef() { return m_parser.parseConstDef(); }
+
+  auto parseStructDef() { return m_parser.parseStructDef(); }
+  auto parseStructMembers() { return m_parser.parseStructMembers(); }
+  auto parseStructMember() { return m_parser.parseStructMember(); }
+
+  auto parseVariantDef() { return m_parser.parseVariantDef(); }
+  auto parseVariantTypes() { return m_parser.parseVariantTypes(); }
+  auto parseVariantType() { return m_parser.parseVariantType(); }
+
+  auto parseFnDef() { return m_parser.parseFnDef(); }
+  auto parseFnParams() { return m_parser.parseFnParams(); }
+  auto parseFnParam() { return m_parser.parseFnParam(); }
+  auto parseFnReturnType() { return m_parser.parseFnReturnType(); }
 
   /* ------------------------------- Expressions ------------------------------ */
   auto parseExpression() { return m_parser.parseExpression(); }
 
+  auto parsePrimaryExpression() { return m_parser.parsePrimaryExpression(); }
   auto parseIdentifierExpr() { return m_parser.parseIdentifierExpr(); }
-  auto parsePrimaryExpr() { return m_parser.parsePrimaryExpr(); }
   template <typename T>
   auto parseLiteral() {
     return m_parser.parseLiteral<T>();
@@ -36,26 +58,14 @@ class ParserTest : public ::Test {
   auto parseParenExpr() { return m_parser.parseParenExpr(); }
   auto parseCastExpr() { return m_parser.parseCastExpr(); }
 
-  /* ------------------------------- Definitions ------------------------------ */
-  auto parseVarDef() { return m_parser.parseVarDef(); }
-  auto parseConstDef() { return m_parser.parseConstDef(); }
-
-  auto parseStructMember() { return m_parser.parseStructMember(); }
-  auto parseStructMembers() { return m_parser.parseStructMembers(); }
-  auto parseStructDef() { return m_parser.parseStructDef(); }
-
-  auto parseVariantType() { return m_parser.parseVariantType(); }
-  auto parseVariantTypes() { return m_parser.parseVariantTypes(); }
-  auto parseVariantDef() { return m_parser.parseVariantDef(); }
-
-  auto parseFnReturnType() { return m_parser.parseFnReturnType(); }
-  auto parseFnParam() { return m_parser.parseFnParam(); }
-  auto parseFnParams() { return m_parser.parseFnParams(); }
-  auto parseFnDef() { return m_parser.parseFnDef(); }
+  auto parseFunctionalExpression() { return m_parser.parseFunctionalExpression(); }
+  auto parseFunctionalExpressionPostfix() { return m_parser.parseFunctionalExpressionPostfix(); }
+  auto parseFnCallPostfix() { return m_parser.parseFnCallPostfix(); }
+  auto parseFnCallArgs() { return m_parser.parseFnCallArgs(); }
+  auto parseMemberAccessPostfix() { return m_parser.parseMemberAccessPostfix(); }
+  auto parseVariantAccessPostfix() { return m_parser.parseVariantAccessPostfix(); }
 
   /* ------------------------------- Statements ------------------------------- */
-
-  auto parseProgram() { return m_parser.parseProgram(); }
 
   ::testing::StrictMock<ErrorHandlerMock> m_errorHandler;
   StringCharReader m_reader;

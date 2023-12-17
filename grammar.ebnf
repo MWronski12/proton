@@ -158,55 +158,54 @@ fnReturnType
 (* STATEMENTS *)
 
 Statement
-    = VarDef
-    | ConstDef
-    | ExpressionOrAssignmentStatement
-    | StdinExtraction
-    | StdoutInsertion
-    | VariantMatchStatement
-    | IfStatement
-    | ForStatement
-    | WhileStatement
-    | ContinueStatement
-    | BreakStatement
-    | ReturnStatement
-    | Block;
+    = Definition
+    | BlockStmt
+    | ExpressionOrAssignmentStmt
+    | StdinExtractionStmt
+    | StdoutInsertionStmt
+    | VariantMatchStmt
+    | IfStmt
+    | ForStmt
+    | WhileStmt
+    | ContinueStmt
+    | BreakStmt
+    | ReturnStmt
 
-StdinExtraction
+StdinExtractionStmt
     = ">>", expression, ";";
-StdoutInsertion
+StdoutInsertionStmt
     = "<<", expression, { "<<", expression }, ";";
 
-ExpressionOrAssignmentStatement
+ExpressionOrAssignmentStmt
     = expression, [ "=", expression ], ";";
 
-VariantMatchStatement
+VariantMatchStmt
     = "match", expression, "{", { variantCase }, "}";
 variantCase
     = "case", typeIdentifier, "->", Block;
 
-IfStatement
+IfStmt
     = "if", { elifClause }, [ elseClause ];
 elifClause
     = "elif", expression, Block;
 elseClause
     = "else", Block;
 
-WhileStatement
-    = "while", expression, Block;
-
-ForStatement
+ForStmt
     = "for", identifier, "in", range, Block;
-range
+Range
     = expression, "until", expression;
 
-ReturnStatement
+WhileStmt
+    = "while", expression, Block;
+
+ReturnStmt
     = "return", [ expression ], ";";
 
-BreakStatement
+BreakStmt
     = "break", ";";
-ContinueStatement
+ContinueStmt
     = "continue", ";";
 
-Block
+BlockStmt
     = "{", { Statement }, "}";

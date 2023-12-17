@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "ASTNode.h"
-#include "Block.h"
 #include "Expression.h"
+#include "Statement.h"
 
 /*
  * Definition
@@ -17,18 +17,10 @@
  *     | VariantDef
  *     | FnDef;
  */
-struct Definition : public ASTNode {
+struct Definition : public Statement {
  public:
-  Definition() = delete;
-  Definition(const Definition&) = delete;
-  Definition& operator=(const Definition&) = delete;
-
-  Definition(Definition&&) = default;
-  Definition& operator=(Definition&&) = default;
-  virtual ~Definition() override = default;
-
   Definition(Position&& position, Identifier&& defName)
-      : ASTNode{std::move(position)}, name{std::move(defName)} {}
+      : Statement{std::move(position)}, name{std::move(defName)} {}
 
   Identifier name;
 };
@@ -125,7 +117,7 @@ struct VariantDef : public Definition {
 
 /*
  * FnDef
- *    = "fn", identifier, "(", [ fnParams ], ")", returnTypeAnnotation, Block;
+ *    = "fn", identifier, "(", [ fnParams ], ")", returnTypeAnnotation, BlockStmt;
  */
 struct FnDef : public Definition {
  public:
@@ -155,7 +147,7 @@ struct FnDef : public Definition {
   using ReturnType = TypeIdentifier;
 
   FnDef(Position&& position, Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType,
-        Block&& fnBody)
+        BlockStmt&& fnBody)
       : Definition{std::move(position), std::move(fnName)},
         parameters{std::move(fnParams)},
         returnType{std::move(fnReturnType)},
@@ -163,5 +155,5 @@ struct FnDef : public Definition {
 
   Params parameters;
   ReturnType returnType;
-  Block body;
+  BlockStmt body;
 };

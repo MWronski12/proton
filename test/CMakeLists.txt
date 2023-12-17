@@ -20,6 +20,7 @@ add_executable(test
   source/parser/ParseVariantDef_test.cpp
   source/parser/ParseFnDef_test.cpp
   source/parser/ParsePrimaryExpr_test.cpp
+  source/parser/ParseFunctionalExpr_test.cpp
 )
 
 target_include_directories(test PUBLIC
