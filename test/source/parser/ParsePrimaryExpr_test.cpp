@@ -265,7 +265,7 @@ TEST_F(ParserTest, ParserHandlesMissingLParenInCastExpr) {
 }
 
 TEST_F(ParserTest, ParserHandlesCastExprMissingExpr) {
-  m_reader.load(L"(1)");
+  m_reader.load(L"int()");
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::CASTEXPR_EXPECTED_EXPRESSION, _)).Times(1);

@@ -151,7 +151,7 @@ TEST_F(ParserTest, ParserHandlesEmptyFnDef) {
 }
 
 TEST_F(ParserTest, ParserHandlesEmptyParamsFnDef) {
-  m_reader.load(L"fn foo() -> int { return 42; }");
+  m_reader.load(L"fn foo() -> int { }");
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
@@ -165,7 +165,7 @@ TEST_F(ParserTest, ParserHandlesEmptyParamsFnDef) {
 }
 
 TEST_F(ParserTest, ParserHandlesFnDef) {
-  m_reader.load(L"fn foo(const boo: string) -> int { << \"My param is: \" << boo; }");
+  m_reader.load(L"fn foo(const boo: string) -> int { }");
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);

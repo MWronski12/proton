@@ -36,14 +36,12 @@ enum class ErrorType {
   STRUCTMEMBER_EXPECTED_COLON,
   STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER,
   STRUCTMEMBER_EXPECTED_SEMICOLON,
-  STRUCTMEMBER_REDEFINITION,
 
   // Variant Definition
   VARIANTDEF_EXPECTED_IDENTIFIER,
   VARIANTDEF_EXPECTED_LBRACE,
   VARIANTDEF_EXPECTED_RBRACE,
   VARIANTDEF_EXPECTED_SEMICOLON,
-  VARIANTTYPE_REDEFINITION,
 
   // Fn Definition
   FNDEF_EXPECTED_IDENTIFIER,
@@ -54,7 +52,6 @@ enum class ErrorType {
   FNPARAM_EXPECTED_IDENTIFIER,
   FNPARAM_EXPECTED_COLON,
   FNPARAM_EXPECTED_TYPE_IDENTIFIER,
-  FNPARAM_REDEFINITION,
   FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
 
   // Binary Expression
@@ -76,7 +73,6 @@ enum class ErrorType {
   OBJECT_EXPECTED_RBRACE,
   OBJECTMEMBER_EXPECTED_COLON,
   OBJECTMEMBER_EXPECTED_EXPRESSION,
-  OBJECTMEMBER_REDEFINITION,
 
   // Fn Call
   FNCALL_EXPECTED_ARGUMENT,
@@ -106,29 +102,36 @@ enum class ErrorType {
   VARIANTMATCH_EXPECTED_EXPRESSION,
   VARIANTMATCH_EXPECTED_LBRACE,
   VARIANTMATCH_EXPECTED_RBRACE,
-  VARIANTMATCHCASE_REDEFINITION,
 
-  // IfStmt
+  // Flow control statements
   ELIF_EXPECTED_CONDITION,
   ELIF_EXPECTED_BLOCK,
   ELSE_EXPECTED_BLOCK,
   IF_EXPECTED_CONDITION,
   IF_EXPECTED_BLOCK,
 
-  // ForStmt
   FORRANGE_EXPECTED_UNTIL,
   FORRANGE_EXPECTED_END_EXPR,
   FOR_EXPECTED_IDENTIFIER,
   FOR_EXPECTED_IN,
   FOR_EXPECTED_RANGE,
   FOR_EXPECTED_BLOCK,
+  WHILE_EXPECTED_CONDITION,
+  WHILE_EXPECTED_BLOCK,
+  CONTINUE_EXPECTED_SEMICOLON,
+  BREAK_EXPECTED_SEMICOLON,
+  RETURN_EXPECTED_SEMICOLON,
 
   // Semantic Errors
-  EXPECTED_MAIN_FUNCTION_DEF,
-  REDEFINITION,
+  EXPECTED_MAIN_FUNCTION_DEF,  // t
+  FN_REDEFINITION,             // t
+  STRUCTMEMBER_REDEFINITION,
+  VARIANTTYPE_REDEFINITION,
+  FNPARAM_REDEFINITION,
+  OBJECTMEMBER_REDEFINITION,      // t
+  VARIANTMATCHCASE_REDEFINITION,  // t
 
   // Internal Errors
-  INTERNAL_ERROR,
   TOKEN_INVARIANT_VIOLATION,
 };
 
@@ -140,10 +143,13 @@ const auto INTERNAL_ERROR = std::string("Internal Error");
 using ErrorInfo = std::pair<std::string, std::string>;  // pairs of <ErrorTypeStr, ErrorMsg>
 
 static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
-    {ErrorType::INTERNAL_ERROR, {INTERNAL_ERROR, "Internal Error!"}},
+
+    /* ----------------------------- Internal Errors ---------------------------- */
+
     {ErrorType::TOKEN_INVARIANT_VIOLATION, {INTERNAL_ERROR, "Token data is not integral!"}},
 
     /* ----------------------------- Lexical Errors ----------------------------- */
+
     {ErrorType::INVALID_NUMBER_LITERAL, {LEXICAL_ERROR, "Invalid number literal!"}},
     {ErrorType::INVALID_CHAR_LITERAL,
      {LEXICAL_ERROR,
@@ -196,7 +202,6 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected type identifier in struct member definition!"}},
     {ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON,
      {SYNTAX_ERROR, "Missing semicolon at the end of struct member definition!"}},
-    {ErrorType::STRUCTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Struct member redefinition!"}},
 
     // Variant Definition
     {ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER,
@@ -207,7 +212,6 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected closing brace in variant definition!"}},
     {ErrorType::VARIANTDEF_EXPECTED_SEMICOLON,
      {SYNTAX_ERROR, "Missing semicolon at the end of variant definition!"}},
-    {ErrorType::VARIANTTYPE_REDEFINITION, {SEMANTIC_ERROR, "Variant type redefinition!"}},
 
     // Fn Definition
     {ErrorType::FNDEF_EXPECTED_IDENTIFIER,
@@ -225,7 +229,6 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected colon in function parameter definition!"}},
     {ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in function parameter definition!"}},
-    {ErrorType::FNPARAM_REDEFINITION, {SEMANTIC_ERROR, "Function parameter redefinition!"}},
     {ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
      {SYNTAX_ERROR, "Expected type identifier in function return type definition!"}},
 
@@ -251,7 +254,6 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
 
     // Object
     {ErrorType::OBJECT_EXPECTED_RBRACE, {SYNTAX_ERROR, "Expected closing brace in object!"}},
-    {ErrorType::OBJECTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Object member redefinition!"}},
     {ErrorType::OBJECTMEMBER_EXPECTED_EXPRESSION,
      {SYNTAX_ERROR, "Expected expression in object member definition!"}},
     {ErrorType::OBJECTMEMBER_EXPECTED_COLON,
@@ -301,17 +303,13 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SYNTAX_ERROR, "Expected opening brace in variant match!"}},
     {ErrorType::VARIANTMATCH_EXPECTED_RBRACE,
      {SYNTAX_ERROR, "Expected closing brace in variant match!"}},
-    {ErrorType::VARIANTMATCHCASE_REDEFINITION,
-     {SEMANTIC_ERROR, "Variant match case redefinition!"}},
 
-    // IfStmt
+    // Flow control statements
     {ErrorType::ELIF_EXPECTED_CONDITION, {SYNTAX_ERROR, "Expected condition in elif statement!"}},
     {ErrorType::ELIF_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in elif statement!"}},
-    {ErrorType::ELSE_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in else statement!"}},
     {ErrorType::IF_EXPECTED_CONDITION, {SYNTAX_ERROR, "Expected condition in if statement!"}},
     {ErrorType::IF_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in if statement!"}},
-
-    // ForStmt
+    {ErrorType::ELSE_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in else statement!"}},
     {ErrorType::FORRANGE_EXPECTED_UNTIL, {SYNTAX_ERROR, "Expected 'until' in for statement!"}},
     {ErrorType::FORRANGE_EXPECTED_END_EXPR,
      {SYNTAX_ERROR, "Expected end expression in for statement!"}},
@@ -319,9 +317,24 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     {ErrorType::FOR_EXPECTED_IN, {SYNTAX_ERROR, "Expected 'in' in for statement!"}},
     {ErrorType::FOR_EXPECTED_RANGE, {SYNTAX_ERROR, "Expected range in for statement!"}},
     {ErrorType::FOR_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in for statement!"}},
+    {ErrorType::WHILE_EXPECTED_CONDITION, {SYNTAX_ERROR, "Expected condition in while statement!"}},
+    {ErrorType::WHILE_EXPECTED_BLOCK, {SYNTAX_ERROR, "Expected block in while statement!"}},
+    {ErrorType::CONTINUE_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of continue statement!"}},
+    {ErrorType::BREAK_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of break statement!"}},
+    {ErrorType::RETURN_EXPECTED_SEMICOLON,
+     {SYNTAX_ERROR, "Missing semicolon at the end of return statement!"}},
 
     /* ----------------------------- Semantic Errors ---------------------------- */
+
     {ErrorType::EXPECTED_MAIN_FUNCTION_DEF,
      {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"}},
-    {ErrorType::REDEFINITION, {SEMANTIC_ERROR, "Redefinition!"}},
+    {ErrorType::FN_REDEFINITION, {SEMANTIC_ERROR, "Function redefinition!"}},
+    {ErrorType::STRUCTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Struct member redefinition!"}},
+    {ErrorType::VARIANTMATCHCASE_REDEFINITION,
+     {SEMANTIC_ERROR, "Variant match case redefinition!"}},
+    {ErrorType::OBJECTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Object member redefinition!"}},
+    {ErrorType::VARIANTTYPE_REDEFINITION, {SEMANTIC_ERROR, "Variant type redefinition!"}},
+    {ErrorType::FNPARAM_REDEFINITION, {SEMANTIC_ERROR, "Function parameter redefinition!"}},
 };

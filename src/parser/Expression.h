@@ -32,10 +32,11 @@ struct Expression : public ASTNode {
 struct BinaryExpression : public Expression {
  public:
   BinaryExpression(Position&& position, std::unique_ptr<Expression>&& left,
-                   std::unique_ptr<Expression>&& right)
-      : Expression{std::move(position)}, left{std::move(left)}, right{std::move(right)} {}
+                   std::optional<TokenType> op, std::unique_ptr<Expression>&& right)
+      : Expression{std::move(position)}, left{std::move(left)}, op{op}, right{std::move(right)} {}
 
   std::unique_ptr<Expression> left;
+  std::optional<TokenType> op;
   std::unique_ptr<Expression> right;
 };
 
@@ -45,9 +46,11 @@ struct BinaryExpression : public Expression {
  */
 struct UnaryExpression : public Expression {
  public:
-  UnaryExpression(Position&& position, std::unique_ptr<Expression>&& expr)
-      : Expression{std::move(position)}, expr{std::move(expr)} {}
+  UnaryExpression(Position&& position, std::optional<TokenType> op,
+                  std::unique_ptr<Expression>&& expr)
+      : Expression{std::move(position)}, op{op}, expr{std::move(expr)} {}
 
+  std::optional<TokenType> op;
   std::unique_ptr<Expression> expr;
 };
 
@@ -88,143 +91,6 @@ struct FunctionalExpression : public Expression {
 struct PrimaryExpression : public Expression {
  public:
   PrimaryExpression(Position&& position) : Expression{std::move(position)} {}
-};
-
-/* ---------------------------------- Logic --------------------------------- */
-
-/*
- * LogicOrExpr
- *    = LogicAndExpr, { LogicOrOp, LogicAndExpr };
- */
-
-/* || */
-struct LogicOrExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/*
- * LogicAndExpr
- *    = EqualityExpr, { LogicAndOp, EqualityExpr };
- */
-
-/* && */
-struct LogicAndExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* -------------------------------- Equality -------------------------------- */
-
-/*
- * EqualityExpr
- *    = RelationalExpr, { EqualityOp, RelationalExpr };
- */
-
-/* == */
-struct EqualityIsExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* != */
-struct EqualityIsNotExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* ------------------------------- Relational ------------------------------- */
-
-/*
- * RelationalExpr
- *    = AdditiveExpr, { RelationalOp, AdditiveExpr };
- */
-
-/* < */
-struct RelationalLessThanExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* <= */
-struct RelationalLessThanOrEqualExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* > */
-struct RelationalGreaterThanExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* >= */
-struct RelationalGreaterThanOrEqualExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* -------------------------------- Additive -------------------------------- */
-
-/*
- * AdditiveExpr
- *    = MultiplicativeExpr, { AdditiveOp, MultiplicativeExpr };
- */
-
-/* + */
-struct AdditivePlusExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* - */
-struct AdditiveMinusExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* ----------------------------- Multiplicative ----------------------------- */
-
-/*
- * MultiplicativeExpr
- *    = UnaryExpr, { MultiplicativeOp, UnaryExpr };
- */
-
-/* * */
-struct MultiplicativeMulExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* / */
-struct MultiplicativeDivExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* % */
-struct MultiplicativeModExpr : public BinaryExpression {
- public:
-  using BinaryExpression::BinaryExpression;
-};
-
-/* ---------------------------------- Unary --------------------------------- */
-
-/*
- * UnaryOpExpr
- *    = [ UnaryOp ], FunctionalExpr;
- */
-
-/* ! */
-struct LogicNegExpr : public UnaryExpression {
- public:
-  using UnaryExpression::UnaryExpression;
-};
-
-/* - */
-struct ArithmNegExpr : public UnaryExpression {
- public:
-  using UnaryExpression::UnaryExpression;
 };
 
 /* ------------------------------- Functional ------------------------------- */

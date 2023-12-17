@@ -8,7 +8,7 @@ using Identifier = std::wstring;
 using TypeIdentifier = std::wstring;
 
 /*
- * @brief Main struct for all the AST nodes.
+ * @brief Base struct for all the AST nodes.
  */
 struct ASTNode {
  public:
