@@ -5,9 +5,10 @@
 #include <vector>
 
 #include "ASTNode.h"
-#include "TokenType.h"
 
 /* -------------------------------- Abstract -------------------------------- */
+
+enum class Operator { Add, Sub, Mul, Div, Mod, And, Or, Not, Eq, Neq, Lt, Gt, Leq, Geq };
 
 /*
  * Expression
@@ -32,11 +33,11 @@ struct Expression : public ASTNode {
 struct BinaryExpression : public Expression {
  public:
   BinaryExpression(Position&& position, std::unique_ptr<Expression>&& left,
-                   std::optional<TokenType> op, std::unique_ptr<Expression>&& right)
+                   std::optional<Operator> op, std::unique_ptr<Expression>&& right)
       : Expression{std::move(position)}, left{std::move(left)}, op{op}, right{std::move(right)} {}
 
   std::unique_ptr<Expression> left;
-  std::optional<TokenType> op;
+  std::optional<Operator> op;
   std::unique_ptr<Expression> right;
 };
 
@@ -46,11 +47,11 @@ struct BinaryExpression : public Expression {
  */
 struct UnaryExpression : public Expression {
  public:
-  UnaryExpression(Position&& position, std::optional<TokenType> op,
+  UnaryExpression(Position&& position, std::optional<Operator> op,
                   std::unique_ptr<Expression>&& expr)
       : Expression{std::move(position)}, op{op}, expr{std::move(expr)} {}
 
-  std::optional<TokenType> op;
+  std::optional<Operator> op;
   std::unique_ptr<Expression> expr;
 };
 
@@ -248,15 +249,17 @@ struct ParenExpr : public PrimaryExpression {
   std::unique_ptr<Expression> expr;
 };
 
+enum class PrimitiveType { Int, Float, Bool, Char, String };
+
 /*
  * CastExpr
  *    = primitiveType, "(", Expression, ")";
  */
 struct CastExpr : public PrimaryExpression {
  public:
-  CastExpr(Position&& position, TokenType type, std::unique_ptr<Expression>&& expr)
+  CastExpr(Position&& position, PrimitiveType type, std::unique_ptr<Expression>&& expr)
       : PrimaryExpression{std::move(position)}, type{type}, expr{std::move(expr)} {}
 
-  TokenType type;
+  PrimitiveType type;
   std::unique_ptr<Expression> expr;
 };

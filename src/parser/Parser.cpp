@@ -419,7 +419,7 @@ std::unique_ptr<Expression> Parser::parseBinaryExpression(
   if (lhs == nullptr) return nullptr;
 
   while (std::find(operators.cbegin(), operators.cend(), m_token.type) != operators.cend()) {
-    auto op = m_token.type;
+    auto op = m_tokenTypeToOperator.at(m_token.type);
     consumeToken();
 
     auto rhs = (this->*parseSubExpr)();
@@ -448,7 +448,7 @@ std::unique_ptr<Expression> Parser::parseUnaryExpression(
   }
 
   auto position = m_token.position;
-  auto op = m_token.type;
+  auto op = m_tokenTypeToOperator.at(m_token.type);
   consumeToken();
 
   auto expr = (this->*parseSubExpr)();
@@ -777,7 +777,7 @@ std::unique_ptr<Expression> Parser::parseCastExpr() {
 
   auto position = m_token.position;
   std::unique_ptr<Expression> expr;
-  auto type = m_token.type;
+  auto type = m_tokenTypeToPrimitiveType.at(m_token.type);
   consumeToken();
 
   if (!consumeIf(TokenType::LPAREN, ErrorType::CASTEXPR_EXPECTED_LPAREN)) return nullptr;

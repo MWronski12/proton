@@ -188,6 +188,30 @@ class Parser {
       {TokenType::RETURN_KWRD, [this] { return parseReturnStmt(); }},
       {TokenType::EXTRACTION_OP, [this] { return parseStdinExtractionStmt(); }},
       {TokenType::INSERTION_OP, [this] { return parseStdoutInsertionStmt(); }},
+  };
 
+  std::unordered_map<TokenType, Operator> m_tokenTypeToOperator = {
+      {TokenType::LOGIC_OR, Operator::Or},
+      {TokenType::LOGIC_AND, Operator::And},
+      {TokenType::LOGIC_NOT, Operator::Not},
+      {TokenType::EQUALITY, Operator::Eq},
+      {TokenType::INEQUALITY, Operator::Neq},
+      {TokenType::LESS_THAN, Operator::Lt},
+      {TokenType::GREATER_THAN, Operator::Gt},
+      {TokenType::LESS_OR_EQUAL, Operator::Leq},
+      {TokenType::GREATER_OR_EQUAL, Operator::Geq},
+      {TokenType::PLUS, Operator::Add},
+      {TokenType::MINUS, Operator::Sub},
+      {TokenType::ASTERISK, Operator::Mul},
+      {TokenType::SLASH, Operator::Div},
+      {TokenType::PERCENT, Operator::Mod},
+  };
+
+  std::unordered_map<TokenType, PrimitiveType> m_tokenTypeToPrimitiveType = {
+      {TokenType::INT_KWRD, PrimitiveType::Int},
+      {TokenType::FLOAT_KWRD, PrimitiveType::Float},
+      {TokenType::BOOL_KWRD, PrimitiveType::Bool},
+      {TokenType::CHAR_KWRD, PrimitiveType::Char},
+      {TokenType::STRING_KWRD, PrimitiveType::String},
   };
 };

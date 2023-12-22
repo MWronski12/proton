@@ -7,7 +7,7 @@ TEST_F(ParserTest, parserHandlesBasicBinaryExpression) {
   auto expr = parseExpression();
   auto binExpr = dynamic_cast<BinaryExpression *>(expr.get());
   ASSERT_TRUE(binExpr != nullptr);
-  ASSERT_EQ(binExpr->op, TokenType::MINUS);
+  ASSERT_EQ(binExpr->op, Operator::Sub);
 
   auto left = dynamic_cast<Literal<int> *>(binExpr->left.get());
   auto right = dynamic_cast<Literal<int> *>(binExpr->right.get());
