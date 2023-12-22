@@ -883,48 +883,58 @@ std::unique_ptr<Statement> Parser::parseExpressionOrAssignmentStmt() {
 
 /*
  * StdinExtractionStmt
- *     = ">>", Expression, ";";
+ *     = ">>", Expression, { ">>", Expression }, ";";
  */
 std::unique_ptr<Statement> Parser::parseStdinExtractionStmt() {
   if (m_token.type != TokenType::EXTRACTION_OP) {
     return nullptr;
   }
-  auto position = m_token.position;
-  consumeToken();
 
+  auto position = m_token.position;
   std::unique_ptr<Expression> expr;
-  if ((expr = parseExpression()) == nullptr) {
-    m_errorHandler(ErrorType::STDINEXTRACTION_EXPECTED_EXPRESSION, m_token.position);
-    return nullptr;
-  };
+  std::vector<std::unique_ptr<Expression>> expressions;
+
+  while (m_token.type == TokenType::EXTRACTION_OP) {
+    consumeToken();
+    if ((expr = parseExpression()) == nullptr) {
+      m_errorHandler(ErrorType::STDINEXTRACTION_EXPECTED_EXPRESSION, m_token.position);
+      return nullptr;
+    };
+    expressions.push_back(std::move(expr));
+  }
 
   if (!consumeIf(TokenType::SEMICOLON, ErrorType::STDINEXTRACTION_EXPECTED_SEMICOLON))
     return nullptr;
 
-  return std::make_unique<StdinExtractionStmt>(std::move(position), std::move(expr));
+  return std::make_unique<StdinExtractionStmt>(std::move(position), std::move(expressions));
 }
 
 /*
  * StdoutInsertionStmt
- *     = "<<", Expression, ";";
+ *     = "<<", Expression, { "<<", Expression }, ";";
  */
 std::unique_ptr<Statement> Parser::parseStdoutInsertionStmt() {
   if (m_token.type != TokenType::INSERTION_OP) {
     return nullptr;
   }
-  auto position = m_token.position;
-  consumeToken();
 
+  auto position = m_token.position;
   std::unique_ptr<Expression> expr;
-  if ((expr = parseExpression()) == nullptr) {
-    m_errorHandler(ErrorType::STDOUTINSERTION_EXPECTED_EXPRESSION, m_token.position);
-    return nullptr;
-  };
+  std::vector<std::unique_ptr<Expression>> expressions;
+
+  while (m_token.type == TokenType::INSERTION_OP) {
+    consumeToken();
+    if ((expr = parseExpression()) == nullptr) {
+      m_errorHandler(ErrorType::STDOUTINSERTION_EXPECTED_EXPRESSION, m_token.position);
+      return nullptr;
+    };
+    expressions.push_back(std::move(expr));
+  }
 
   if (!consumeIf(TokenType::SEMICOLON, ErrorType::STDOUTINSERTION_EXPECTED_SEMICOLON))
     return nullptr;
 
-  return std::make_unique<StdoutInsertionStmt>(std::move(position), std::move(expr));
+  return std::make_unique<StdoutInsertionStmt>(std::move(position), std::move(expressions));
 }
 
 /*

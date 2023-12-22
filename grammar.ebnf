@@ -172,7 +172,7 @@ Statement
     | ReturnStmt
 
 StdinExtractionStmt
-    = ">>", expression, ";";
+    = ">>", expression, { ">>", expression }, ";";
 StdoutInsertionStmt
     = "<<", expression, { "<<", expression }, ";";
 

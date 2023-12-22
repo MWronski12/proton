@@ -40,6 +40,18 @@ TEST_F(ParserTest, ParserHandlesStdinMissingSemicolon) {
   ASSERT_TRUE(stmt == nullptr);
 }
 
+TEST_F(ParserTest, ParserHandlesChainingStdinExtractionStmt) {
+  m_reader.load(L">> x >> y >> z;");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  auto stmt = parseStdinExtractionStmt();
+  ASSERT_TRUE(stmt != nullptr);
+  auto chain = dynamic_cast<StdinExtractionStmt *>(stmt.get());
+  ASSERT_TRUE(chain != nullptr);
+  ASSERT_TRUE(chain->expressions.size() == 3);
+}
+
 /* --------------------------- StdoutInsertionStmt -------------------------- */
 
 TEST_F(ParserTest, ParserHandlesStdoutInsertionStmt) {
@@ -78,6 +90,18 @@ TEST_F(ParserTest, ParserHandlesStdoutMissingSemicolon) {
       .Times(1);
   auto stmt = parseStdoutInsertionStmt();
   ASSERT_TRUE(stmt == nullptr);
+}
+
+TEST_F(ParserTest, ParserHandlesChainingStdoutInsertionStmt) {
+  m_reader.load(L"<< x << y << z;");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  auto stmt = parseStdoutInsertionStmt();
+  ASSERT_TRUE(stmt != nullptr);
+  auto chain = dynamic_cast<StdoutInsertionStmt *>(stmt.get());
+  ASSERT_TRUE(chain != nullptr);
+  ASSERT_TRUE(chain->expressions.size() == 3);
 }
 
 /* --------------------------- VariantMatch::Case --------------------------- */

@@ -68,26 +68,26 @@ struct AssignmentStmt : public Statement {
 
 /*
  * StdinExtractionStmt
- *     = ">>", Expression, ";";
+ *     = ">>", Expression, { ">>", Expression }, ";";
  */
 struct StdinExtractionStmt : public Statement {
  public:
-  StdinExtractionStmt(Position &&position, std::unique_ptr<Expression> &&expr)
-      : Statement{std::move(position)}, expr{std::move(expr)} {}
+  StdinExtractionStmt(Position &&position, std::vector<std::unique_ptr<Expression>> &&expressions)
+      : Statement{std::move(position)}, expressions{std::move(expressions)} {}
 
-  std::unique_ptr<Expression> expr;
+  std::vector<std::unique_ptr<Expression>> expressions;
 };
 
 /*
  * StdoutInsertionStmt
- *     = "<<", Expression, ";";
+ *     = "<<", Expression, { "<<", Expression }, ";";
  */
 struct StdoutInsertionStmt : public Statement {
  public:
-  StdoutInsertionStmt(Position &&position, std::unique_ptr<Expression> &&expr)
-      : Statement{std::move(position)}, expr{std::move(expr)} {}
+  StdoutInsertionStmt(Position &&position, std::vector<std::unique_ptr<Expression>> &&expressions)
+      : Statement{std::move(position)}, expressions{std::move(expressions)} {}
 
-  std::unique_ptr<Expression> expr;
+  std::vector<std::unique_ptr<Expression>> expressions;
 };
 
 /*
