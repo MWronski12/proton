@@ -192,34 +192,34 @@ struct Literal : public PrimaryExpression {
   T value;
 };
 
+struct ObjectMember {
+  /*
+   * objectMember
+   *    = Identifier, ":", Expression;
+   */
+  ObjectMember(Identifier&& name, std::unique_ptr<Expression>&& value)
+      : name{std::move(name)}, value{std::move(value)} {}
+
+  Identifier name;
+  std::unique_ptr<Expression> value;
+};
+
 /*
  * Object
- *    = "{", [ memberValues ], "}";
+ *    = "{", [ objectMembers ], "}";
  */
 struct Object : public PrimaryExpression {
  public:
-  struct Member {
-    /*
-     * memberValue
-     *    = Identifier, ":", Expression;
-     */
-    Member(Identifier&& name, std::unique_ptr<Expression>&& value)
-        : name{std::move(name)}, value{std::move(value)} {}
-
-    Identifier name;
-    std::unique_ptr<Expression> value;
-  };
-
   /*
-   * memberValues
-   *    = memberValue, { ",", memberValue };
+   * objectMembers
+   *    = objectMember, { ",", objectMember };
    */
-  using Members = std::unordered_map<Identifier, Member>;
+  using Members = std::unordered_map<Identifier, ObjectMember>;
 
-  Object(Position&& position, Members&& members)
+  Object(Position&& position, std::unique_ptr<Members>&& members)
       : PrimaryExpression{std::move(position)}, members{std::move(members)} {}
 
-  Members members;
+  std::unique_ptr<Members> members;
 };
 
 /*

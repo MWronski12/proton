@@ -95,8 +95,8 @@ class Parser {
     return std::make_unique<Literal<T>>(std::move(position), std::move(value));
   }
   std::unique_ptr<Expression> parseObject();
-  std::optional<Object::Members> parseObjectMembers();
-  std::optional<Object::Member> parseObjectMember();
+  std::unique_ptr<Object::Members> parseObjectMembers();
+  std::unique_ptr<ObjectMember> parseObjectMember();
   std::unique_ptr<Expression> parseParenExpr();
   std::unique_ptr<Expression> parseCastExpr();
 
@@ -109,16 +109,16 @@ class Parser {
   std::unique_ptr<Statement> parseStdoutInsertionStmt();
 
   std::unique_ptr<Statement> parseVariantMatchStmt();
-  std::optional<VariantMatchStmt::Cases> parseVariantMatchCases();
-  std::optional<VariantMatchStmt::Case> parseVariantMatchCase();
+  std::unique_ptr<VariantMatchStmt::Cases> parseVariantMatchCases();
+  std::unique_ptr<VariantMatchCase> parseVariantMatchCase();
 
   std::unique_ptr<Statement> parseIfStmt();
-  IfStmt::Elifs parseElifs();
-  std::optional<IfStmt::Elif> parseElif();
-  std::optional<IfStmt::Else> parseElse();
+  std::unique_ptr<IfStmt::Elifs> parseElifs();
+  std::unique_ptr<Elif> parseElif();
+  std::unique_ptr<Else> parseElse();
 
   std::unique_ptr<Statement> parseForStmt();
-  std::optional<ForStmt::Range> parseForRange();
+  std::unique_ptr<Range> parseRange();
 
   std::unique_ptr<Statement> parseWhileStmt();
   std::unique_ptr<Statement> parseContinueStmt();

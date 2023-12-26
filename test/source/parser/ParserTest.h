@@ -76,7 +76,7 @@ class ParserTest : public ::Test {
   auto parseElif() { return m_parser.parseElif(); }
   auto parseElse() { return m_parser.parseElse(); }
   auto parseForStmt() { return m_parser.parseForStmt(); }
-  auto parseForRange() { return m_parser.parseForRange(); }
+  auto parseRange() { return m_parser.parseRange(); }
   auto parseWhileStmt() { return m_parser.parseWhileStmt(); }
   auto parseContinueStmt() { return m_parser.parseContinueStmt(); }
   auto parseBreakStmt() { return m_parser.parseBreakStmt(); }

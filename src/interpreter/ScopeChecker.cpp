@@ -1,8 +1,7 @@
-#include "ScopeChecker.h"
 
 ScopeChecker::ScopeChecker(ErrorHandler& errorHandler) : m_errorHandler{errorHandler} {}
 
-void ScopeChecker::visit(Program& program) {}
+// void ScopeChecker::visit(Program& program) {}
 
 // void ScopeChecker::visit(Definition& def) {}
 // void ScopeChecker::visit(VarDef& def) {}

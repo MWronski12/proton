@@ -12,19 +12,19 @@ enable_testing()
 
 add_executable(test
   source/input/StringCharReader_test.cpp
-  # source/lexer/Lexer_test.cpp
-  # source/lexer/TokenType_test.cpp
-  # source/parser/ParseVarDef_test.cpp
-  # source/parser/ParseConstDef_test.cpp
-  # source/parser/ParseStructDef_test.cpp
-  # source/parser/ParseVariantDef_test.cpp
-  # source/parser/ParseFnDef_test.cpp
-  # source/parser/ParsePrimaryExpr_test.cpp
-  # source/parser/ParseFunctionalExpr_test.cpp
-  # source/parser/ParseStatement_test.cpp
-  # source/parser/ParseExpression_test.cpp
-  # source/parser/ParseStatement_test.cpp
-  # source/parser/ParseProgram_test.cpp
+  source/lexer/Lexer_test.cpp
+  source/lexer/TokenType_test.cpp
+  source/parser/ParseVarDef_test.cpp
+  source/parser/ParseConstDef_test.cpp
+  source/parser/ParseStructDef_test.cpp
+  source/parser/ParseVariantDef_test.cpp
+  source/parser/ParseFnDef_test.cpp
+  source/parser/ParsePrimaryExpr_test.cpp
+  source/parser/ParseFunctionalExpr_test.cpp
+  source/parser/ParseStatement_test.cpp
+  source/parser/ParseExpression_test.cpp
+  source/parser/ParseStatement_test.cpp
+  source/parser/ParseProgram_test.cpp
 )
 
 target_include_directories(test PUBLIC

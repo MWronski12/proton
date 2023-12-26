@@ -53,8 +53,7 @@ TEST_F(ParserTest, ParserHandlesMismatchedLiterals) {
   literal = parseLiteral<bool>();
   ASSERT_TRUE(literal == nullptr);
 }
-
-/* ----------------------------- Object::Member ----------------------------- */
+/* ------------------------------ ObjectMember ------------------------------ */
 
 TEST_F(ParserTest, ParserHandlesObjectMember) {
   m_reader.load(L"foo: 666     777");
@@ -63,12 +62,12 @@ TEST_F(ParserTest, ParserHandlesObjectMember) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto member = parseObjectMember();
-  ASSERT_TRUE(member != std::nullopt);
+  ASSERT_TRUE(member != nullptr);
   EXPECT_EQ(member->name, L"foo");
   ASSERT_TRUE(member->value != nullptr);
 
   member = parseObjectMember();
-  ASSERT_TRUE(member == std::nullopt);
+  ASSERT_TRUE(member == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesObjectMemberMissingColon) {
@@ -78,7 +77,7 @@ TEST_F(ParserTest, ParserHandlesObjectMemberMissingColon) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::OBJECTMEMBER_EXPECTED_COLON, _)).Times(1);
 
   auto member = parseObjectMember();
-  ASSERT_TRUE(member == std::nullopt);
+  ASSERT_TRUE(member == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesObjectMemberMissingExpr) {
@@ -88,7 +87,7 @@ TEST_F(ParserTest, ParserHandlesObjectMemberMissingExpr) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::OBJECTMEMBER_EXPECTED_EXPRESSION, _)).Times(1);
 
   auto member = parseObjectMember();
-  ASSERT_TRUE(member == std::nullopt);
+  ASSERT_TRUE(member == nullptr);
 }
 
 /* ----------------------------- Object::Members ---------------------------- */
@@ -100,8 +99,7 @@ TEST_F(ParserTest, ParserHandlesObjectEmptyMembers) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members != std::nullopt);
-  ASSERT_EQ(members->size(), 0);
+  ASSERT_TRUE(members == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesObjectMembers) {
@@ -111,7 +109,7 @@ TEST_F(ParserTest, ParserHandlesObjectMembers) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members != std::nullopt);
+  ASSERT_TRUE(members != nullptr);
   ASSERT_EQ(members->size(), 2);
 }
 
@@ -122,14 +120,14 @@ TEST_F(ParserTest, ParserAllowsForTrailingCommaInObjectMembers) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members != std::nullopt);
+  ASSERT_TRUE(members != nullptr);
   ASSERT_EQ(members->size(), 2);
 
   auto literal = parseLiteral<int>();
   ASSERT_TRUE(literal != nullptr);
 
   members = parseObjectMembers();
-  ASSERT_TRUE(members != std::nullopt);
+  ASSERT_TRUE(members != nullptr);
   ASSERT_EQ(members->size(), 2);
 }
 
@@ -140,7 +138,7 @@ TEST_F(ParserTest, ParserHandlesObjectMemberRedefinition) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::OBJECTMEMBER_REDEFINITION, _)).Times(1);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members == std::nullopt);
+  ASSERT_TRUE(members == nullptr);
 }
 
 /* --------------------------------- Object --------------------------------- */
@@ -154,7 +152,7 @@ TEST_F(ParserTest, ParserHandlesEmptyObject) {
   auto objExpr = parseObject();
   Object* object = dynamic_cast<Object*>(objExpr.get());
   ASSERT_TRUE(object != nullptr);
-  ASSERT_EQ(object->members.size(), 0);
+  ASSERT_TRUE(object->members == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesObject) {
@@ -167,7 +165,7 @@ TEST_F(ParserTest, ParserHandlesObject) {
   auto objExpr = parseObject();
   Object* object = dynamic_cast<Object*>(objExpr.get());
   ASSERT_TRUE(object != nullptr);
-  ASSERT_EQ(object->members.size(), 5);
+  ASSERT_EQ(object->members->size(), 5);
 }
 
 /* -------------------------------- ParenExpr ------------------------------- */

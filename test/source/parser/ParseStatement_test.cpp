@@ -112,7 +112,7 @@ TEST_F(ParserTest, ParserHandlesEmptyVariantMatchCase) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseVariantMatchCase();
-  ASSERT_TRUE(stmt == std::nullopt);
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantMatchCase) {
@@ -121,7 +121,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchCase) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseVariantMatchCase();
-  ASSERT_TRUE(stmt.has_value());
+  ASSERT_TRUE(stmt != nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantMatchCaseMissingType) {
@@ -131,7 +131,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchCaseMissingType) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTMATCHCASE_EXPECTED_TYPE, _)).Times(1);
 
   auto stmt = parseVariantMatchCase();
-  ASSERT_FALSE(stmt.has_value());
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantMatchCaseMissingArrow) {
@@ -140,7 +140,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchCaseMissingArrow) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTMATCHCASE_EXPECTED_ARROW, _)).Times(1);
   auto stmt = parseVariantMatchCase();
-  ASSERT_FALSE(stmt.has_value());
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantMatchCaseMissingBlock) {
@@ -149,7 +149,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchCaseMissingBlock) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTMATCHCASE_EXPECTED_BLOCK, _)).Times(1);
   auto stmt = parseVariantMatchCase();
-  ASSERT_FALSE(stmt.has_value());
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 /* ------------------------- VariantMatchStmt::Cases ------------------------ */
@@ -160,7 +160,7 @@ TEST_F(ParserTest, ParserHandlesEmptyVariantCases) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto cases = parseVariantMatchCases();
-  ASSERT_TRUE(cases.has_value());
+  ASSERT_TRUE(cases != nullptr);
   ASSERT_EQ(cases->size(), 0);
 }
 
@@ -170,7 +170,7 @@ TEST_F(ParserTest, ParserHandlesVariantCases) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto cases = parseVariantMatchCases();
-  ASSERT_TRUE(cases.has_value());
+  ASSERT_TRUE(cases != nullptr);
   ASSERT_EQ(cases->size(), 2);
 }
 
@@ -180,7 +180,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchCaseRedefinition) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTMATCHCASE_REDEFINITION, _)).Times(1);
   auto cases = parseVariantMatchCases();
-  ASSERT_FALSE(cases.has_value());
+  ASSERT_TRUE(cases == nullptr);
 }
 
 /* ---------------------------- VariantMatchStmt ---------------------------- */
@@ -231,7 +231,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchStmtMissingRBrace) {
   ASSERT_TRUE(stmt == nullptr);
 }
 
-/* ------------------------------ IfStmt::Elif ------------------------------ */
+/* ---------------------------------- Elif ---------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyElif) {
   m_reader.load(L"");
@@ -239,7 +239,7 @@ TEST_F(ParserTest, ParserHandlesEmptyElif) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElif();
-  ASSERT_TRUE(stmt == std::nullopt);
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesElif) {
@@ -248,7 +248,7 @@ TEST_F(ParserTest, ParserHandlesElif) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElif();
-  ASSERT_TRUE(stmt.has_value());
+  ASSERT_TRUE(stmt != nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesElifMissingExpr) {
@@ -258,7 +258,7 @@ TEST_F(ParserTest, ParserHandlesElifMissingExpr) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::ELIF_EXPECTED_CONDITION, _)).Times(1);
   auto stmt = parseElif();
-  ASSERT_FALSE(stmt.has_value());
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesElifMissingBlock) {
@@ -267,10 +267,10 @@ TEST_F(ParserTest, ParserHandlesElifMissingBlock) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::ELIF_EXPECTED_BLOCK, _)).Times(1);
   auto stmt = parseElif();
-  ASSERT_FALSE(stmt.has_value());
+  ASSERT_TRUE(stmt == nullptr);
 }
 
-/* ------------------------------- IfStmtElifs ------------------------------ */
+/* ---------------------------------- Elifs --------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyElifs) {
   m_reader.load(L"");
@@ -278,7 +278,7 @@ TEST_F(ParserTest, ParserHandlesEmptyElifs) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElifs();
-  EXPECT_EQ(stmt.size(), 0);
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesElifs) {
@@ -287,10 +287,11 @@ TEST_F(ParserTest, ParserHandlesElifs) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElifs();
-  EXPECT_EQ(stmt.size(), 2);
+  ASSERT_TRUE(stmt != nullptr);
+  EXPECT_EQ(stmt->size(), 2);
 }
 
-/* ------------------------------ IfStmt::Else ------------------------------ */
+/* ---------------------------------- Else ---------------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyElse) {
   m_reader.load(L"");
@@ -298,7 +299,7 @@ TEST_F(ParserTest, ParserHandlesEmptyElse) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElse();
-  ASSERT_TRUE(stmt == std::nullopt);
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesElse) {
@@ -307,7 +308,7 @@ TEST_F(ParserTest, ParserHandlesElse) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElse();
-  ASSERT_TRUE(stmt.has_value());
+  ASSERT_TRUE(stmt != nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesElseMissingBlock) {
@@ -316,7 +317,7 @@ TEST_F(ParserTest, ParserHandlesElseMissingBlock) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::ELSE_EXPECTED_BLOCK, _)).Times(1);
   auto stmt = parseElse();
-  ASSERT_FALSE(stmt.has_value());
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 /* --------------------------------- IfStmt --------------------------------- */
@@ -365,8 +366,8 @@ TEST_F(ParserTest, ParserHandlesEmptyForRange) {
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  auto stmt = parseForRange();
-  ASSERT_TRUE(stmt == std::nullopt);
+  auto stmt = parseRange();
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesForRange) {
@@ -374,8 +375,8 @@ TEST_F(ParserTest, ParserHandlesForRange) {
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  auto stmt = parseForRange();
-  ASSERT_TRUE(stmt.has_value());
+  auto stmt = parseRange();
+  ASSERT_TRUE(stmt != nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesForRangeMissingStartExpr) {
@@ -383,8 +384,8 @@ TEST_F(ParserTest, ParserHandlesForRangeMissingStartExpr) {
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  auto stmt = parseForRange();
-  ASSERT_TRUE(stmt == std::nullopt);
+  auto stmt = parseRange();
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesForRangeMissingUntil) {
@@ -392,8 +393,8 @@ TEST_F(ParserTest, ParserHandlesForRangeMissingUntil) {
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FORRANGE_EXPECTED_UNTIL, _)).Times(1);
-  auto stmt = parseForRange();
-  ASSERT_TRUE(stmt == std::nullopt);
+  auto stmt = parseRange();
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesForRangeMissingEndExpr) {
@@ -401,8 +402,8 @@ TEST_F(ParserTest, ParserHandlesForRangeMissingEndExpr) {
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FORRANGE_EXPECTED_END_EXPR, _)).Times(1);
-  auto stmt = parseForRange();
-  ASSERT_TRUE(stmt == std::nullopt);
+  auto stmt = parseRange();
+  ASSERT_TRUE(stmt == nullptr);
 }
 
 /* -------------------------------- ForStmt --------------------------------- */

@@ -119,6 +119,15 @@ TEST_F(ParserTest, ParserHandlesEmptyStructDef) {
   ASSERT_TRUE(result == nullptr);
 }
 
+TEST_F(ParserTest, ParserHandlesStructDef) {
+  m_reader.load(L"struct Foo { bar: int; baz : int; qux : int; };");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  auto result = parseStructDef();
+  ASSERT_TRUE(result != nullptr);
+}
+
 TEST_F(ParserTest, ParserHandlesStructDefMissingName) {
   m_reader.load(L"struct { x: int; }; next");
   consumeToken();
@@ -142,6 +151,15 @@ TEST_F(ParserTest, ParserHandlesStructDefMissingRBrace) {
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_RBRACE, _)).Times(1);
+  auto result = parseStructDef();
+  ASSERT_TRUE(result == nullptr);
+}
+
+TEST_F(ParserTest, ParserHandlesStructDefMissingSemicolon) {
+  m_reader.load(L"struct Foo { x: int; y : int; z : int; }");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::STRUCTDEF_EXPECTED_SEMICOLON, _)).Times(1);
   auto result = parseStructDef();
   ASSERT_TRUE(result == nullptr);
 }
