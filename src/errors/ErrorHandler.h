@@ -6,6 +6,8 @@
 #include "ErrorType.h"
 #include "Position.h"
 
+enum class ErrorLevel { Error, Warning };
+
 class ErrorHandler {
  public:
   ErrorHandler(const ErrorHandler&) = delete;
@@ -13,18 +15,24 @@ class ErrorHandler {
   ErrorHandler& operator=(const ErrorHandler&) = delete;
   ErrorHandler& operator=(ErrorHandler&&) = delete;
 
-  ErrorHandler();
   ErrorHandler(int numToleratedErrors);
-  ~ErrorHandler();
+  ErrorHandler() = default;
+  ~ErrorHandler() = default;
 
-  void operator()(const ErrorType type, const Position& position);
+  void operator()(const ErrorType type, const Position& position,
+                  ErrorLevel level = ErrorLevel::Error);
+
+ protected:
   virtual void handleError(const ErrorType type, const Position& position);
+  virtual void handleWarning(const ErrorType type, const Position& position);
 
  private:
-  void append(const ErrorType type, const Position& position);
-  std::string format(const ErrorType type, const Position& position) const;
-  void exitIfErrors();
+  bool hasErrors() const;
+  void dumpErrors() const;
+  void appendErrorMessage(const ErrorType type, const Position& position);
+  std::string formatErrorMessage(const ErrorType type, const Position& position) const;
 
-  int m_numToleratedErrors;
-  std::stringstream m_errors;
+  int m_numErrors = 0;
+  const int m_numToleratedErrors = 10;
+  std::stringstream m_errorMessages;
 };

@@ -424,7 +424,7 @@ std::unique_ptr<Expression> Parser::parseBinaryExpression(
 
     auto rhs = (this->*parseSubExpr)();
     if (rhs == nullptr) {
-      m_errorHandler.handleError(ErrorType::BINARYEXPRESSION_EXPECTED_RHS, m_token.position);
+      m_errorHandler(ErrorType::BINARYEXPRESSION_EXPECTED_RHS, m_token.position);
       return nullptr;
     };
 
@@ -454,7 +454,7 @@ std::unique_ptr<Expression> Parser::parseUnaryExpression(
   auto expr = (this->*parseSubExpr)();
   if (expr == nullptr) {
     // No expression after the operator
-    m_errorHandler.handleError(ErrorType::UNARYEXPRESSION_EXPECTED_EXPR, m_token.position);
+    m_errorHandler(ErrorType::UNARYEXPRESSION_EXPECTED_EXPR, m_token.position);
     return nullptr;
   }
 

@@ -100,7 +100,7 @@ class Parser {
     try {
       value = std::get<T>(m_token.value);
     } catch (const std::bad_variant_access &) {
-      m_errorHandler.handleError(ErrorType::TOKEN_INVARIANT_VIOLATION, position);
+      m_errorHandler(ErrorType::TOKEN_INVARIANT_VIOLATION, position);
       return nullptr;
     }
 

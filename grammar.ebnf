@@ -187,7 +187,7 @@ variantMatchCase
     = "case", typeIdentifier, "->", Block;
 
 IfStmt
-    = "if", { elifClause }, [ elseClause ];
+    = "if", expression, Block, { elifClause }, [ elseClause ];
 elifClause
     = "elif", expression, Block;
 elseClause
