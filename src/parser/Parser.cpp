@@ -1,7 +1,8 @@
+#include "Parser.h"
+
 #include <cassert>
 
 #include "ErrorType.h"
-#include "Parser.h"
 #include "TokenType.h"
 
 Parser::Parser(Lexer& lexer, ErrorHandler& errorHandler)
@@ -170,47 +171,48 @@ std::unique_ptr<Definition> Parser::parseStructDef() {
   consumeToken();
 
   std::optional<Identifier> name;
-  std::optional<StructDef::Members> members;
+  std::unique_ptr<StructDef::Members> members;
 
   if ((name = parseIdentifier()) == std::nullopt) {
     m_errorHandler(ErrorType::STRUCTDEF_EXPECTED_IDENTIFIER, m_token.position);
     return nullptr;
   }
   if (!consumeIf(TokenType::LBRACE, ErrorType::STRUCTDEF_EXPECTED_LBRACE)) return nullptr;
-  if ((members = parseStructMembers()) == std::nullopt) return nullptr;
+  members = parseStructMembers();
   if (!consumeIf(TokenType::RBRACE, ErrorType::STRUCTDEF_EXPECTED_RBRACE)) return nullptr;
   if (!consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTDEF_EXPECTED_SEMICOLON)) return nullptr;
 
-  return std::make_unique<StructDef>(std::move(position), std::move(*name), std::move(*members));
+  return std::make_unique<StructDef>(std::move(position), std::move(*name), std::move(members));
 }
 
 /*
  * structMembers
  *  = structMember, { structMember };
  */
-std::optional<StructDef::Members> Parser::parseStructMembers() {
-  StructDef::Members members{};
-
+std::unique_ptr<StructDef::Members> Parser::parseStructMembers() {
   auto member = parseStructMember();
-  while (member != std::nullopt) {
+  if (member == nullptr) return nullptr;
+
+  StructDef::Members members{};
+  while (member != nullptr) {
     if (members.find(member->name) != members.end()) {
       m_errorHandler(ErrorType::STRUCTMEMBER_REDEFINITION, m_token.position);
-      return std::nullopt;
+      return nullptr;
     } else {
       members.insert(std::make_pair(member->name, std::move(*member)));
     }
     member = parseStructMember();
   }
 
-  return members;
+  return std::make_unique<StructDef::Members>(std::move(members));
 }
 
 /* structMember
  *  = identifier, ":", typeIdentifier, ";";
  */
-std::optional<StructDef::Member> Parser::parseStructMember() {
+std::unique_ptr<StructMember> Parser::parseStructMember() {
   if (m_token.type != TokenType::IDENTIFIER) {
-    return std::nullopt;
+    return nullptr;
   }
 
   auto position = m_token.position;
@@ -219,16 +221,16 @@ std::optional<StructDef::Member> Parser::parseStructMember() {
   std::optional<TypeIdentifier> type;
 
   name = parseIdentifier();
-  if (!consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON)) return std::nullopt;
+  if (!consumeIf(TokenType::COLON, ErrorType::STRUCTMEMBER_EXPECTED_COLON)) return nullptr;
   if ((type = parseTypeIdentifier()) == std::nullopt) {
     m_errorHandler(ErrorType::STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-    return std::nullopt;
+    return nullptr;
   }
   if (!consumeIf(TokenType::SEMICOLON, ErrorType::STRUCTMEMBER_EXPECTED_SEMICOLON)) {
-    return std::nullopt;
+    return nullptr;
   }
 
-  return StructDef::Member{std::move(*name), std::move(*type)};
+  return std::make_unique<StructMember>(std::move(*name), std::move(*type));
 }
 
 /*
@@ -243,50 +245,53 @@ std::unique_ptr<Definition> Parser::parseVariantDef() {
   consumeToken();
 
   std::optional<Identifier> name;
-  std::optional<VariantDef::Types> types;
+  std::unique_ptr<VariantDef::Types> types;
 
   if ((name = parseIdentifier()) == std::nullopt) {
     m_errorHandler(ErrorType::VARIANTDEF_EXPECTED_IDENTIFIER, m_token.position);
     return nullptr;
   }
   if (!consumeIf(TokenType::LBRACE, ErrorType::VARIANTDEF_EXPECTED_LBRACE)) return nullptr;
-  if ((types = parseVariantTypes()) == std::nullopt) return nullptr;
+  types = parseVariantTypes();
   if (!consumeIf(TokenType::RBRACE, ErrorType::VARIANTDEF_EXPECTED_RBRACE)) return nullptr;
   if (!consumeIf(TokenType::SEMICOLON, ErrorType::VARIANTDEF_EXPECTED_SEMICOLON)) return nullptr;
 
-  return std::make_unique<VariantDef>(std::move(position), std::move(*name), std::move(*types));
+  return std::make_unique<VariantDef>(std::move(position), std::move(*name), std::move(types));
 }
 
 /*
  * variantTypes
  *     = variantType, { ",", variantType };
  */
-std::optional<VariantDef::Types> Parser::parseVariantTypes() {
-  VariantDef::Types types{};
-
+std::unique_ptr<VariantDef::Types> Parser::parseVariantTypes() {
   auto type = parseVariantType();
-  if (type == std::nullopt) return types;
+  if (type == nullptr) return nullptr;
+
+  VariantDef::Types types{};
   types.push_back(std::move(*type));
 
   while (m_token.type == TokenType::COMMA) {
     consumeToken();
     type = parseVariantType();
-    if (type == std::nullopt) return types;
+    if (type == nullptr) return std::make_unique<VariantDef::Types>(std::move(types));
     if (std::find(types.begin(), types.end(), *type) != types.end()) {
       m_errorHandler(ErrorType::VARIANTTYPE_REDEFINITION, m_token.position);
-      return std::nullopt;
+      return nullptr;
     }
     types.push_back(std::move(*type));
   }
 
-  return types;
+  return std::make_unique<VariantDef::Types>(std::move(types));
 }
 
 /*
  * variantType
  *     = typeIdentifier
  */
-std::optional<VariantDef::Type> Parser::parseVariantType() { return parseTypeIdentifier(); }
+std::unique_ptr<VariantDef::Type> Parser::parseVariantType() {
+  auto type = parseTypeIdentifier();
+  return type == std::nullopt ? nullptr : std::make_unique<VariantDef::Type>(std::move(*type));
+}
 
 /*
  * FnDef
@@ -300,8 +305,8 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
   auto position = m_token.position;
 
   std::optional<Identifier> name;
-  std::optional<FnDef::Params> params;
-  std::optional<FnDef::ReturnType> returnType;
+  std::unique_ptr<FnDef::Params> params;
+  std::unique_ptr<FnDef::ReturnType> returnType;
   std::unique_ptr<Statement> body;
 
   if ((name = parseIdentifier()) == std::nullopt) {
@@ -309,9 +314,9 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
     return nullptr;
   }
   if (!consumeIf(TokenType::LPAREN, ErrorType::FNDEF_EXPECTED_LPAREN)) return nullptr;
-  if ((params = parseFnParams()) == std::nullopt) return nullptr;
+  params = parseFnParams();
   if (!consumeIf(TokenType::RPAREN, ErrorType::FNDEF_EXPECTED_RPAREN)) return nullptr;
-  if ((returnType = parseFnReturnType()) == std::nullopt) {
+  if ((returnType = parseFnReturnType()) == nullptr) {
     m_errorHandler(ErrorType::FNDEF_EXPECTED_RETURN_TYPE, m_token.position);
     return nullptr;
   }
@@ -324,7 +329,7 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
   assert(block != nullptr && "Expected body to be a BlockStmt");
   body.release();
 
-  return std::make_unique<FnDef>(std::move(position), std::move(*name), std::move(*params),
+  return std::make_unique<FnDef>(std::move(position), std::move(*name), std::move(params),
                                  std::move(*returnType), std::move(*block));
 }
 
@@ -332,34 +337,34 @@ std::unique_ptr<Definition> Parser::parseFnDef() {
  * fnParams
  *    = fnParam, { ",", fnParam };
  */
-std::optional<FnDef::Params> Parser::parseFnParams() {
-  FnDef::Params params{};
-
+std::unique_ptr<FnDef::Params> Parser::parseFnParams() {
   auto param = parseFnParam();
-  if (param == std::nullopt) return params;
-
+  if (param == nullptr) return nullptr;
+  
+  FnDef::Params params{};
   params.insert(std::make_pair(param->name, std::move(*param)));
+
   while (m_token.type == TokenType::COMMA) {
     consumeToken();
     param = parseFnParam();
-    if (param == std::nullopt) return params;
+    if (param == nullptr) return std::make_unique<FnDef::Params>(std::move(params));
     if (params.find(param->name) != params.end()) {
       m_errorHandler(ErrorType::FNPARAM_REDEFINITION, m_token.position);
-      return std::nullopt;
+      return nullptr;
     }
     params.insert(std::make_pair(param->name, std::move(*param)));
   }
 
-  return params;
+  return std::make_unique<FnDef::Params>(std::move(params));
 }
 
 /*
  * fnParam
  *    = [ "const" ], identifier, ":", typeIdentifier;
  */
-std::optional<FnDef::Param> Parser::parseFnParam() {
+std::unique_ptr<FnParam> Parser::parseFnParam() {
   if (m_token.type != TokenType::CONST_KWRD && m_token.type != TokenType::IDENTIFIER) {
-    return std::nullopt;
+    return nullptr;
   }
 
   bool isConst = false;
@@ -372,32 +377,34 @@ std::optional<FnDef::Param> Parser::parseFnParam() {
   }
   if ((name = parseIdentifier()) == std::nullopt) {
     m_errorHandler(ErrorType::FNPARAM_EXPECTED_IDENTIFIER, m_token.position);
-    return std::nullopt;
+    return nullptr;
   }
-  if (!consumeIf(TokenType::COLON, ErrorType::FNPARAM_EXPECTED_COLON)) return std::nullopt;
+  if (!consumeIf(TokenType::COLON, ErrorType::FNPARAM_EXPECTED_COLON)) return nullptr;
   if ((type = parseTypeIdentifier()) == std::nullopt) {
     m_errorHandler(ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-    return std::nullopt;
+    return nullptr;
   }
 
-  return FnDef::Param{isConst, std::move(*name), std::move(*type)};
+  return std::make_unique<FnParam>(isConst, std::move(*name), std::move(*type));
 }
 
 /*
  * fnReturnType
  *    = "->", typeIdentifier;
  */
-std::optional<FnDef::ReturnType> Parser::parseFnReturnType() {
+std::unique_ptr<FnDef::ReturnType> Parser::parseFnReturnType() {
   if (m_token.type != TokenType::ARROW) {
-    return std::nullopt;
+    return nullptr;
   }
+
   consumeToken();
   auto type = parseTypeIdentifier();
   if (type == std::nullopt) {
     m_errorHandler(ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER, m_token.position);
-    return std::nullopt;
+    return nullptr;
   }
-  return type;
+
+  return std::make_unique<FnDef::ReturnType>(std::move(*type));
 }
 
 /* -------------------------------------------------------------------------- */

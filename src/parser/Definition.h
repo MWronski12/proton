@@ -63,29 +63,33 @@ struct ConstDef : public Definition {
 
 /* -------------------------------- StructDef ------------------------------- */
 
+/* structMember
+   *  = identifier, ":", typeIdentifier, ";";
+   */
+  struct StructMember {
+    StructMember(Identifier&& memberName, TypeIdentifier&& memberType)
+        : name{std::move(memberName)}, type{std::move(memberType)} {}
+
+    Identifier name;
+    TypeIdentifier type;
+  };
+
 /*
  * StructDef
  *     = "struct", identifier, "{", [ structMembers ], "}", ";";
  */
 struct StructDef : public Definition {
  public:
-  /* structMember
-   *  = identifier, ":", typeIdentifier, ";";
-   */
-  struct Member {
-    Identifier name;
-    TypeIdentifier type;
-  };
   /*
    * structMembers
    *  = structMember, { structMember };
    */
-  using Members = std::unordered_map<Identifier, Member>;
+  using Members = std::unordered_map<Identifier, StructMember>;
 
-  StructDef(Position&& position, Identifier&& structName, Members&& structMembers)
+  StructDef(Position&& position, Identifier&& structName, std::unique_ptr<Members>&& structMembers)
       : Definition{std::move(position), std::move(structName)}, members{std::move(structMembers)} {}
 
-  Members members;
+  std::unique_ptr<Members> members;
 };
 
 /* ------------------------------- VariantDef ------------------------------- */
@@ -107,13 +111,26 @@ struct VariantDef : public Definition {
    */
   using Types = std::vector<Type>;
 
-  VariantDef(Position&& position, Identifier&& variantName, Types&& variantTypes)
+  VariantDef(Position&& position, Identifier&& variantName, std::unique_ptr<Types>&& variantTypes)
       : Definition{std::move(position), std::move(variantName)}, types{std::move(variantTypes)} {}
 
-  Types types;
+  std::unique_ptr<Types> types;
 };
 
 /* --------------------------------- FnDef ---------------------------------- */
+
+  /*
+   * fnParam
+   *    = [ "const" ], identifier, ":", typeIdentifier;
+   */
+  struct FnParam {
+    FnParam(bool paramIsConst, Identifier&& paramName, TypeIdentifier&& paramType)
+        : isConst{paramIsConst}, name{std::move(paramName)}, type{std::move(paramType)} {}
+
+    bool isConst;
+    Identifier name;
+    TypeIdentifier type;
+  };
 
 /*
  * FnDef
@@ -122,23 +139,10 @@ struct VariantDef : public Definition {
 struct FnDef : public Definition {
  public:
   /*
-   * fnParam
-   *    = [ "const" ], identifier, ":", typeIdentifier;
-   */
-  struct Param {
-    Param(bool paramIsConst, Identifier&& paramName, TypeIdentifier&& paramType)
-        : isConst{paramIsConst}, name{std::move(paramName)}, type{std::move(paramType)} {}
-
-    bool isConst;
-    Identifier name;
-    TypeIdentifier type;
-  };
-
-  /*
    * fnParams
    *    = fnParam, { ",", fnParam };
    */
-  using Params = std::unordered_map<Identifier, Param>;
+  using Params = std::unordered_map<Identifier, FnParam>;
 
   /*
    * fnReturnType
@@ -146,14 +150,14 @@ struct FnDef : public Definition {
    */
   using ReturnType = TypeIdentifier;
 
-  FnDef(Position&& position, Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType,
+  FnDef(Position&& position, Identifier&& fnName, std::unique_ptr<Params>&& fnParams, TypeIdentifier&& fnReturnType,
         BlockStmt&& fnBody)
       : Definition{std::move(position), std::move(fnName)},
         parameters{std::move(fnParams)},
         returnType{std::move(fnReturnType)},
         body{std::move(fnBody)} {}
 
-  Params parameters;
+  std::unique_ptr<Params> parameters;
   ReturnType returnType;
   BlockStmt body;
 };

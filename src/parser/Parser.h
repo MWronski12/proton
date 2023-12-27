@@ -38,17 +38,17 @@ class Parser {
   std::unique_ptr<Definition> parseConstDef();
 
   std::unique_ptr<Definition> parseStructDef();
-  std::optional<StructDef::Members> parseStructMembers();
-  std::optional<StructDef::Member> parseStructMember();
+  std::unique_ptr<StructDef::Members> parseStructMembers();
+  std::unique_ptr<StructMember> parseStructMember();
 
   std::unique_ptr<Definition> parseVariantDef();
-  std::optional<VariantDef::Types> parseVariantTypes();
-  std::optional<VariantDef::Type> parseVariantType();
+  std::unique_ptr<VariantDef::Types> parseVariantTypes();
+  std::unique_ptr<VariantDef::Type> parseVariantType();
 
   std::unique_ptr<Definition> parseFnDef();
-  std::optional<FnDef::Params> parseFnParams();
-  std::optional<FnDef::Param> parseFnParam();
-  std::optional<FnDef::ReturnType> parseFnReturnType();
+  std::unique_ptr<FnDef::Params> parseFnParams();
+  std::unique_ptr<FnParam> parseFnParam();
+  std::unique_ptr<FnDef::ReturnType> parseFnReturnType();
 
   /* ------------------------------- Expressions ------------------------------ */
 

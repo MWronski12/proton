@@ -10,7 +10,7 @@ TEST_F(ParserTest, ParserHandlesEmptyReturnType) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnReturnType();
-  EXPECT_EQ(result, std::nullopt);
+  EXPECT_EQ(result, nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesFnReturnType) {
@@ -19,8 +19,8 @@ TEST_F(ParserTest, ParserHandlesFnReturnType) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnReturnType();
-  ASSERT_TRUE(result != std::nullopt);
-  EXPECT_EQ(result.value(), TypeIdentifier(L"int"));
+  ASSERT_TRUE(result != nullptr);
+  EXPECT_EQ(*result, VariantDef::Type(L"int"));
 }
 
 TEST_F(ParserTest, ParserHandlesMissingTypeIdentifierInReturnType) {
@@ -30,7 +30,7 @@ TEST_F(ParserTest, ParserHandlesMissingTypeIdentifierInReturnType) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER, _))
       .Times(1);
   auto result = parseFnReturnType();
-  ASSERT_TRUE(result == std::nullopt);
+  ASSERT_TRUE(result == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesFnParamRedefinition) {
@@ -39,7 +39,7 @@ TEST_F(ParserTest, ParserHandlesFnParamRedefinition) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_REDEFINITION, _)).Times(1);
   auto result = parseFnParams();
-  ASSERT_TRUE(result == std::nullopt);
+  ASSERT_TRUE(result == nullptr);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -52,7 +52,7 @@ TEST_F(ParserTest, ParserHandlesEmptyFnParam) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnParam();
-  EXPECT_EQ(result, std::nullopt);
+  EXPECT_EQ(result, nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesFnParam) {
@@ -61,7 +61,7 @@ TEST_F(ParserTest, ParserHandlesFnParam) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnParam();
-  ASSERT_TRUE(result != std::nullopt);
+  ASSERT_TRUE(result != nullptr);
   EXPECT_EQ(result->isConst, false);
   EXPECT_EQ(result->name, Identifier(L"x"));
   EXPECT_EQ(result->type, TypeIdentifier(L"int"));
@@ -73,7 +73,7 @@ TEST_F(ParserTest, ParserHandlesConstFnParam) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnParam();
-  ASSERT_TRUE(result != std::nullopt);
+  ASSERT_TRUE(result != nullptr);
   EXPECT_EQ(result->isConst, true);
   EXPECT_EQ(result->name, Identifier(L"x"));
   EXPECT_EQ(result->type, TypeIdentifier(L"int"));
@@ -85,7 +85,7 @@ TEST_F(ParserTest, ParserHandlesMissingIdentifierInFnParam) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_EXPECTED_IDENTIFIER, _)).Times(1);
   auto result = parseFnParam();
-  ASSERT_TRUE(result == std::nullopt);
+  ASSERT_TRUE(result == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesMissingColonInFnParam) {
@@ -94,7 +94,7 @@ TEST_F(ParserTest, ParserHandlesMissingColonInFnParam) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_EXPECTED_COLON, _)).Times(1);
   auto result = parseFnParam();
-  ASSERT_TRUE(result == std::nullopt);
+  ASSERT_TRUE(result == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesMissingTypeIdentifierInFnParam) {
@@ -103,7 +103,7 @@ TEST_F(ParserTest, ParserHandlesMissingTypeIdentifierInFnParam) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_EXPECTED_TYPE_IDENTIFIER, _)).Times(1);
   auto result = parseFnParam();
-  ASSERT_TRUE(result == std::nullopt);
+  ASSERT_TRUE(result == nullptr);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -160,7 +160,7 @@ TEST_F(ParserTest, ParserHandlesEmptyParamsFnDef) {
   FnDef* fnDef = dynamic_cast<FnDef*>(result.get());
   ASSERT_TRUE(fnDef != nullptr);
   EXPECT_EQ(fnDef->name, Identifier(L"foo"));
-  EXPECT_EQ(fnDef->parameters.empty(), true);
+  EXPECT_EQ(fnDef->parameters, nullptr);
   EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"int"));
 }
 
@@ -172,9 +172,9 @@ TEST_F(ParserTest, ParserHandlesFnDef) {
   auto result = parseFnDef();
   ASSERT_TRUE(result != nullptr);
   FnDef* fnDef = dynamic_cast<FnDef*>(result.get());
-  ASSERT_TRUE(fnDef != nullptr);
+  ASSERT_TRUE(fnDef != nullptr && fnDef->parameters != nullptr);
   EXPECT_EQ(fnDef->name, Identifier(L"foo"));
-  ASSERT_TRUE(fnDef->parameters.size() == 1);
+  ASSERT_TRUE(fnDef->parameters->size() == 1);
   EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"int"));
 }
 
