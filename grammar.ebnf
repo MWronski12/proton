@@ -20,18 +20,16 @@ primitiveType                           (* RETURNED BY LEXER *)
 
 (* LITERALS *)
 
-literal                       (* RETURNED BY LEXER *)
-    = int
-    | float
-    | bool 
-    | char
-    | string;
+Literal                       (* RETURNED BY LEXER *)
+    = Int
+    | Float
+    | Bool 
+    | Char
+    | String;
 
-object
-    = "{", [ objectMembers ], "}";
-objectMembers
-    =  objectMember, {",", objectMember };
-objectMember
+Object
+    = "{", { ObjectMember }, "}";
+ObjectMember
     = identifier, ":", expression;
 
 
@@ -105,15 +103,15 @@ unaryOp                     (* prio 6 r-l *)
     | "-";
 
 funcExprPostfix           (* prio 7 l-r *)
-    = fnCallOp
-    | memberAccessOp 
-    | variantAccessOp;
+    = fnCallPostfix
+    | memberAccessPostfix 
+    | variantAccessPostfix;
 
-fnCallOp
+fnCallPostfix
     = "(", [ expression, { ",", expression } ], ")"; 
-memberAccessOp
+memberAccessPostfix
     = ".", identifier;
-variantAccessOp
+variantAccessPostfix
     = "as", typeIdentifier;
 
 
@@ -132,28 +130,21 @@ ConstDef
     = "const", identifier, ":", typeIdentifier, "=", expression, ";";
 
 StructDef
-    = "struct", identifier, "{", [ structMembers ], "}", ";";
-structMembers
-    = structMember, { structMember };
-structMember
+    = "struct", identifier, "{", { StructMember }, "}", ";";
+StructMember
     = identifier, ":", typeIdentifier, ";";
 
 VariantDef
     = "variant", identifier, "{", [ variantTypes ], "}", ";";
 variantTypes
-    = variantType, { ",", variantType };
-variantType
-    = typeIdentifier
+    = typeIdentifier, { ",", typeIdentifier };
 
 FnDef
-    = "fn", identifier, "(", [ fnParams ], ")", returnTypeAnnotation, Block;
+    = "fn", identifier, "(", [ fnParams ], ")", "->", typeIdentifier, Block;
 fnParams
     = fnParam, { ",", fnParam };
-fnParam
+FnParam
     = [ "const" ], identifier, ":", typeIdentifier;
-fnReturnType
-    = "->", typeIdentifier;
-
 
 (* STATEMENTS *)
 
@@ -183,14 +174,14 @@ VariantMatchStmt
     = "match", expression, "{", variantMatchCases, "}";
 variantMatchCases
     = { variantMatchCase };
-variantMatchCase
+VariantMatchCase
     = "case", typeIdentifier, "->", Block;
 
 IfStmt
-    = "if", expression, Block, { elifClause }, [ elseClause ];
-elifClause
+    = "if", expression, Block, { elif }, [ else ];
+Elif
     = "elif", expression, Block;
-elseClause
+else
     = "else", Block;
 
 ForStmt

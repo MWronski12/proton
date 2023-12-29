@@ -58,12 +58,12 @@ struct ExpressionStmt : public Statement {
  */
 struct AssignmentStmt : public Statement {
  public:
-  AssignmentStmt(Position &&position, std::unique_ptr<Expression> &&left,
-                 std::unique_ptr<Expression> &&right)
-      : Statement{std::move(position)}, left{std::move(left)}, right{std::move(right)} {}
+  AssignmentStmt(Position &&position, std::unique_ptr<Expression> &&lhs,
+                 std::unique_ptr<Expression> &&rhs)
+      : Statement{std::move(position)}, lhs{std::move(lhs)}, rhs{std::move(rhs)} {}
 
-  std::unique_ptr<Expression> left;
-  std::unique_ptr<Expression> right;
+  std::unique_ptr<Expression> lhs;
+  std::unique_ptr<Expression> rhs;
 };
 
 /*
@@ -90,11 +90,11 @@ struct StdoutInsertionStmt : public Statement {
   std::vector<std::unique_ptr<Expression>> expressions;
 };
 
+/* VariantMatchCase
+ *    = "case", typeIdentifier, "->", BlockStmt;
+ */
 struct VariantMatchCase : public ASTNode {
  public:
-  /* variantMatchCase
-   *    = "case", typeIdentifier, "->", BlockStmt;
-   */
   VariantMatchCase(Position &&position, TypeIdentifier &&variant, BlockStmt &&block)
       : ASTNode{std::move(position)}, variant{std::move(variant)}, block{std::move(block)} {}
 
@@ -104,14 +104,10 @@ struct VariantMatchCase : public ASTNode {
 
 /*
  * VariantMatch
- *     = "match", Expression, "{", variantMatchCases , "}";
+ *     = "match", Expression, "{", { VariantMatchCases } , "}";
  */
 struct VariantMatchStmt : public Statement {
  public:
-  /*
-   * variantCases
-   *    = { variantCase };
-   */
   using Cases = std::unordered_map<TypeIdentifier, VariantMatchCase>;
 
   VariantMatchStmt(Position &&position, std::unique_ptr<Expression> &&expr, Cases &&cases)
@@ -127,8 +123,8 @@ struct Elif : public ASTNode {
    * Elif
    *     = "elif", Expression, BlockStmt;
    */
-  Elif(Position &&position, std::unique_ptr<Expression> &&condition, BlockStmt &&block)
-      : ASTNode{std::move(position)}, condition{std::move(condition)}, block{std::move(block)} {}
+  Elif(Position &&position, std::unique_ptr<Expression> &&expr, BlockStmt &&block)
+      : ASTNode{std::move(position)}, condition{std::move(expr)}, block{std::move(block)} {}
 
   std::unique_ptr<Expression> condition;
   BlockStmt block;
@@ -152,23 +148,19 @@ struct Else : public ASTNode {
  */
 struct IfStmt : public Statement {
  public:
-  /*
-   * Elifs
-   *     = { Elif };
-   */
   using Elifs = std::vector<Elif>;
 
-  IfStmt(Position &&position, std::unique_ptr<Expression> &&condition, BlockStmt &&block,
-         std::unique_ptr<Elifs> &&elifs, std::unique_ptr<Else> &&elseClause)
+  IfStmt(Position &&position, std::unique_ptr<Expression> &&expr, BlockStmt &&block, Elifs &&elifs,
+         std::unique_ptr<Else> &&elseClause)
       : Statement{std::move(position)},
-        condition{std::move(condition)},
+        condition{std::move(expr)},
         block{std::move(block)},
         elifs{std::move(elifs)},
         elseClause{std::move(elseClause)} {}
 
   std::unique_ptr<Expression> condition;
   BlockStmt block;
-  std::unique_ptr<Elifs> elifs;
+  Elifs elifs;
   std::unique_ptr<Else> elseClause;
 };
 
@@ -209,9 +201,9 @@ struct ForStmt : public Statement {
 struct WhileStmt : public Statement {
  public:
   WhileStmt(Position &&position, std::unique_ptr<Expression> &&expr, BlockStmt &&block)
-      : Statement{std::move(position)}, expr{std::move(expr)}, block{std::move(block)} {}
+      : Statement{std::move(position)}, condition{std::move(expr)}, block{std::move(block)} {}
 
-  std::unique_ptr<Expression> expr;
+  std::unique_ptr<Expression> condition;
   BlockStmt block;
 };
 

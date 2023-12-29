@@ -82,7 +82,7 @@ TEST_F(ParserTest, ParserHandlesStructMembers) {
   consumeToken();
 
   auto members = parseStructMembers();
-  ASSERT_TRUE(members != nullptr && members->size() == 3);
+  ASSERT_TRUE(members != std::nullopt && members->size() == 3);
 
   ASSERT_TRUE(members->find(L"x") != members->end());
   EXPECT_EQ(members->at(L"x").name, Identifier(L"x"));
@@ -103,7 +103,7 @@ TEST_F(ParserTest, ParserHandlesStructMemberRedefinition) {
   consumeToken();
 
   auto result = parseStructMembers();
-  ASSERT_TRUE(result == nullptr);
+  ASSERT_TRUE(result == std::nullopt);
 }
 
 /* -------------------------------------------------------------------------- */

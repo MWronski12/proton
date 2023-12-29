@@ -1,3 +1,5 @@
+#pragma once
+
 #include <gtest/gtest.h>
 
 #include "Lexer.h"
@@ -34,11 +36,9 @@ class ParserTest : public ::Test {
   auto parseStructMember() { return m_parser.parseStructMember(); }
   auto parseVariantDef() { return m_parser.parseVariantDef(); }
   auto parseVariantTypes() { return m_parser.parseVariantTypes(); }
-  auto parseVariantType() { return m_parser.parseVariantType(); }
   auto parseFnDef() { return m_parser.parseFnDef(); }
   auto parseFnParams() { return m_parser.parseFnParams(); }
   auto parseFnParam() { return m_parser.parseFnParam(); }
-  auto parseFnReturnType() { return m_parser.parseFnReturnType(); }
 
   /* ------------------------------- Expressions ------------------------------ */
   auto parseExpression() { return m_parser.parseExpression(); }

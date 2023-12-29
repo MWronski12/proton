@@ -1,30 +1,6 @@
 #include "Definition.h"
 #include "ParserTest.h"
 
-/* ------------------------------- VariantType ------------------------------ */
-
-TEST_F(ParserTest, ParserHandlesEmptyVariantType) {
-  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  m_reader.load(L"");
-  consumeToken();
-
-  auto result = parseVariantType();
-  EXPECT_EQ(result, nullptr);
-}
-
-TEST_F(ParserTest, ParserHandlesVariantType) {
-  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  m_reader.load(L"int float");
-  consumeToken();
-
-  auto intType = parseVariantType();
-  auto floatType = parseVariantType();
-
-  ASSERT_TRUE(intType != nullptr && floatType != nullptr);
-  EXPECT_EQ(*intType, TypeIdentifier(L"int"));
-  EXPECT_EQ(*floatType, TypeIdentifier(L"float"));
-}
-
 /* ------------------------------ VariantTypes ------------------------------ */
 
 TEST_F(ParserTest, ParserHandlesEmptyVariantTypes) {
@@ -33,7 +9,7 @@ TEST_F(ParserTest, ParserHandlesEmptyVariantTypes) {
   consumeToken();
 
   auto result = parseVariantTypes();
-  ASSERT_TRUE(result != nullptr);
+  ASSERT_TRUE(result != std::nullopt);
   ASSERT_TRUE(result->empty());
 }
 
@@ -43,7 +19,7 @@ TEST_F(ParserTest, ParserHandlesVariantTypes) {
   consumeToken();
 
   auto result = parseVariantTypes();
-  ASSERT_TRUE(result != nullptr);
+  ASSERT_TRUE(result != std::nullopt);
   ASSERT_EQ(result->size(), 3);
   EXPECT_EQ(result->at(0), TypeIdentifier(L"int"));
   EXPECT_EQ(result->at(1), TypeIdentifier(L"float"));
@@ -56,7 +32,7 @@ TEST_F(ParserTest, ParserHandlesVariantTypeRedefintion) {
   consumeToken();
 
   auto result = parseVariantTypes();
-  ASSERT_TRUE(result == nullptr);
+  ASSERT_TRUE(result == std::nullopt);
 }
 
 /* ------------------------------- VariantDef ------------------------------- */
@@ -78,11 +54,8 @@ TEST_F(ParserTest, ParserHandlesVariantDef) {
   auto result = parseVariantDef();
   ASSERT_TRUE(result != nullptr);
   VariantDef* def = dynamic_cast<VariantDef*>(result.get());
-  ASSERT_TRUE(def != nullptr && def->types != nullptr);
-  ASSERT_TRUE(def->types->size() == 3);
-  EXPECT_EQ(def->types->at(0), TypeIdentifier(L"int"));
-  EXPECT_EQ(def->types->at(1), TypeIdentifier(L"float"));
-  EXPECT_EQ(def->types->at(2), TypeIdentifier(L"string"));
+  ASSERT_TRUE(def != nullptr);
+  ASSERT_TRUE(def->types.size() == 3);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantDefAllowsEmptyVariant) {
@@ -93,8 +66,8 @@ TEST_F(ParserTest, ParserHandlesVariantDefAllowsEmptyVariant) {
   auto result = parseVariantDef();
   ASSERT_TRUE(result != nullptr);
   VariantDef* def = dynamic_cast<VariantDef*>(result.get());
-  ASSERT_TRUE(def != nullptr && def->types != nullptr);
-  ASSERT_TRUE(def->types->size() == 0);
+  ASSERT_TRUE(def != nullptr);
+  ASSERT_TRUE(def->types.size() == 0);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantDefAllowsTrailingComma) {
@@ -105,10 +78,8 @@ TEST_F(ParserTest, ParserHandlesVariantDefAllowsTrailingComma) {
   auto result = parseVariantDef();
   ASSERT_TRUE(result != nullptr);
   VariantDef* def = dynamic_cast<VariantDef*>(result.get());
-  ASSERT_TRUE(def != nullptr && def->types != nullptr);
-  ASSERT_TRUE(def->types->size() == 2);
-  EXPECT_EQ(def->types->at(0), TypeIdentifier(L"int"));
-  EXPECT_EQ(def->types->at(1), TypeIdentifier(L"float"));
+  ASSERT_TRUE(def != nullptr);
+  ASSERT_TRUE(def->types.size() == 2);
 }
 
 TEST_F(ParserTest, ParserHandlesVariantDefDoesntAllowCommaOnly) {

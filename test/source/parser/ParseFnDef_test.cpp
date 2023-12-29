@@ -1,48 +1,6 @@
 #include "ParserTest.h"
 
 /* -------------------------------------------------------------------------- */
-/*                                 ReturnType                                 */
-/* -------------------------------------------------------------------------- */
-
-TEST_F(ParserTest, ParserHandlesEmptyReturnType) {
-  m_reader.load(L"");
-  consumeToken();
-
-  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  auto result = parseFnReturnType();
-  EXPECT_EQ(result, nullptr);
-}
-
-TEST_F(ParserTest, ParserHandlesFnReturnType) {
-  m_reader.load(L" -> int ");
-  consumeToken();
-
-  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
-  auto result = parseFnReturnType();
-  ASSERT_TRUE(result != nullptr);
-  EXPECT_EQ(*result, VariantDef::Type(L"int"));
-}
-
-TEST_F(ParserTest, ParserHandlesMissingTypeIdentifierInReturnType) {
-  m_reader.load(L" -> ");
-  consumeToken();
-
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER, _))
-      .Times(1);
-  auto result = parseFnReturnType();
-  ASSERT_TRUE(result == nullptr);
-}
-
-TEST_F(ParserTest, ParserHandlesFnParamRedefinition) {
-  m_reader.load(L"const x : int, const x : int");
-  consumeToken();
-
-  EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_REDEFINITION, _)).Times(1);
-  auto result = parseFnParams();
-  ASSERT_TRUE(result == nullptr);
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                   FnParam                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -137,6 +95,15 @@ TEST_F(ParserTest, ParserHandlesFnParams) {
   EXPECT_EQ(result->at(L"z").type, TypeIdentifier(L"int"));
 }
 
+TEST_F(ParserTest, ParserHandlesFnParamRedefinition) {
+  m_reader.load(L"const x : int, const x : int");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNPARAM_REDEFINITION, _)).Times(1);
+  auto result = parseFnParams();
+  ASSERT_TRUE(result == std::nullopt);
+}
+
 /* -------------------------------------------------------------------------- */
 /*                                    FnDef                                   */
 /* -------------------------------------------------------------------------- */
@@ -160,7 +127,7 @@ TEST_F(ParserTest, ParserHandlesEmptyParamsFnDef) {
   FnDef* fnDef = dynamic_cast<FnDef*>(result.get());
   ASSERT_TRUE(fnDef != nullptr);
   EXPECT_EQ(fnDef->name, Identifier(L"foo"));
-  EXPECT_EQ(fnDef->parameters, nullptr);
+  EXPECT_EQ(fnDef->parameters.size(), 0);
   EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"int"));
 }
 
@@ -172,9 +139,9 @@ TEST_F(ParserTest, ParserHandlesFnDef) {
   auto result = parseFnDef();
   ASSERT_TRUE(result != nullptr);
   FnDef* fnDef = dynamic_cast<FnDef*>(result.get());
-  ASSERT_TRUE(fnDef != nullptr && fnDef->parameters != nullptr);
+  ASSERT_TRUE(fnDef != nullptr);
   EXPECT_EQ(fnDef->name, Identifier(L"foo"));
-  ASSERT_TRUE(fnDef->parameters->size() == 1);
+  ASSERT_TRUE(fnDef->parameters.size() == 1);
   EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"int"));
 }
 
@@ -205,13 +172,22 @@ TEST_F(ParserTest, ParserHandlesFnDefMissingRPar) {
   EXPECT_EQ(result, nullptr);
 }
 
+TEST_F(ParserTest, ParserHandlesFnDefMissingArrow) {
+  m_reader.load(L"fn foo () int { return 42; }");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNDEF_EXPECTED_ARROW, _)).Times(1);
+  auto result = parseFnDef();
+  ASSERT_TRUE(result == nullptr);
+}
+
 TEST_F(ParserTest, ParserHandlesFnDefMissingReturnType) {
-  m_reader.load(L"fn foo () { return 42; }");
+  m_reader.load(L"fn foo () -> { return 42; }");
   consumeToken();
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNDEF_EXPECTED_RETURN_TYPE, _)).Times(1);
   auto result = parseFnDef();
-  EXPECT_EQ(result, nullptr);
+  ASSERT_TRUE(result == nullptr);
 }
 
 TEST_F(ParserTest, ParserHandlesFnDefMissingBlock) {

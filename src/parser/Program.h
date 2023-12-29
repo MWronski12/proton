@@ -6,10 +6,10 @@
  */
 struct Program : public ASTNode {
  public:
-  using IdentifierToDefinitionPtrMap = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
+  using Definitions = std::unordered_map<Identifier, std::unique_ptr<Definition>>;
 
-  Program(Position &&position, IdentifierToDefinitionPtrMap &&definitions)
+  Program(Position &&position, Definitions &&definitions)
       : ASTNode{std::move(position)}, definitions{std::move(definitions)} {}
 
-  IdentifierToDefinitionPtrMap definitions;
+  Definitions definitions;
 };

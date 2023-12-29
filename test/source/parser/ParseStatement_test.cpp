@@ -104,7 +104,7 @@ TEST_F(ParserTest, ParserHandlesChainingStdoutInsertionStmt) {
   ASSERT_TRUE(chain->expressions.size() == 3);
 }
 
-/* --------------------------- VariantMatch::Case --------------------------- */
+/* ---------------------------- VariantMatchCase ---------------------------- */
 
 TEST_F(ParserTest, ParserHandlesEmptyVariantMatchCase) {
   m_reader.load(L"");
@@ -160,7 +160,7 @@ TEST_F(ParserTest, ParserHandlesEmptyVariantCases) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto cases = parseVariantMatchCases();
-  ASSERT_TRUE(cases != nullptr);
+  ASSERT_TRUE(cases != std::nullopt);
   ASSERT_EQ(cases->size(), 0);
 }
 
@@ -170,7 +170,7 @@ TEST_F(ParserTest, ParserHandlesVariantCases) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto cases = parseVariantMatchCases();
-  ASSERT_TRUE(cases != nullptr);
+  ASSERT_TRUE(cases != std::nullopt);
   ASSERT_EQ(cases->size(), 2);
 }
 
@@ -180,7 +180,7 @@ TEST_F(ParserTest, ParserHandlesVariantMatchCaseRedefinition) {
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::VARIANTMATCHCASE_REDEFINITION, _)).Times(1);
   auto cases = parseVariantMatchCases();
-  ASSERT_TRUE(cases == nullptr);
+  ASSERT_TRUE(cases == std::nullopt);
 }
 
 /* ---------------------------- VariantMatchStmt ---------------------------- */
@@ -278,7 +278,8 @@ TEST_F(ParserTest, ParserHandlesEmptyElifs) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElifs();
-  ASSERT_TRUE(stmt == nullptr);
+  ASSERT_TRUE(stmt != std::nullopt);
+  EXPECT_TRUE(stmt->size() == 0);
 }
 
 TEST_F(ParserTest, ParserHandlesElifs) {
@@ -287,7 +288,7 @@ TEST_F(ParserTest, ParserHandlesElifs) {
 
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto stmt = parseElifs();
-  ASSERT_TRUE(stmt != nullptr);
+  ASSERT_TRUE(stmt != std::nullopt);
   EXPECT_EQ(stmt->size(), 2);
 }
 

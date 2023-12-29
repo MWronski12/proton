@@ -99,7 +99,8 @@ TEST_F(ParserTest, ParserHandlesObjectEmptyMembers) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members == nullptr);
+  ASSERT_TRUE(members != std::nullopt);
+  EXPECT_TRUE(members->size() == 0);
 }
 
 TEST_F(ParserTest, ParserHandlesObjectMembers) {
@@ -109,7 +110,7 @@ TEST_F(ParserTest, ParserHandlesObjectMembers) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members != nullptr);
+  ASSERT_TRUE(members != std::nullopt);
   ASSERT_EQ(members->size(), 2);
 }
 
@@ -120,14 +121,14 @@ TEST_F(ParserTest, ParserAllowsForTrailingCommaInObjectMembers) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members != nullptr);
+  ASSERT_TRUE(members != std::nullopt);
   ASSERT_EQ(members->size(), 2);
 
   auto literal = parseLiteral<int>();
   ASSERT_TRUE(literal != nullptr);
 
   members = parseObjectMembers();
-  ASSERT_TRUE(members != nullptr);
+  ASSERT_TRUE(members != std::nullopt);
   ASSERT_EQ(members->size(), 2);
 }
 
@@ -138,7 +139,7 @@ TEST_F(ParserTest, ParserHandlesObjectMemberRedefinition) {
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::OBJECTMEMBER_REDEFINITION, _)).Times(1);
 
   auto members = parseObjectMembers();
-  ASSERT_TRUE(members == nullptr);
+  ASSERT_TRUE(members == std::nullopt);
 }
 
 /* --------------------------------- Object --------------------------------- */
@@ -152,7 +153,7 @@ TEST_F(ParserTest, ParserHandlesEmptyObject) {
   auto objExpr = parseObject();
   Object* object = dynamic_cast<Object*>(objExpr.get());
   ASSERT_TRUE(object != nullptr);
-  ASSERT_TRUE(object->members == nullptr);
+  ASSERT_EQ(object->members.size(), 0);
 }
 
 TEST_F(ParserTest, ParserHandlesObject) {
@@ -165,7 +166,7 @@ TEST_F(ParserTest, ParserHandlesObject) {
   auto objExpr = parseObject();
   Object* object = dynamic_cast<Object*>(objExpr.get());
   ASSERT_TRUE(object != nullptr);
-  ASSERT_EQ(object->members->size(), 5);
+  ASSERT_EQ(object->members.size(), 5);
 }
 
 /* -------------------------------- ParenExpr ------------------------------- */
