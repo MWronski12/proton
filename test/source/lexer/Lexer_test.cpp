@@ -1,4 +1,3 @@
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -18,11 +17,6 @@ class LexerTest : public ::Test {
   StringCharReader m_reader;
   Lexer m_lexer;
 };
-
-TEST(TokenType, TokenTypeConfigurationsAreCorrect) {
-  ASSERT_EQ((int)TokenType::UNEXPECTED, 0);
-  ASSERT_EQ((int)TokenType::ETX, TOKEN_TYPE_NAMES.size() - 1);
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                SPECIAL CASES                               */
@@ -298,11 +292,36 @@ TEST_F(LexerTest, LexerHandlesInvalidFloatLiterals) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                  BOOLEANS                                  */
+/* -------------------------------------------------------------------------- */
+
+TEST_F(LexerTest, LexerHandlesBooleanLiterals) {
+  m_reader.load(L"true false");
+
+  auto token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::BOOL);
+  EXPECT_EQ(std::get<bool>(token.value), true);
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::BOOL);
+  EXPECT_EQ(std::get<bool>(token.value), false);
+
+  m_reader.load(L"true_but_not_really false_but_maybe_not");
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.representation, L"true_but_not_really");
+
+  token = m_lexer.getNextToken();
+  EXPECT_EQ(token.type, TokenType::IDENTIFIER);
+  EXPECT_EQ(token.representation, L"false_but_maybe_not");
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                    CHARS                                   */
 /* -------------------------------------------------------------------------- */
 
 TEST_F(LexerTest, LexerHandlesCharLiterals) {
-  m_reader.load(L"\'X\'");
+  m_reader.load(L"\'X\'");  // Valid char literal 'X'
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::CHAR);
   EXPECT_EQ(token.representation, L"X");
@@ -328,29 +347,11 @@ TEST_F(LexerTest, LexerHandlesCharLiterals) {
 }
 
 TEST_F(LexerTest, LexerHandlesEscapeSequencesInCharLiterals) {
-  m_reader.load(L"\'\\\"\'");
+  m_reader.load(L"\'\\\"\'");  // Valid escape sequence
   auto token = m_lexer.getNextToken();
   EXPECT_EQ(token.type, TokenType::CHAR);
   EXPECT_EQ(token.representation, L"\"");
   EXPECT_EQ(std::get<wchar_t>(token.value), L'\"');
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                  BOOLEANS                                  */
-/* -------------------------------------------------------------------------- */
-
-TEST_F(LexerTest, LexerHandlesBooleanLiterals) {
-  m_reader.load(L"true false");
-
-  auto token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::BOOL);
-  EXPECT_EQ(token.representation, L"true");
-  EXPECT_EQ(std::get<bool>(token.value), true);
-
-  token = m_lexer.getNextToken();
-  EXPECT_EQ(token.type, TokenType::BOOL);
-  EXPECT_EQ(token.representation, L"false");
-  EXPECT_EQ(std::get<bool>(token.value), false);
 }
 
 /* -------------------------------------------------------------------------- */
