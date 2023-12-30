@@ -9,8 +9,8 @@ TEST_F(ParserTest, ParserHandlesBasicBinaryExpression) {
   ASSERT_TRUE(binExpr != nullptr);
   ASSERT_EQ(binExpr->op, Operator::Sub);
 
-  auto left = dynamic_cast<Literal<int> *>(binExpr->left.get());
-  auto right = dynamic_cast<Literal<int> *>(binExpr->right.get());
+  auto left = dynamic_cast<Literal<int> *>(binExpr->lhs.get());
+  auto right = dynamic_cast<Literal<int> *>(binExpr->rhs.get());
   ASSERT_TRUE(left != nullptr);
   ASSERT_TRUE(right != nullptr);
 }
@@ -24,13 +24,13 @@ TEST_F(ParserTest, ParserHandlesOperatorPrecedence) {
   ASSERT_TRUE(binExpr != nullptr);
   ASSERT_EQ(binExpr->op, Operator::Sub);
 
-  auto left = dynamic_cast<Literal<int> *>(binExpr->left.get());
-  auto right = dynamic_cast<BinaryExpression *>(binExpr->right.get());
+  auto left = dynamic_cast<Literal<int> *>(binExpr->lhs.get());
+  auto right = dynamic_cast<BinaryExpression *>(binExpr->rhs.get());
   ASSERT_TRUE(left != nullptr);
   ASSERT_TRUE(right != nullptr);
 
-  auto rightLeft = dynamic_cast<Literal<int> *>(right->left.get());
-  auto rightRight = dynamic_cast<Literal<int> *>(right->right.get());
+  auto rightLeft = dynamic_cast<Literal<int> *>(right->lhs.get());
+  auto rightRight = dynamic_cast<Literal<int> *>(right->rhs.get());
   ASSERT_TRUE(rightLeft != nullptr);
   ASSERT_TRUE(rightRight != nullptr);
 }
@@ -54,8 +54,8 @@ TEST_F(ParserTest, ParserHandlesOperatorUnaryExpressionsPrescedence) {
   ASSERT_TRUE(binExpr != nullptr);
   ASSERT_EQ(binExpr->op, Operator::Mul);
 
-  auto left = dynamic_cast<Literal<int> *>(binExpr->left.get());
-  auto right = dynamic_cast<UnaryExpression *>(binExpr->right.get());
+  auto left = dynamic_cast<Literal<int> *>(binExpr->lhs.get());
+  auto right = dynamic_cast<UnaryExpression *>(binExpr->rhs.get());
   ASSERT_TRUE(left != nullptr);
   ASSERT_TRUE(right != nullptr);
 
@@ -71,16 +71,16 @@ TEST_F(ParserTest, ParserHandlesChainedExpressions) {
 
   auto variantAccess = dynamic_cast<FunctionalExpression *>(expr.get());
   ASSERT_TRUE(variantAccess != nullptr);
-  auto variantAccessPostfix = dynamic_cast<VariantAccess::Postfix *>(variantAccess->postfix.get());
+  auto variantAccessPostfix = dynamic_cast<VariantAccessPostfix *>(variantAccess->postfix.get());
   ASSERT_TRUE(variantAccessPostfix != nullptr);
 
   auto memberAccess = dynamic_cast<FunctionalExpression *>(variantAccess->expr.get());
   ASSERT_TRUE(memberAccess != nullptr);
-  auto memberAccessPostfix = dynamic_cast<MemberAccess::Postfix *>(memberAccess->postfix.get());
+  auto memberAccessPostfix = dynamic_cast<MemberAccessPostfix *>(memberAccess->postfix.get());
   ASSERT_TRUE(memberAccessPostfix != nullptr);
 
   auto fnCall = dynamic_cast<FunctionalExpression *>(memberAccess->expr.get());
   ASSERT_TRUE(fnCall != nullptr);
-  auto fnCallPostfix = dynamic_cast<FnCall::Postfix *>(fnCall->postfix.get());
+  auto fnCallPostfix = dynamic_cast<FnCallPostfix *>(fnCall->postfix.get());
   ASSERT_TRUE(fnCallPostfix != nullptr);
 }

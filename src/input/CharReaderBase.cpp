@@ -1,6 +1,6 @@
 #include "CharReaderBase.h"
 
-/*
+/**
  * @brief Gets next character from the input stream and advances
  * internal position.
  *
@@ -19,7 +19,7 @@ wchar_t CharReaderBase::get() {
   return m_char;
 }
 
-/*
+/**
  * @brief Should be called by implementors in constructor and on each
  * load operation in order to update sourceFile of tracked.
  *
@@ -32,7 +32,7 @@ void CharReaderBase::setCurrentFilename(const std::string& filename) {
 }
 std::string CharReaderBase::getCurrentFilename() const { return m_position.sourceFile; }
 
-/*
+/**
  * @brief Gets last consumed character.
  * Before consuming first character, returns NO_CHAR_YET.
  * After the end of file was reached returns WEOF.
@@ -41,7 +41,7 @@ std::string CharReaderBase::getCurrentFilename() const { return m_position.sourc
  */
 wchar_t CharReaderBase::last() const { return m_char; }
 
-/*
+/**
  * @return Position - current position in the input stream
  */
 Position CharReaderBase::pos() const { return m_position; }

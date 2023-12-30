@@ -2,25 +2,25 @@
 
 /* -------------------------------- Postfixes ------------------------------- */
 
-// FnCall::Postfix
+// FnCallPostfix
 TEST_F(ParserTest, ParserHandlesValidFnCallPostfix) {
   m_reader.load(L"()");
   consumeToken();
   auto result = parseFnCallPostfix();
-  FnCall::Postfix* postfix = dynamic_cast<FnCall::Postfix*>(result.get());
+  FnCallPostfix* postfix = dynamic_cast<FnCallPostfix*>(result.get());
   ASSERT_TRUE(postfix != nullptr);
   EXPECT_EQ(postfix->args.size(), 0);
 
   m_reader.load(L"(1, 2, 3)");
   consumeToken();
   result = parseFnCallPostfix();
-  postfix = dynamic_cast<FnCall::Postfix*>(result.get());
+  postfix = dynamic_cast<FnCallPostfix*>(result.get());
   ASSERT_TRUE(postfix != nullptr);
   EXPECT_EQ(postfix->args.size(), 3);
 
   EXPECT_CALL(m_errorHandler, handleError(ErrorType::FNCALL_EXPECTED_RPAREN, _)).Times(1);
   m_reader.load(L"(1, 2");
-  postfix = dynamic_cast<FnCall::Postfix*>(result.get());
+  postfix = dynamic_cast<FnCallPostfix*>(result.get());
   consumeToken();
   result = parseFnCallPostfix();
   ASSERT_TRUE(result == nullptr);
@@ -49,17 +49,17 @@ TEST_F(ParserTest, ParserHandlesFnCallArgs) {
   ASSERT_TRUE(args == std::nullopt);
 }
 
-// MemberAccess::Postfix
+// MemberAccessPostfix
 TEST_F(ParserTest, ParserHandlesMemberAccessPostfix) {
   m_reader.load(L".foo.bar");
   consumeToken();
   auto result = parseFunctionalExpressionPostfix();
-  MemberAccess::Postfix* postfix = dynamic_cast<MemberAccess::Postfix*>(result.get());
+  MemberAccessPostfix* postfix = dynamic_cast<MemberAccessPostfix*>(result.get());
   ASSERT_TRUE(postfix != nullptr);
   EXPECT_EQ(postfix->member, L"foo");
 
   result = parseFunctionalExpressionPostfix();
-  postfix = dynamic_cast<MemberAccess::Postfix*>(result.get());
+  postfix = dynamic_cast<MemberAccessPostfix*>(result.get());
   ASSERT_TRUE(postfix != nullptr);
   EXPECT_EQ(postfix->member, L"bar");
 
@@ -67,16 +67,16 @@ TEST_F(ParserTest, ParserHandlesMemberAccessPostfix) {
   m_reader.load(L".");
   consumeToken();
   result = parseFunctionalExpressionPostfix();
-  postfix = dynamic_cast<MemberAccess::Postfix*>(result.get());
+  postfix = dynamic_cast<MemberAccessPostfix*>(result.get());
   ASSERT_TRUE(postfix == nullptr);
 }
 
-// VariantAccess::Postfix
+// VariantAccessPostfix
 TEST_F(ParserTest, ParserHandlesVariantAccessPostfix) {
   m_reader.load(L"as int as float");
   consumeToken();
   auto result = parseFunctionalExpressionPostfix();
-  VariantAccess::Postfix* postfix = dynamic_cast<VariantAccess::Postfix*>(result.get());
+  VariantAccessPostfix* postfix = dynamic_cast<VariantAccessPostfix*>(result.get());
   ASSERT_TRUE(postfix != nullptr);
   EXPECT_EQ(postfix->variant, L"int");
 
@@ -85,7 +85,7 @@ TEST_F(ParserTest, ParserHandlesVariantAccessPostfix) {
   m_reader.load(L"as");
   consumeToken();
   result = parseFunctionalExpressionPostfix();
-  postfix = dynamic_cast<VariantAccess::Postfix*>(result.get());
+  postfix = dynamic_cast<VariantAccessPostfix*>(result.get());
   ASSERT_TRUE(postfix == nullptr);
 }
 

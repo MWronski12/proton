@@ -7,7 +7,7 @@
 using Identifier = std::wstring;
 using TypeIdentifier = std::wstring;
 
-/*
+/**
  * @brief Base struct for all the AST nodes.
  */
 struct ASTNode {

@@ -3,53 +3,51 @@
 
 #include "ErrorHandler.h"
 
-ErrorHandler::ErrorHandler() : m_numToleratedErrors(1) {}
-
 ErrorHandler::ErrorHandler(const int numToleratedErrors)
     : m_numToleratedErrors(numToleratedErrors) {}
 
-ErrorHandler::~ErrorHandler() { exitIfErrors(); }
-
-/*
- * @brief Calls handleError method of derived class. Just a convenience wrapper, which also allows
- * for testing with mocks.
+/**
+ * @brief Signals error or warning.
+ *
+ * @note ErrorLevel::Error is default and makes the program exit immedietely.
+ * @note ErrorLevel::Warning makes the program exit if the number of tolerated warnings is
+ * exceeded.
  */
-void ErrorHandler::operator()(const ErrorType type, const Position& position) {
-  handleError(type, position);
+void ErrorHandler::operator()(const ErrorType type, const Position& position, ErrorLevel level) {
+  m_numErrors++;
+  level == ErrorLevel::Error ? handleError(type, position) : handleWarning(type, position);
 }
 
-/*
- * @brief method for signaling errors. If error is not tolerated, exits the program.
+/**
+ * @brief Prints formatted error message and exits.
  */
 void ErrorHandler::handleError(const ErrorType type, const Position& position) {
-  append(type, position);
-  if (--m_numToleratedErrors <= 0) {
-    exitIfErrors();
+  appendErrorMessage(type, position);
+  dumpErrors();
+  exit(1);
+}
+
+/*
+ * @brief Stores warning information. If number of tolerated warnings is exceeded,
+ * prints formatted error message and exits.
+ */
+void ErrorHandler::handleWarning(const ErrorType type, const Position& position) {
+  appendErrorMessage(type, position);
+  if (m_numErrors >= m_numToleratedErrors) {
+    dumpErrors();
+    exit(1);
   }
 }
 
-/*
- * @brief Prints error message and exits if there are any errors.
- */
-void ErrorHandler::exitIfErrors() {
-  auto message = m_errors.str();
-  if (!message.empty()) {
-    std::cerr << message << std::endl;
-    std::exit(1);
-  }
+bool ErrorHandler::hasErrors() const { return m_numErrors > 0; }
+
+void ErrorHandler::dumpErrors() const { std::cerr << m_errorMessages.str(); }
+
+void ErrorHandler::appendErrorMessage(const ErrorType type, const Position& position) {
+  m_errorMessages << formatErrorMessage(type, position);
 }
 
-/*
- * @brief Appends formatted error message. Designed to be called from derived.
- */
-void ErrorHandler::append(const ErrorType type, const Position& position) {
-  m_errors << format(type, position);
-}
-
-/*
- * @brief Formats error message including ErorType, position and sourceFile.
- */
-std::string ErrorHandler::format(const ErrorType type, const Position& position) const {
+std::string ErrorHandler::formatErrorMessage(const ErrorType type, const Position& position) const {
   std::stringstream message;
 
   message << "\n"
