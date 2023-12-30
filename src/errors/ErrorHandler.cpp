@@ -1,7 +1,7 @@
+#include "ErrorHandler.h"
+
 #include <iostream>
 #include <sstream>
-
-#include "ErrorHandler.h"
 
 ErrorHandler::ErrorHandler(const int numToleratedErrors)
     : m_numToleratedErrors(numToleratedErrors) {}

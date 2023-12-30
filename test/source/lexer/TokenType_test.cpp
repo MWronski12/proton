@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "TokenType.h"
+
+#include <gtest/gtest.h>
 
 TEST(TokenTypeTest, UnexpectedTokenIsFirst) { EXPECT_EQ(int(TokenType::UNEXPECTED), 0); }
 

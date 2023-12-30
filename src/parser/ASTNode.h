@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "ASTVisitor.h"
 #include "Position.h"
 
 using Identifier = std::wstring;
@@ -11,7 +12,9 @@ using TypeIdentifier = std::wstring;
  * @brief Base struct for all the AST nodes.
  */
 struct ASTNode {
- public:
+  Position position;
+
+ protected:
   ASTNode(const ASTNode &) = delete;
   ASTNode &operator=(const ASTNode &) = delete;
   ASTNode() = delete;
@@ -21,6 +24,8 @@ struct ASTNode {
   virtual ~ASTNode() = default;
 
   ASTNode(Position &&pos) : position{pos} {}
+};
 
-  Position position;
+struct VisitableNode {
+  virtual void accept(ASTVisitor &visitor) = 0;
 };

@@ -1,3 +1,5 @@
+#include "Lexer.h"
+
 #include <algorithm>
 #include <cwctype>
 #include <functional>
@@ -5,7 +7,6 @@
 #include <stdexcept>
 #include <string>
 
-#include "Lexer.h"
 #include "Token.h"
 #include "lexer_utils.h"
 

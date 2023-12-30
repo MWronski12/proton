@@ -1,7 +1,8 @@
+#include "Parser.h"
+
 #include <cassert>
 
 #include "ErrorType.h"
-#include "Parser.h"
 #include "TokenType.h"
 
 Parser::Parser(Lexer& lexer, ErrorHandler& errorHandler)

@@ -1,8 +1,9 @@
+#include "Lexer.h"
+
 #include <gtest/gtest.h>
 
 #include <iostream>
 
-#include "Lexer.h"
 #include "StringCharReader.h"
 #include "mocks/ErrorHandlerMock.h"
 

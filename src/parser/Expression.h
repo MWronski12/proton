@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -18,7 +19,6 @@ enum class Operator { Add, Sub, Mul, Div, Mod, And, Or, Not, Eq, Neq, Lt, Gt, Le
  *    | FunctionalExpression;
  */
 struct Expression : public ASTNode {
- public:
   virtual ~Expression() = default;
 
  protected:
@@ -34,11 +34,12 @@ struct Expression : public ASTNode {
  *    | AdditiveExpr
  *    | MultiplicativeExpr;
  */
-struct BinaryExpression : public Expression {
- public:
+struct BinaryExpression : public Expression, public VisitableNode {
   BinaryExpression(Position&& position, std::unique_ptr<Expression>&& lhs,
                    std::optional<Operator> op, std::unique_ptr<Expression>&& rhs)
       : Expression{std::move(position)}, lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   std::unique_ptr<Expression> lhs;
   std::optional<Operator> op;
@@ -49,11 +50,12 @@ struct BinaryExpression : public Expression {
  * UnaryExpression
  *    = UnaryOpExpr;
  */
-struct UnaryExpression : public Expression {
- public:
+struct UnaryExpression : public Expression, public VisitableNode {
   UnaryExpression(Position&& position, std::optional<Operator> op,
                   std::unique_ptr<Expression>&& expr)
       : Expression{std::move(position)}, op{op}, expr{std::move(expr)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   std::optional<Operator> op;
   std::unique_ptr<Expression> expr;
@@ -65,7 +67,7 @@ struct UnaryExpression : public Expression {
  *    | VariantAccessPostfix;
  */
 struct FunctionalPostfix : public ASTNode {
- public:
+ protected:
   FunctionalPostfix(Position&& position) : ASTNode{std::move(position)} {}
 };
 
@@ -75,11 +77,12 @@ struct FunctionalPostfix : public ASTNode {
  *    | MemberAccess
  *    | VariantAccess;
  */
-struct FunctionalExpression : public Expression {
- public:
+struct FunctionalExpression : public Expression, public VisitableNode {
   FunctionalExpression(Position&& position, std::unique_ptr<Expression>&& expr,
                        std::unique_ptr<FunctionalPostfix>&& postfix)
       : Expression{std::move(position)}, expr{std::move(expr)}, postfix{std::move(postfix)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   std::unique_ptr<Expression> expr;
   std::unique_ptr<FunctionalPostfix> postfix;
@@ -94,7 +97,7 @@ struct FunctionalExpression : public Expression {
  *    | CastExpr;
  */
 struct PrimaryExpression : public Expression {
- public:
+ protected:
   PrimaryExpression(Position&& position) : Expression{std::move(position)} {}
 };
 
@@ -106,10 +109,11 @@ using FnCallArgs = std::vector<std::unique_ptr<Expression>>;
  * FnCallPostfix
  *    = "(", [ Expression, { ",", Expression } ], ")";
  */
-struct FnCallPostfix : public FunctionalPostfix {
- public:
+struct FnCallPostfix : public FunctionalPostfix, public VisitableNode {
   FnCallPostfix(Position&& position, FnCallArgs&& args)
       : FunctionalPostfix{std::move(position)}, args{std::move(args)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   FnCallArgs args;
 };
@@ -118,10 +122,11 @@ struct FnCallPostfix : public FunctionalPostfix {
  * MemberAccessPostfix
  *    = ".", Identifier;
  */
-struct MemberAccessPostfix : public FunctionalPostfix {
- public:
+struct MemberAccessPostfix : public FunctionalPostfix, public VisitableNode {
   MemberAccessPostfix(Position&& position, Identifier&& member)
       : FunctionalPostfix{std::move(position)}, member{std::move(member)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   Identifier member;
 };
@@ -130,10 +135,11 @@ struct MemberAccessPostfix : public FunctionalPostfix {
  * VariantAccessPostfix
  *    = "as", typeIdentifier;
  */
-struct VariantAccessPostfix : public FunctionalPostfix {
- public:
+struct VariantAccessPostfix : public FunctionalPostfix, public VisitableNode {
   VariantAccessPostfix(Position&& position, TypeIdentifier&& variant)
       : FunctionalPostfix{std::move(position)}, variant{std::move(variant)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   TypeIdentifier variant;
 };
@@ -141,7 +147,7 @@ struct VariantAccessPostfix : public FunctionalPostfix {
 /* --------------------------------- Primary -------------------------------- */
 
 /*
- * primaryExpression
+ * PrimaryExpression
  *    = IdentifierExpr
  *    | literal
  *    | Object
@@ -153,10 +159,11 @@ struct VariantAccessPostfix : public FunctionalPostfix {
  * IdentifierExpr
  *    = Identifier;
  */
-struct IdentifierExpr : public PrimaryExpression {
- public:
+struct IdentifierExpr : public PrimaryExpression, public VisitableNode {
   IdentifierExpr(Position&& position, Identifier&& name)
       : PrimaryExpression{std::move(position)}, name{std::move(name)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   Identifier name;
 };
@@ -171,8 +178,15 @@ struct IdentifierExpr : public PrimaryExpression {
  */
 
 template <typename T>
-struct Literal : public PrimaryExpression {
- public:
+struct Literal : public PrimaryExpression, public VisitableNode {
+  static_assert(std::is_same<T, int>::value || std::is_same<T, float>::value ||
+                    std::is_same<T, bool>::value || std::is_same<T, wchar_t>::value ||
+                    std::is_same<T, std::wstring>::value,
+                "Literal can be instantiated only with int, float, bool, wchar_t or std::wstring, "
+                "which are builtin primitive types.");
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
+
   Literal(Position&& position, T&& value)
       : PrimaryExpression{std::move(position)}, value(std::move(value)) {}
   T value;
@@ -182,9 +196,11 @@ struct Literal : public PrimaryExpression {
  * ObjectMember
  *    = Identifier, ":", Expression;
  */
-struct ObjectMember {
+struct ObjectMember : public VisitableNode {
   ObjectMember(Identifier&& name, std::unique_ptr<Expression>&& value)
       : name{std::move(name)}, value{std::move(value)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   Identifier name;
   std::unique_ptr<Expression> value;
@@ -192,14 +208,15 @@ struct ObjectMember {
 
 /*
  * Object
- *    = "{", { ObjectMembers }, "}";
+ *    = "{", { ObjectMember }, "}";
  */
-struct Object : public PrimaryExpression {
- public:
+struct Object : public PrimaryExpression, public VisitableNode {
   using Members = std::unordered_map<Identifier, ObjectMember>;
 
   Object(Position&& position, Members&& members)
       : PrimaryExpression{std::move(position)}, members{std::move(members)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   Members members;
 };
@@ -208,10 +225,11 @@ struct Object : public PrimaryExpression {
  * ParenExpr
  *    = "(", Expression, ")";
  */
-struct ParenExpr : public PrimaryExpression {
- public:
+struct ParenExpr : public PrimaryExpression, public VisitableNode {
   ParenExpr(Position&& position, std::unique_ptr<Expression>&& expr)
       : PrimaryExpression{std::move(position)}, expr{std::move(expr)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   std::unique_ptr<Expression> expr;
 };
@@ -222,10 +240,11 @@ enum class PrimitiveType { Int, Float, Bool, Char, String };
  * CastExpr
  *    = primitiveType, "(", Expression, ")";
  */
-struct CastExpr : public PrimaryExpression {
- public:
+struct CastExpr : public PrimaryExpression, public VisitableNode {
   CastExpr(Position&& position, PrimitiveType type, std::unique_ptr<Expression>&& expr)
       : PrimaryExpression{std::move(position)}, type{type}, expr{std::move(expr)} {}
+
+  void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   PrimitiveType type;
   std::unique_ptr<Expression> expr;
