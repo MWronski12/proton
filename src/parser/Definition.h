@@ -29,7 +29,7 @@ struct Definition : public Statement {
 
 /*
  * VarDef
- *     = "var", identifier, ":", typeIdentifier, "=", expression, ";";
+ *     = "var", identifier, ":", typeIdentifier, "=", Expression, ";";
  */
 struct VarDef : public Definition {
  public:
@@ -47,7 +47,7 @@ struct VarDef : public Definition {
 
 /*
  * ConstDef
- *     = "const", identifier, ":", typeIdentifier, "=", expression, ";";
+ *     = "const", identifier, ":", typeIdentifier, "=", Expression, ";";
  */
 struct ConstDef : public Definition {
  public:
@@ -63,24 +63,24 @@ struct ConstDef : public Definition {
 
 /* -------------------------------- StructDef ------------------------------- */
 
+/* StructMember
+ *  = identifier, ":", typeIdentifier, ";";
+ */
+struct StructMember : public ASTNode {
+  StructMember(Position&& position, Identifier&& memberName, TypeIdentifier&& memberType)
+      : ASTNode{std::move(position)}, name{std::move(memberName)}, type{std::move(memberType)} {}
+
+  Identifier name;
+  TypeIdentifier type;
+};
+
 /*
  * StructDef
- *     = "struct", identifier, "{", [ structMembers ], "}", ";";
+ *     = "struct", identifier, "{", [ StructMember ], "}", ";";
  */
 struct StructDef : public Definition {
  public:
-  /* structMember
-   *  = identifier, ":", typeIdentifier, ";";
-   */
-  struct Member {
-    Identifier name;
-    TypeIdentifier type;
-  };
-  /*
-   * structMembers
-   *  = structMember, { structMember };
-   */
-  using Members = std::unordered_map<Identifier, Member>;
+  using Members = std::unordered_map<Identifier, StructMember>;
 
   StructDef(Position&& position, Identifier&& structName, Members&& structMembers)
       : Definition{std::move(position), std::move(structName)}, members{std::move(structMembers)} {}
@@ -92,20 +92,11 @@ struct StructDef : public Definition {
 
 /*
  * VariantDef
- *     = "variant", identifier, "{", [ variantTypes ], "}", ";";
+ *     = "variant", identifier, "{", { typeIdentifier } ], "}", ";";
  */
 struct VariantDef : public Definition {
  public:
-  /*
-   * variantType
-   *     = typeIdentifier
-   */
-  using Type = TypeIdentifier;
-  /*
-   * variantTypes
-   *     = variantType, { ",", variantType };
-   */
-  using Types = std::vector<Type>;
+  using Types = std::vector<TypeIdentifier>;
 
   VariantDef(Position&& position, Identifier&& variantName, Types&& variantTypes)
       : Definition{std::move(position), std::move(variantName)}, types{std::move(variantTypes)} {}
@@ -116,35 +107,29 @@ struct VariantDef : public Definition {
 /* --------------------------------- FnDef ---------------------------------- */
 
 /*
+ * FnParam
+ *    = [ "const" ], identifier, ":", typeIdentifier;
+ */
+struct FnParam : public ASTNode {
+  FnParam(Position&& position, bool paramIsConst, Identifier&& paramName,
+          TypeIdentifier&& paramType)
+      : ASTNode{std::move(position)},
+        isConst{paramIsConst},
+        name{std::move(paramName)},
+        type{std::move(paramType)} {}
+
+  bool isConst;
+  Identifier name;
+  TypeIdentifier type;
+};
+
+/*
  * FnDef
- *    = "fn", identifier, "(", [ fnParams ], ")", returnTypeAnnotation, BlockStmt;
+ *    = "fn", identifier, "(", { FnParam }, ")", "->", typeIdentifier, BlockStmt;
  */
 struct FnDef : public Definition {
  public:
-  /*
-   * fnParam
-   *    = [ "const" ], identifier, ":", typeIdentifier;
-   */
-  struct Param {
-    Param(bool paramIsConst, Identifier&& paramName, TypeIdentifier&& paramType)
-        : isConst{paramIsConst}, name{std::move(paramName)}, type{std::move(paramType)} {}
-
-    bool isConst;
-    Identifier name;
-    TypeIdentifier type;
-  };
-
-  /*
-   * fnParams
-   *    = fnParam, { ",", fnParam };
-   */
-  using Params = std::unordered_map<Identifier, Param>;
-
-  /*
-   * fnReturnType
-   *    = "->", typeIdentifier;
-   */
-  using ReturnType = TypeIdentifier;
+  using Params = std::unordered_map<Identifier, FnParam>;
 
   FnDef(Position&& position, Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType,
         BlockStmt&& fnBody)
@@ -154,6 +139,6 @@ struct FnDef : public Definition {
         body{std::move(fnBody)} {}
 
   Params parameters;
-  ReturnType returnType;
+  TypeIdentifier returnType;
   BlockStmt body;
 };

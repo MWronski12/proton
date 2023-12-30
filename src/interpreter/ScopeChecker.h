@@ -1,6 +1,8 @@
+#pragma once
+
 #include <variant>
 
-#include "ASTVisitor.h"
+#include "ErrorHandler.h"
 #include "ScopedTable.h"
 
 class ScopeChecker : public ASTVisitor {
@@ -9,14 +11,12 @@ class ScopeChecker : public ASTVisitor {
 
   void visit(Program& program) override;
 
-  void visit(Definition& def) override;
   void visit(VarDef& def) override;
   void visit(ConstDef& def) override;
   void visit(StructDef& def) override;
   void visit(VariantDef& def) override;
   void visit(FnDef& def) override;
 
-  void visit(Expression& expr) override;
   void visit(BinaryExpression& expr) override;
   void visit(UnaryExpression& expr) override;
   void visit(FunctionalExpression& expr) override;
@@ -35,7 +35,6 @@ class ScopeChecker : public ASTVisitor {
   void visit(ParenExpr& expr) override;
   void visit(CastExpr& expr) override;
 
-  void visit(Statement& stmt) override;
   void visit(BlockStmt& stmt) override;
   void visit(AssignmentStmt& stmt) override;
   void visit(StdinExtractionStmt& stmt) override;
