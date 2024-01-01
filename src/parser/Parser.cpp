@@ -1,8 +1,7 @@
-#include "Parser.h"
-
 #include <cassert>
 
 #include "ErrorType.h"
+#include "Parser.h"
 #include "TokenType.h"
 
 Parser::Parser(Lexer& lexer, ErrorHandler& errorHandler)
@@ -1007,9 +1006,7 @@ std::unique_ptr<Statement> Parser::parseVariantMatchStmt() {
   };
 
   if (!consumeIf(TokenType::LBRACE, ErrorType::VARIANTMATCH_EXPECTED_LBRACE)) return nullptr;
-  if ((cases = parseVariantMatchCases()) == std::nullopt) {
-    cases = VariantMatchStmt::Cases{};  // empty map
-  };
+  if ((cases = parseVariantMatchCases()) == std::nullopt) return nullptr;
   if (!consumeIf(TokenType::RBRACE, ErrorType::VARIANTMATCH_EXPECTED_RBRACE)) return nullptr;
 
   return std::make_unique<VariantMatchStmt>(std::move(position), std::move(expr),

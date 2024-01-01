@@ -145,6 +145,19 @@ TEST_F(ParserTest, ParserHandlesFnDef) {
   EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"int"));
 }
 
+TEST_F(ParserTest, ParserHandlesVoidFnDef) {
+  m_reader.load(L"fn helloWorld() -> void { }");
+  consumeToken();
+
+  EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
+  auto result = parseFnDef();
+  ASSERT_TRUE(result != nullptr);
+  FnDef* fnDef = dynamic_cast<FnDef*>(result.get());
+  ASSERT_TRUE(fnDef != nullptr);
+  EXPECT_EQ(fnDef->name, Identifier(L"helloWorld"));
+  EXPECT_EQ(fnDef->returnType, TypeIdentifier(L"void"));
+}
+
 TEST_F(ParserTest, ParserHandlesFnDefMissingIdentifier) {
   m_reader.load(L"fn () -> int { return 42; }");
   consumeToken();

@@ -17,7 +17,7 @@
  *     | VariantDef
  *     | FnDef;
  */
-struct Definition : public Statement {
+struct Definition : public Statement, public VisitableNode {
   Identifier name;
 
  protected:
@@ -31,7 +31,7 @@ struct Definition : public Statement {
  * VarDef
  *     = "var", identifier, ":", typeIdentifier, "=", Expression, ";";
  */
-struct VarDef : public Definition, public VisitableNode {
+struct VarDef : public Definition {
   VarDef(Position&& position, Identifier&& varName, TypeIdentifier&& varType,
          std::unique_ptr<Expression>&& varValue)
       : Definition{std::move(position), std::move(varName)},
@@ -50,7 +50,7 @@ struct VarDef : public Definition, public VisitableNode {
  * ConstDef
  *     = "const", identifier, ":", typeIdentifier, "=", Expression, ";";
  */
-struct ConstDef : public Definition, public VisitableNode {
+struct ConstDef : public Definition {
   ConstDef(Position&& position, Identifier&& varName, TypeIdentifier&& varType,
            std::unique_ptr<Expression>&& varValue)
       : Definition{std::move(position), std::move(varName)},
@@ -82,7 +82,7 @@ struct StructMember : public ASTNode, public VisitableNode {
  * StructDef
  *     = "struct", identifier, "{", [ StructMember ], "}", ";";
  */
-struct StructDef : public Definition, public VisitableNode {
+struct StructDef : public Definition {
   using Members = std::unordered_map<Identifier, StructMember>;
 
   StructDef(Position&& position, Identifier&& structName, Members&& structMembers)
@@ -99,7 +99,7 @@ struct StructDef : public Definition, public VisitableNode {
  * VariantDef
  *     = "variant", identifier, "{", { typeIdentifier } ], "}", ";";
  */
-struct VariantDef : public Definition, public VisitableNode {
+struct VariantDef : public Definition {
   using Types = std::vector<TypeIdentifier>;
 
   VariantDef(Position&& position, Identifier&& variantName, Types&& variantTypes)
@@ -135,7 +135,7 @@ struct FnParam : public ASTNode, public VisitableNode {
  * FnDef
  *    = "fn", identifier, "(", { FnParam }, ")", "->", typeIdentifier, BlockStmt;
  */
-struct FnDef : public Definition, public VisitableNode {
+struct FnDef : public Definition {
   using Params = std::unordered_map<Identifier, FnParam>;
 
   FnDef(Position&& position, Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType,

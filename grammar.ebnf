@@ -171,9 +171,7 @@ ExpressionOrAssignmentStmt
     = expression, [ "=", expression ], ";";
 
 VariantMatchStmt
-    = "match", expression, "{", variantMatchCases, "}";
-variantMatchCases
-    = { variantMatchCase };
+    = "match", expression, "{", { variantMatchCase }, "}";
 VariantMatchCase
     = "case", typeIdentifier, "->", Block;
 

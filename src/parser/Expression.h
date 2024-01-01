@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ASTNode.h"
+#include "Position.h"
 
 /* -------------------------------- Abstract -------------------------------- */
 
@@ -179,11 +180,10 @@ struct IdentifierExpr : public PrimaryExpression, public VisitableNode {
 
 template <typename T>
 struct Literal : public PrimaryExpression, public VisitableNode {
-  static_assert(std::is_same<T, int>::value || std::is_same<T, float>::value ||
-                    std::is_same<T, bool>::value || std::is_same<T, wchar_t>::value ||
-                    std::is_same<T, std::wstring>::value,
-                "Literal can be instantiated only with int, float, bool, wchar_t or std::wstring, "
-                "which are builtin primitive types.");
+  static_assert(
+      std::disjunction<std::is_same<T, int>, std::is_same<T, float>, std::is_same<T, bool>,
+                       std::is_same<T, wchar_t>, std::is_same<T, std::wstring>>::value,
+      "T must be one of the following types: int, float, bool, wchar_t, std::wstring");
 
   void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 

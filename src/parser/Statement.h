@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "ASTNode.h"
+#include "Expression.h"
+#include "Position.h"
 
 /*
  * Statement
@@ -110,7 +112,7 @@ struct VariantMatchCase : public ASTNode, public VisitableNode {
 
 /*
  * VariantMatch
- *     = "match", Expression, "{", { VariantMatchCases } , "}";
+ *     = "match", Expression, "{", { VariantMatchCase } , "}";
  */
 struct VariantMatchStmt : public Statement, public VisitableNode {
   using Cases = std::unordered_map<TypeIdentifier, VariantMatchCase>;

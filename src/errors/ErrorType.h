@@ -127,6 +127,7 @@ enum class ErrorType {
   // Semantic Errors
   EXPECTED_MAIN_FUNCTION_DEF,
   REDEFINITION,
+  UNDEFINED_TYPE,
   STRUCTMEMBER_REDEFINITION,
   VARIANTTYPE_REDEFINITION,
   FNPARAM_REDEFINITION,
@@ -336,6 +337,7 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SEMANTIC_ERROR, "Expected main function definition (fn main() -> int { return 0; }) !"}},
     {ErrorType::REDEFINITION,
      {SEMANTIC_ERROR, "Redefinition, identifier with that name already exists!"}},
+    {ErrorType::UNDEFINED_TYPE, {SEMANTIC_ERROR, "Undefined type!"}},
     {ErrorType::STRUCTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Struct member redefinition!"}},
     {ErrorType::VARIANTMATCHCASE_REDEFINITION,
      {SEMANTIC_ERROR, "Variant match case redefinition!"}},

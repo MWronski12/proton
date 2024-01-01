@@ -1,6 +1,6 @@
-#include "parser_utils.h"
-
 #include <algorithm>
+
+#include "parser_utils.h"
 
 bool isPrimitiveType(TokenType tokenType) {
   return std::find(primitiveTypes.cbegin(), primitiveTypes.cend(), tokenType) !=
@@ -8,5 +8,6 @@ bool isPrimitiveType(TokenType tokenType) {
 }
 
 bool isTypeIdentifier(TokenType tokenType) {
-  return isPrimitiveType(tokenType) || tokenType == TokenType::IDENTIFIER;
+  return isPrimitiveType(tokenType) || tokenType == TokenType::IDENTIFIER ||
+         tokenType == TokenType::VOID_KWRD;
 }
