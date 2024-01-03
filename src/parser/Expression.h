@@ -181,8 +181,8 @@ struct IdentifierExpr : public PrimaryExpression, public VisitableNode {
 template <typename T>
 struct Literal : public PrimaryExpression, public VisitableNode {
   static_assert(
-      std::disjunction<std::is_same<T, int>, std::is_same<T, float>, std::is_same<T, bool>,
-                       std::is_same<T, wchar_t>, std::is_same<T, std::wstring>>::value,
+      std::disjunction_v<std::is_same<T, int>, std::is_same<T, float>, std::is_same<T, bool>,
+                         std::is_same<T, wchar_t>, std::is_same<T, std::wstring>>,
       "T must be one of the following types: int, float, bool, wchar_t, std::wstring");
 
   void accept(ASTVisitor& visitor) override { visitor.visit(*this); };

@@ -1,12 +1,26 @@
 #pragma once
 
 #include "Type.h"
+#include "Value.h"
 
 namespace Interpreter {
 
-// bool operator==(const Type& lhs, const Type& rhs);
-// bool operator==(const Struct& lhs, const Struct& rhs);
-// bool operator==(const Variant& lhs, const Variant& rhs);
-// bool operator==(const Function& lhs, const Function& rhs);
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+std::wostream& operator<<(std::wostream& os, const VariantValue& value);
+std::wostream& operator<<(std::wostream& os, const Object& value);
+std::wostream& operator<<(std::wostream& os, const Value& value);
+
+std::wostream& operator<<(std::wostream& os, const Variant& type);
+std::wostream& operator<<(std::wostream& os, const Struct& type);
+std::wostream& operator<<(std::wostream& os, const Type& type);
+
+bool valueTypeMatch(const Value& value, const Type& type);
 
 }  // namespace Interpreter

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <map>
-#include <string>
+#include <optional>
+#include <set>
 
 #include "Type.h"
 #include "Value.h"
@@ -9,11 +9,19 @@
 namespace Interpreter {
 
 /**
- * @brief Data structure representing variable - its name, type and value
+ * @brief Data structure representing a variable - its name, type and optional value.
  */
 struct Variable {
-  Identifier name;
-  Identifier type;
+  Variable(const Identifier& name, const TypeIdentifier& type,
+           const std::optional<Value>& value = std::nullopt,
+           std::set<Modifier>&& modifiers = {}) noexcept;
+
+  bool isConst() const noexcept;
+  bool isDefined() const noexcept;
+
+  const Identifier name;
+  const TypeIdentifier type;
+  const std::set<Modifier> modifiers;
   std::optional<Value> value;
 };
 

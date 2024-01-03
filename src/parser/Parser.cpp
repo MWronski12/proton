@@ -732,7 +732,7 @@ std::unique_ptr<Expression> Parser::parseIdentifierExpr() {
 
 /*
  * Object
- *    = "{", { ObjectMembers }, "}";
+ *    = "{", { ObjectMember }, "}";
  */
 std::unique_ptr<Expression> Parser::parseObject() {
   if (m_token.type != TokenType::LBRACE) {

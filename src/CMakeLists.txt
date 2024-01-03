@@ -9,5 +9,9 @@ add_executable(proton
 )
 
 target_link_libraries(proton PUBLIC
+    errorslib
+    inputlib
     lexerlib
+    parserlib
+    interpreterlib
 )

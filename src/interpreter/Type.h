@@ -7,15 +7,33 @@
 #include <variant>
 #include <vector>
 
-namespace {
-struct BlockStmt;  // For function body reference
-}
+struct BlockStmt;
 
 namespace Interpreter {
 
-using Identifier = std::wstring;
-
 struct Type;
+
+using Identifier = std::wstring;
+using TypeIdentifier = std::wstring;
+
+const TypeIdentifier VOID = std::wstring(L"void");
+const TypeIdentifier INT = std::wstring(L"int");
+const TypeIdentifier FLOAT = std::wstring(L"float");
+const TypeIdentifier BOOL = std::wstring(L"bool");
+const TypeIdentifier CHAR = std::wstring(L"char");
+const TypeIdentifier STRING = std::wstring(L"string");
+
+const TypeIdentifier VARIANT = std::wstring(L"variant");
+const TypeIdentifier STRUCT = std::wstring(L"struct");
+const TypeIdentifier FUNCTION = std::wstring(L"function");
+
+// Composite types hold references to other types for recursive type checking.
+// All referenced subtypes must outlive the composite type.
+using TypeRef = std::reference_wrapper<const Type>;
+
+struct TypeRefComparator {
+  bool operator()(const TypeRef& lhs, const TypeRef& rhs) const { return &lhs.get() < &rhs.get(); }
+};
 
 enum class Modifier { CONST };
 
@@ -57,29 +75,36 @@ struct String {};
  * @brief Data structure representing variant types.
  */
 struct Variant {
-  std::set<Identifier> types;
+  template <typename... Ts>
+  Variant(Ts&&... variantTypes) {
+    std::set<TypeRef, TypeRefComparator> typesSet{std::forward<Ts>(variantTypes)...};
+    types = std::move(typesSet);
+  }
+
+  std::set<TypeRef, TypeRefComparator> types;
 };
 
 /**
  * @brief Data structure representing struct types.
  */
 struct Struct {
-  std::map<Identifier, Identifier> members;
+  std::map<Identifier, TypeRef> members;
 };
 
 /**
  * @brief Data structure representing function types.
  */
 struct Function {
+  using Body = std::reference_wrapper<::BlockStmt>;
   struct Param {
     Identifier name;
-    Identifier type;
+    TypeRef type;
     std::set<Modifier> modifiers;
   };
 
   std::vector<Param> params;
-  Identifier returnType;
-  std::optional<std::reference_wrapper<::BlockStmt>> body;
+  TypeRef returnType;
+  std::optional<Body> body;
 };
 
 /* --------------------------- Type representation -------------------------- */
@@ -88,8 +113,18 @@ struct Function {
  * @brief Data structure representing proton language type.
  */
 struct Type {
-  std::set<Modifier> modifiers;
-  std::variant<Void, Int, Float, Bool, Char, String, Variant, Struct, Function> type;
+  template <typename T>
+  Type(T&& type, std::set<Modifier>&& modifiers = {})
+      : type{std::move(type)}, modifiers{std::move(modifiers)} {
+    static_assert(
+        std::disjunction_v<std::is_same<T, Void>, std::is_same<T, Int>, std::is_same<T, Float>,
+                           std::is_same<T, Bool>, std::is_same<T, Char>, std::is_same<T, String>,
+                           std::is_same<T, Variant>, std::is_same<T, Struct>,
+                           std::is_same<T, Function>>);
+  }
+
+  const std::variant<Void, Int, Float, Bool, Char, String, Variant, Struct, Function> type;
+  const std::set<Modifier> modifiers;
 };
 
 }  // namespace Interpreter

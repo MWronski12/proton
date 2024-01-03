@@ -45,47 +45,47 @@ struct ReturnStmt;
 
 class ASTVisitor {
  public:
-  virtual void visit(Program& program) = 0;
+  virtual void visit([[maybe_unused]] Program& program) {}
 
-  virtual void visit(VarDef& def) = 0;
-  virtual void visit(ConstDef& def) = 0;
-  virtual void visit(StructDef& def) = 0;
-  virtual void visit(StructMember& member) = 0;
-  virtual void visit(VariantDef& def) = 0;
-  virtual void visit(FnDef& def) = 0;
-  virtual void visit(FnParam& param) = 0;
+  virtual void visit([[maybe_unused]] VarDef& def) {}
+  virtual void visit([[maybe_unused]] ConstDef& def) {}
+  virtual void visit([[maybe_unused]] StructDef& def) {}
+  virtual void visit([[maybe_unused]] StructMember& member) {}
+  virtual void visit([[maybe_unused]] VariantDef& def) {}
+  virtual void visit([[maybe_unused]] FnDef& def) {}
+  virtual void visit([[maybe_unused]] FnParam& param) {}
 
-  virtual void visit(BinaryExpression& expr) = 0;
-  virtual void visit(UnaryExpression& expr) = 0;
-  virtual void visit(FunctionalExpression& expr) = 0;
-  virtual void visit(MemberAccessPostfix& postfix) = 0;
-  virtual void visit(VariantAccessPostfix& postfix) = 0;
-  virtual void visit(FnCallPostfix& postfix) = 0;
-  virtual void visit(IdentifierExpr& expr) = 0;
-  virtual void visit(Literal<int>& expr) = 0;
-  virtual void visit(Literal<float>& expr) = 0;
-  virtual void visit(Literal<bool>& expr) = 0;
-  virtual void visit(Literal<wchar_t>& expr) = 0;
-  virtual void visit(Literal<std::wstring>& expr) = 0;
-  virtual void visit(Object& expr) = 0;
-  virtual void visit(ObjectMember& expr) = 0;
-  virtual void visit(ParenExpr& expr) = 0;
-  virtual void visit(CastExpr& expr) = 0;
+  virtual void visit([[maybe_unused]] BinaryExpression& expr) {}
+  virtual void visit([[maybe_unused]] UnaryExpression& expr) {}
+  virtual void visit([[maybe_unused]] FunctionalExpression& expr) {}
+  virtual void visit([[maybe_unused]] MemberAccessPostfix& postfix) {}
+  virtual void visit([[maybe_unused]] VariantAccessPostfix& postfix) {}
+  virtual void visit([[maybe_unused]] FnCallPostfix& postfix) {}
+  virtual void visit([[maybe_unused]] IdentifierExpr& expr) {}
+  virtual void visit([[maybe_unused]] Literal<int>& expr) {}
+  virtual void visit([[maybe_unused]] Literal<float>& expr) {}
+  virtual void visit([[maybe_unused]] Literal<bool>& expr) {}
+  virtual void visit([[maybe_unused]] Literal<wchar_t>& expr) {}
+  virtual void visit([[maybe_unused]] Literal<std::wstring>& expr) {}
+  virtual void visit([[maybe_unused]] Object& expr) {}
+  virtual void visit([[maybe_unused]] ObjectMember& expr) {}
+  virtual void visit([[maybe_unused]] ParenExpr& expr) {}
+  virtual void visit([[maybe_unused]] CastExpr& expr) {}
 
-  virtual void visit(BlockStmt& stmt) = 0;
-  virtual void visit(ExpressionStmt& stmt) = 0;
-  virtual void visit(AssignmentStmt& stmt) = 0;
-  virtual void visit(StdinExtractionStmt& stmt) = 0;
-  virtual void visit(StdoutInsertionStmt& stmt) = 0;
-  virtual void visit(VariantMatchStmt& stmt) = 0;
-  virtual void visit(VariantMatchCase& stmt) = 0;
-  virtual void visit(IfStmt& stmt) = 0;
-  virtual void visit(Else& stmt) = 0;
-  virtual void visit(Elif& stmt) = 0;
-  virtual void visit(ForStmt& stmt) = 0;
-  virtual void visit(Range& stmt) = 0;
-  virtual void visit(WhileStmt& stmt) = 0;
-  virtual void visit(ContinueStmt& stmt) = 0;
-  virtual void visit(BreakStmt& stmt) = 0;
-  virtual void visit(ReturnStmt& stmt) = 0;
+  virtual void visit([[maybe_unused]] BlockStmt& stmt) {}
+  virtual void visit([[maybe_unused]] ExpressionStmt& stmt) {}
+  virtual void visit([[maybe_unused]] AssignmentStmt& stmt) {}
+  virtual void visit([[maybe_unused]] StdinExtractionStmt& stmt) {}
+  virtual void visit([[maybe_unused]] StdoutInsertionStmt& stmt) {}
+  virtual void visit([[maybe_unused]] VariantMatchStmt& stmt) {}
+  virtual void visit([[maybe_unused]] VariantMatchCase& stmt) {}
+  virtual void visit([[maybe_unused]] IfStmt& stmt) {}
+  virtual void visit([[maybe_unused]] Else& stmt) {}
+  virtual void visit([[maybe_unused]] Elif& stmt) {}
+  virtual void visit([[maybe_unused]] ForStmt& stmt) {}
+  virtual void visit([[maybe_unused]] Range& stmt) {}
+  virtual void visit([[maybe_unused]] WhileStmt& stmt) {}
+  virtual void visit([[maybe_unused]] ContinueStmt& stmt) {}
+  virtual void visit([[maybe_unused]] BreakStmt& stmt) {}
+  virtual void visit([[maybe_unused]] ReturnStmt& stmt) {}
 };
