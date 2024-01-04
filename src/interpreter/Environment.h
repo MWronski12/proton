@@ -17,7 +17,8 @@ enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
 struct Environment {
  public:
-  using FunctionTable = std::map<Identifier, Function>;
+  using FunctionTableEntry = std::pair<FnSignature, std::optional<Function>>;
+  using FunctionTable = std::map<Identifier, FunctionTableEntry>;
 
   Environment();
 
@@ -43,22 +44,24 @@ struct Environment {
   bool typeIsDefined(const TypeIdentifier& name) const noexcept;
   std::pair<Scope::TypeTable::iterator, bool> declareType(const TypeIdentifier& name);
   std::pair<Scope::TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type);
-  std::optional<TypeRef> getType(
-      const TypeIdentifier& name) const noexcept;
+  std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
   /* ---------------------------- Function methods ---------------------------- */
 
-  bool fnIsDeclared(const Identifier& name) const;
-  bool fnIsDefined(const Identifier& name) const;
-  std::pair<FunctionTable::iterator, bool> declareFn(const Identifier& name,
-                                                     const TypeIdentifier& returnType,
-                                                     std::vector<Function::Param>&& params = {});
-  void bindFunctionBody(const Identifier& name, std::reference_wrapper<::BlockStmt> body);
-  void bindFunctionArgs(const Identifier& name, std::vector<Value>&& args);
+  bool fnIsDeclared(const Identifier& name) const noexcept;
+  bool fnIsDefined(const Identifier& name) const noexcept;
+  std::pair<FunctionTable::iterator, bool> declareFn(
+      const Identifier& name, const TypeRef& returnType,
+      std::vector<FnSignature::Arg>&& args = {}) noexcept;
+  std::pair<FunctionTable::iterator, bool> defineFn(
+      const Identifier& name, const TypeRef& returnType, const Function::BodyRef& body,
+      std::vector<Function::Param>&& params = {}) noexcept;
+  std::optional<Type> getFnSignature(const Identifier& name) const noexcept;
+  std::optional<Value> getFunction(const Identifier& name) const noexcept;
 
   /* -------------------------- Flow control methods -------------------------- */
 
-  void pushStackFrame();
+  void pushStackFrame(const Identifier& name, std::vector<Value>&& args = {});
   void popStackFrame();
   void enterScope();
   void exitScope();

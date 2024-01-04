@@ -16,8 +16,8 @@ bool valueVariantTypeMatch(const Value& value, const Variant& variantType) {
 
 bool valueStructTypeMatch(const Value& value, const Struct& structType) {
   // 1) Value must be an object to match a struct type
-  if (!std::holds_alternative<Object>(value.value)) return false;
-  const auto& object = std::get<Object>(value.value);
+  if (!std::holds_alternative<ObjectValue>(value.value)) return false;
+  const auto& object = std::get<ObjectValue>(value.value);
 
   // 2) Object must have the same number of members as the struct type
   if (object.members.size() != structType.members.size()) return false;
@@ -35,7 +35,25 @@ bool valueStructTypeMatch(const Value& value, const Struct& structType) {
   return true;
 }
 
-// bool valueFunctionTypeMatch(const Value& value, const Function& functionType) { return false; }
+bool valueFunctionTypeMatch(const Value& value, const FnSignature& signature) {
+  // 1) Value must be a function to match a function type
+  if (!std::holds_alternative<Function>(value.value)) return false;
+  const auto& function = std::get<Function>(value.value);
+
+  // 2) Function must have the same number of parameters as the function type
+  if (function.params.size() != signature.args.size()) return false;
+
+  // 3) Function parameter types must match the corresponding function type parameter types
+  for (uint i = 0; i < function.params.size(); ++i) {
+    if (function.params[i].modifiers != signature.args[i].modifiers) return false;
+    if (&function.params[i].type.get() != &signature.args[i].type.get()) return false;
+  }
+
+  // 4) Function return type must match the function type return type
+  if (&function.returnType.get() != &signature.returnType.get()) return false;
+
+  return true;
+}
 
 }  // namespace
 
@@ -52,7 +70,7 @@ bool valueTypeMatch(const Value& value, const Type& type) {
           [&value](const String&) { return std::holds_alternative<std::wstring>(value.value); },
           [&value](const Variant& type) { return valueVariantTypeMatch(value, type); },
           [&value](const Struct& type) { return valueStructTypeMatch(value, type); },
-          // [&value](const Function& type) { return valueFunctionTypeMatch(value, type); },
+          [&value](const FnSignature& type) { return valueFunctionTypeMatch(value, type); },
           [](const auto&) { return false; },
       },
       type.type);
@@ -62,7 +80,7 @@ std::wostream& operator<<(std::wostream& os, const VariantValue& value) {
   return os << L"Variant(" << *value.value << L")";
 }
 
-std::wostream& operator<<(std::wostream& os, const Object& value) {
+std::wostream& operator<<(std::wostream& os, const ObjectValue& value) {
   os << L"Object({ ";
   if (!value.members.empty()) {
     auto it = value.members.begin();
@@ -75,6 +93,19 @@ std::wostream& operator<<(std::wostream& os, const Object& value) {
   return os;
 }
 
+std::wostream& operator<<(std::wostream& os, const Function& value) {
+  os << L"Function((";
+  if (!value.params.empty()) {
+    auto it = value.params.begin();
+    os << it->name << L": " << it->type.get();
+    for (++it; it != value.params.end(); ++it) {
+      os << L", " << it->name << L": " << it->type.get();
+    }
+  }
+  os << L") " << L"-> " << value.returnType.get() << L" { ... })";
+  return os;
+}
+
 std::wostream& operator<<(std::wostream& os, const Value& value) {
   std::visit(overloaded{
                  [&os](const std::monostate&) { os << L"Void(null)"; },
@@ -84,9 +115,9 @@ std::wostream& operator<<(std::wostream& os, const Value& value) {
                  [&os](const wchar_t& value) { os << L"Char('" << value << "')"; },
                  [&os](const std::wstring& value) { os << L"String(\"" << value << "\")"; },
                  [&os](const VariantValue& value) { os << value; },
-                 [&os](const Object& value) { os << value; },
-                 [&os](const FuncPtr&) { os << L"FuncPtr()"; },
-                 [](const auto&) {},
+                 [&os](const ObjectValue& value) { os << value; },
+                 [&os](const Function& value) { os << value; },
+                 [&os](const auto&) { os << "Unknown value!"; },
              },
              value.value);
   return os;
@@ -120,6 +151,19 @@ std::wostream& operator<<(std::wostream& os, const Struct& type) {
   return os;
 }
 
+std::wostream& operator<<(std::wostream& os, const FnSignature& type) {
+  os << L"Function{(";
+  if (!type.args.empty()) {
+    auto it = type.args.begin();
+    os << it->type.get();
+    for (++it; it != type.args.end(); ++it) {
+      os << L", " << it->type.get();
+    }
+  }
+  os << L") " << L"-> " << type.returnType.get() << L"}";
+  return os;
+}
+
 std::wostream& operator<<(std::wostream& os, const Type& type) {
   std::visit(overloaded{
                  [&os](const Void&) { os << L"Void"; },
@@ -130,7 +174,8 @@ std::wostream& operator<<(std::wostream& os, const Type& type) {
                  [&os](const String&) { os << L"String"; },
                  [&os](const Variant& type) { os << type; },
                  [&os](const Struct& type) { os << type; },
-                 [](const auto&) {},
+                 [&os](const FnSignature& type) { os << type; },
+                 [&os](const auto&) { os << L"Unknown type!"; },
              },
              type.type);
   return os;

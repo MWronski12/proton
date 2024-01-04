@@ -7,8 +7,6 @@
 #include <variant>
 #include <vector>
 
-struct BlockStmt;
-
 namespace Interpreter {
 
 struct Type;
@@ -16,16 +14,16 @@ struct Type;
 using Identifier = std::wstring;
 using TypeIdentifier = std::wstring;
 
-const TypeIdentifier VOID = std::wstring(L"void");
-const TypeIdentifier INT = std::wstring(L"int");
-const TypeIdentifier FLOAT = std::wstring(L"float");
-const TypeIdentifier BOOL = std::wstring(L"bool");
-const TypeIdentifier CHAR = std::wstring(L"char");
-const TypeIdentifier STRING = std::wstring(L"string");
+const TypeIdentifier VOID = L"void";
+const TypeIdentifier INT = L"int";
+const TypeIdentifier FLOAT = L"float";
+const TypeIdentifier BOOL = L"bool";
+const TypeIdentifier CHAR = L"char";
+const TypeIdentifier STRING = L"string";
 
-const TypeIdentifier VARIANT = std::wstring(L"variant");
-const TypeIdentifier STRUCT = std::wstring(L"struct");
-const TypeIdentifier FUNCTION = std::wstring(L"function");
+const TypeIdentifier VARIANT = L"variant";
+const TypeIdentifier STRUCT = L"struct";
+const TypeIdentifier FUNCTION = L"function";
 
 // Composite types hold references to other types for recursive type checking.
 // All referenced subtypes must outlive the composite type.
@@ -94,17 +92,17 @@ struct Struct {
 /**
  * @brief Data structure representing function types.
  */
-struct Function {
-  using Body = std::reference_wrapper<::BlockStmt>;
-  struct Param {
-    Identifier name;
+struct FnSignature {
+  struct Arg {
     TypeRef type;
     std::set<Modifier> modifiers;
   };
 
-  std::vector<Param> params;
+  FnSignature(const TypeRef& returnType, std::vector<Arg>&& args = {})
+      : returnType{returnType}, args{std::move(args)} {}
+
   TypeRef returnType;
-  std::optional<Body> body;
+  std::vector<Arg> args;
 };
 
 /* --------------------------- Type representation -------------------------- */
@@ -114,17 +112,15 @@ struct Function {
  */
 struct Type {
   template <typename T>
-  Type(T&& type, std::set<Modifier>&& modifiers = {})
-      : type{std::move(type)}, modifiers{std::move(modifiers)} {
+  Type(T&& type) : type{std::move(type)} {
     static_assert(
         std::disjunction_v<std::is_same<T, Void>, std::is_same<T, Int>, std::is_same<T, Float>,
                            std::is_same<T, Bool>, std::is_same<T, Char>, std::is_same<T, String>,
                            std::is_same<T, Variant>, std::is_same<T, Struct>,
-                           std::is_same<T, Function>>);
+                           std::is_same<T, FnSignature>>);
   }
 
-  const std::variant<Void, Int, Float, Bool, Char, String, Variant, Struct, Function> type;
-  const std::set<Modifier> modifiers;
+  const std::variant<Void, Int, Float, Bool, Char, String, Variant, Struct, FnSignature> type;
 };
 
 }  // namespace Interpreter

@@ -12,11 +12,10 @@ namespace Interpreter {
  */
 class StackFrame {
  public:
-  // TODO: constructor taking function info and creating ars scope
-  StackFrame(std::pair<Identifier, Function>&& function);
+  StackFrame(const Identifier& fnName, const Function& function);
   ~StackFrame() = default;
 
-  StackFrame() = delete;
+  StackFrame() = default;
   StackFrame(const StackFrame&) = delete;
   StackFrame(StackFrame&&) = delete;
   StackFrame& operator=(const StackFrame&) = delete;
@@ -46,7 +45,9 @@ class StackFrame {
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
  private:
-  const std::pair<Identifier, Function> m_function;
+  const Identifier m_fnName;
+  // const Function m_function;
+
   std::vector<Scope> m_scopes;
 };
 

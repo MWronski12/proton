@@ -1,5 +1,6 @@
 #include "Environment.h"
 #include "Statement.h"
+#include "interpreter_utils.h"
 
 namespace Interpreter {
 
@@ -91,44 +92,79 @@ std::optional<TypeRef> Environment::getType(const TypeIdentifier& name) const no
 
 /* ---------------------------- Function methods ---------------------------- */
 
-// bool Environment::fnIsDeclared(const Identifier& name) const { return m_functions.contains(name);
-// }
+bool Environment::fnIsDeclared(const Identifier& name) const noexcept {
+  return m_functions.contains(name);
+}
 
-// bool Environment::fnIsDefined(const Identifier& name) const {
-//   return m_functions.contains(name) && m_functions.at(name).body != std::nullopt;
-// }
+bool Environment::fnIsDefined(const Identifier& name) const noexcept {
+  return m_functions.contains(name) && m_functions.at(name).second != std::nullopt;
+}
 
-// std::pair<Environment::FunctionTable::iterator, bool> Environment::declareFn(
-//     const Identifier& name, const TypeIdentifier& returnType,
-//     std::vector<Function::Param>&& params) {
-//   if (fnIsDeclared(name)) throw std::logic_error("Function already declared!");
-//   Function fn{std::move(params), returnType, std::nullopt};
-//   return m_functions.emplace(name, std::move(fn));
-// }
+std::pair<Environment::FunctionTable::iterator, bool> Environment::declareFn(
+    const Identifier& name, const TypeRef& returnType,
+    std::vector<FnSignature::Arg>&& arg) noexcept {
+  if (fnIsDeclared(name)) return {m_functions.end(), false};
+  FnSignature fn{returnType, std::move(arg)};
+  return m_functions.emplace(name, std::make_pair(std::move(fn), std::nullopt));
+}
 
-// void Environment::bindFunctionBody(const Identifier& name,
-//                                    std::reference_wrapper<::BlockStmt> body) {
-//   if (!fnIsDeclared(name)) throw std::logic_error("Function not declared!");
-//   if (fnIsDefined(name)) throw std::logic_error("Function already defined!");
-//   m_functions.at(name).body = body;
-// }
+std::pair<Environment::FunctionTable::iterator, bool> Environment::defineFn(
+    const Identifier& name, const TypeRef& returnType, const Function::BodyRef& body,
+    std::vector<Function::Param>&& params) noexcept {
+  if (fnIsDefined(name)) return {m_functions.end(), false};
+  if (!fnIsDeclared(name)) {
+    std::vector<FnSignature::Arg> args;
+    for (const auto& param : params) {
+      args.emplace_back(FnSignature::Arg{param.type, param.modifiers});
+    }
+    bool successfullyDeclared = declareFn(name, returnType, std::move(args)).second;
+    if (!successfullyDeclared) return {m_functions.end(), false};
+  }
+  Function fn{std::move(params), returnType, body};
+  m_functions.at(name).second.emplace(std::move(fn));
+  return {m_functions.find(name), true};
+}
 
-// void Environment::bindFunctionArgs(const Identifier& name, std::vector<Value>&& args) {
-//   if (!fnIsDeclared(name)) throw std::logic_error("Function not declared!");
-//   if (!fnIsDefined(name)) throw std::logic_error("Function not defined!");
-//   // TODO: check if arg binding conditions are met (new stack frame wiht exactly one empty scope
-//   for
-//   // args)
-// }
+std::optional<Type> Environment::getFnSignature(const Identifier& fnName) const noexcept {
+  if (fnIsDeclared(fnName)) {
+    auto fnSignature = m_functions.at(fnName).first;
+    return Type(std::move(fnSignature));
+  }
+  return std::nullopt;
+}
+
+std::optional<Value> Environment::getFunction(const Identifier& fnName) const noexcept {
+  if (fnIsDefined(fnName)) {
+    auto fn = m_functions.at(fnName).second.value();
+    return Value(fn);
+  }
+  return std::nullopt;
+}
+
+// void Environment::bindFunctionArgs(const Identifier& name, std::vector<Value>&& args) {}
 
 /* -------------------------- Flow control methods -------------------------- */
 
-// void Environment::pushStackFrame() {
-//   if (++m_fnCallDepth > RECURSION_LIMIT) {
-//     throw std::logic_error("Recursion limit exceeded!");
-//   }
-//   m_stack.emplace();
-// }
+void Environment::pushStackFrame(const Identifier& name, std::vector<Value>&& argValues) {
+  if (++m_fnCallDepth > RECURSION_LIMIT) {
+    throw std::logic_error("Recursion limit exceeded!");
+  }
+
+  m_stack.emplace();
+  auto value = getFunction(name);
+
+  if (value != std::nullopt) {
+    auto func = std::get<Function>(value->value);
+    for (size_t i = 0; i < func.params.size(); ++i) {
+      auto param = func.params[i];
+      auto argValue = argValues[i];
+      // m_stack.top().defineVar(param.name, param.type, argValue, param.modifiers);
+    }
+    return;
+  }
+
+  throw std::logic_error("Function not found!");
+}
 
 void Environment::popStackFrame() {
   if (m_stack.empty()) {

@@ -4,6 +4,10 @@
 #include <memory>
 #include <variant>
 
+#include "Type.h"
+
+struct BlockStmt;
+
 namespace Interpreter {
 
 struct Value;
@@ -22,25 +26,33 @@ struct VariantValue {
   }
   ~VariantValue() = default;
 
-  VariantValue(const TypeIdentifier& type, std::unique_ptr<Value> value)
-      : currentType{type}, value{std::move(value)} {}
+  VariantValue(std::unique_ptr<Value> value) : value{std::move(value)} {}
 
-  TypeIdentifier currentType;
   std::unique_ptr<Value> value;
 };
 
 /**
  * @brief Data structure representing Struct instance value.
  */
-struct Object {
+struct ObjectValue {
   std::map<Identifier, Value> members;
 };
 
 /**
- * @brief Data structure representing function value, which is a pointer to a function type.
+ * @brief Data structure representing function value.
  */
-struct FuncPtr {
-  TypeIdentifier name;
+struct Function {
+  using BodyRef = std::reference_wrapper<::BlockStmt>;
+
+  struct Param {
+    Identifier name;
+    TypeRef type;
+    std::set<Modifier> modifiers;
+  };
+
+  std::vector<Param> params;
+  TypeRef returnType;
+  BodyRef body;
 };
 
 /* -------------------------- Value representation -------------------------- */
@@ -55,11 +67,11 @@ struct Value {
         std::disjunction_v<std::is_same<T, std::monostate>, std::is_same<T, int>,
                            std::is_same<T, float>, std::is_same<T, bool>, std::is_same<T, wchar_t>,
                            std::is_same<T, std::wstring>, std::is_same<T, VariantValue>,
-                           std::is_same<T, Object>, std::is_same<T, FuncPtr>>);
+                           std::is_same<T, ObjectValue>, std::is_same<T, Function>>);
   }
 
-  std::variant<std::monostate, int, float, bool, wchar_t, std::wstring, VariantValue, Object,
-               FuncPtr>
+  std::variant<std::monostate, int, float, bool, wchar_t, std::wstring, VariantValue, ObjectValue,
+               Function>
       value;
 };
 

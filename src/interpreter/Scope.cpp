@@ -2,18 +2,6 @@
 
 namespace Interpreter {
 
-/* ----------------------------- Variable class ----------------------------- */
-
-Variable::Variable(const Identifier& name, const TypeIdentifier& type,
-                   const std::optional<Value>& value, std::set<Modifier>&& modifiers) noexcept
-    : name{name}, type{type}, modifiers{std::move(modifiers)}, value{value} {}
-
-bool Variable::isConst() const noexcept { return modifiers.contains(Modifier::CONST); }
-
-bool Variable::isDefined() const noexcept { return value != std::nullopt; }
-
-/* ------------------------------- Scope class ------------------------------ */
-
 bool Scope::nameConflict(const Identifier& name) const noexcept {
   return m_variables.contains(name) || m_types.contains(name);
 }
@@ -27,20 +15,21 @@ bool Scope::varIsDefined(const Identifier& name) const noexcept {
 }
 
 std::pair<Scope::VariableTable::iterator, bool> Scope::declareVar(
-    const Identifier& name, const TypeIdentifier& type, std::set<Modifier>&& modifiers) noexcept {
+    const Identifier& name, const TypeIdentifier& type,
+    const std::set<Modifier>& modifiers) noexcept {
   if (varIsDeclared(name) || !typeIsDeclared(type)) return {m_variables.end(), false};
-  Variable var(name, type, std::nullopt, std::move(modifiers));
+  Variable var(name, type, std::nullopt, modifiers);
   return m_variables.emplace(var.name, std::move(var));
 }
 
 std::pair<Scope::VariableTable::iterator, bool> Scope::defineVar(
     const Identifier& name, const TypeIdentifier& type, const Value& value,
-    std::set<Modifier>&& modifiers) noexcept {
+    const std::set<Modifier>& modifiers) noexcept {
   // type must be defined
   // Value must be assignable to type
   // variable must not be defined
   // if variable is declared, then type must match
-  Variable var(name, type, value, std::move(modifiers));
+  Variable var(name, type, value, modifiers);
   return m_variables.emplace(var.name, std::move(var));
 }
 
@@ -83,8 +72,7 @@ std::pair<Scope::TypeTable::iterator, bool> Scope::defineType(const TypeIdentifi
   return m_types.emplace(name, std::move(type));
 }
 
-std::optional<TypeRef> Scope::getType(
-    const TypeIdentifier& name) const noexcept {
+std::optional<TypeRef> Scope::getType(const TypeIdentifier& name) const noexcept {
   if (!typeIsDefined(name)) return std::nullopt;
   return std::ref(m_types.at(name).value());
 }

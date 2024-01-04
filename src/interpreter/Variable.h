@@ -14,10 +14,11 @@ namespace Interpreter {
 struct Variable {
   Variable(const Identifier& name, const TypeIdentifier& type,
            const std::optional<Value>& value = std::nullopt,
-           std::set<Modifier>&& modifiers = {}) noexcept;
+           const std::set<Modifier>& modifiers = {}) noexcept
+      : name{name}, type{type}, modifiers{modifiers}, value{value} {}
 
-  bool isConst() const noexcept;
-  bool isDefined() const noexcept;
+  bool isConst() const noexcept { return modifiers.contains(Modifier::CONST); }
+  bool isDefined() const noexcept { return value != std::nullopt; }
 
   const Identifier name;
   const TypeIdentifier type;

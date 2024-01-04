@@ -4,11 +4,10 @@
 #include <iostream>
 
 #include "Environment.h"
+#include "Statement.h"
 #include "interpreter_utils.h"
 
 using namespace Interpreter;
-
-/* -------------------------------------------------------------------------- */
 
 int main() {
   // Has builtin types Void, Int, Float, Bool, Char, String
@@ -26,6 +25,13 @@ int main() {
   };
   Type Person{Struct{std::move(structMembers)}};
   env.defineType(std::wstring(L"Person"), std::move(Person));
+
+  // Define a function foo(x: int, y: float) -> string {  }
+  std::vector<Function::Param> fnParams;
+  fnParams.push_back({std::wstring(L"x"), *env.getType(INT), {}});
+  fnParams.push_back({std::wstring(L"y"), *env.getType(FLOAT), {}});
+  env.defineFn(L"foo", *env.getType(STRING), *(new ::BlockStmt(Position(), {})),
+               std::move(fnParams));
 
   // Using valueTypeMatch
   std::wcout << "------------------------ valueTypeMatch -------------------------\n";
@@ -54,11 +60,20 @@ int main() {
              << std::endl;
   std::wcout << "valueTypeMatch(Person{foo: \"Hello, World!\", bar: 1}, "
              << env.getType(std::wstring(L"Person")).value().get() << "): "
-             << valueTypeMatch(Value(Object{{
+             << valueTypeMatch(Value(ObjectValue{{
                                    {std::wstring(L"foo"), Value(std::wstring(L"Hello, World!"))},
                                    {std::wstring(L"bar"), Value(1)},
                                }}),
                                env.getType(std::wstring(L"Person")).value().get())
+             << std::endl;
+  std::wcout << "valueTypeMatch(" << env.getFnSignature(L"foo").value() << ", "
+             << env.getFunction(L"foo").value() << "): "
+             << valueTypeMatch(env.getFunction(L"foo").value(), env.getFnSignature(L"foo").value())
+             << std::endl;
+  std::wcout << "valueTypeMatch(" << FnSignature{*env.getType(STRING), {}} << ", "
+             << env.getFunction(L"foo").value() << "): "
+             << valueTypeMatch(env.getFunction(L"foo").value(),
+                               FnSignature{*env.getType(STRING), {}})
              << std::endl;
 
   // Builtin example values
@@ -70,10 +85,10 @@ int main() {
   Value string(std::wstring(L"Hello, World!"));
 
   // Value compatibile with Number variant type
-  Value number(VariantValue{INT, std::make_unique<Value>(1)});
+  Value number(VariantValue{std::make_unique<Value>(1)});
 
   // Value compatibile with Person struct type
-  Value person{Object{{
+  Value person{ObjectValue{{
       {std::wstring(L"foo"), integer},
       {std::wstring(L"bar"), floating},
   }}};
@@ -92,8 +107,8 @@ int main() {
            env.getType(BOOL).value().get(),
            env.getType(CHAR).value().get(),
            env.getType(STRING).value().get(),
-           env.getType(std::wstring(L"Number")).value().get(),
-           env.getType(std::wstring(L"Person")).value().get(),
+           env.getType(L"Number").value().get(),
+           env.getType(L"Person").value().get(),
        }) {
     std::wcout << type << std::endl;
   }

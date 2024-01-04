@@ -24,12 +24,12 @@ class Scope {
 
   bool varIsDeclared(const Identifier& name) const noexcept;
   bool varIsDefined(const Identifier& name) const noexcept;
-  std::pair<VariableTable::iterator, bool> declareVar(const Identifier& name,
-                                                      const TypeIdentifier& type,
-                                                      std::set<Modifier>&& modifiers = {}) noexcept;
-  std::pair<VariableTable::iterator, bool> defineVar(const Identifier& name,
-                                                     const TypeIdentifier& type, const Value& value,
-                                                     std::set<Modifier>&& modifiers = {}) noexcept;
+  std::pair<VariableTable::iterator, bool> declareVar(
+      const Identifier& name, const TypeIdentifier& type,
+      const std::set<Modifier>& modifiers = {}) noexcept;
+  std::pair<VariableTable::iterator, bool> defineVar(
+      const Identifier& name, const TypeIdentifier& type, const Value& value,
+      const std::set<Modifier>& modifiers = {}) noexcept;
   bool assignVar(const Identifier& name, const Value& value) noexcept;
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 

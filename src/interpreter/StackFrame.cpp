@@ -10,6 +10,15 @@ void expect(bool condition, const std::exception& exception) {
 
 namespace Interpreter {
 
+// StackFrame::StackFrame(const Identifier& fnName, const Function& function)
+    // : m_fnName(fnName), m_function(function) {
+  // // Declare arguments
+  // m_scopes.emplace_back();
+  // for (const auto& param : m_function.params) {
+  //   m_scopes.back().declareVar(param.name, param.type, param.modifiers);
+  // }
+// }
+
 bool StackFrame::nameConflict(const Identifier& name) const noexcept {
   if (!m_scopes.empty()) {
     return m_scopes.back().nameConflict(name);
