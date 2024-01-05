@@ -17,6 +17,8 @@ class Interpreter : ASTVisitor {
     if (program.has_value()) {
       program->accept(m_semanticAnalyzer);
       //   program->accept(*this);
+    } else {
+      throw std::runtime_error{"Parsing failed"};
     }
   }
 

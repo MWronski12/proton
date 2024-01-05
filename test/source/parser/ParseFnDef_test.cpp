@@ -84,15 +84,15 @@ TEST_F(ParserTest, ParserHandlesFnParams) {
   EXPECT_CALL(m_errorHandler, handleError(_, _)).Times(0);
   auto result = parseFnParams();
   ASSERT_EQ(result->size(), 3);
-  EXPECT_EQ(result->at(L"x").isConst, false);
-  EXPECT_EQ(result->at(L"x").name, Identifier(L"x"));
-  EXPECT_EQ(result->at(L"x").type, TypeIdentifier(L"int"));
-  EXPECT_EQ(result->at(L"y").isConst, true);
-  EXPECT_EQ(result->at(L"y").name, Identifier(L"y"));
-  EXPECT_EQ(result->at(L"y").type, TypeIdentifier(L"int"));
-  EXPECT_EQ(result->at(L"z").isConst, false);
-  EXPECT_EQ(result->at(L"z").name, Identifier(L"z"));
-  EXPECT_EQ(result->at(L"z").type, TypeIdentifier(L"int"));
+  EXPECT_EQ(result->at(0).isConst, false);
+  EXPECT_EQ(result->at(0).name, Identifier(L"x"));
+  EXPECT_EQ(result->at(0).type, TypeIdentifier(L"int"));
+  EXPECT_EQ(result->at(1).isConst, true);
+  EXPECT_EQ(result->at(1).name, Identifier(L"y"));
+  EXPECT_EQ(result->at(1).type, TypeIdentifier(L"int"));
+  EXPECT_EQ(result->at(2).isConst, false);
+  EXPECT_EQ(result->at(2).name, Identifier(L"z"));
+  EXPECT_EQ(result->at(2).type, TypeIdentifier(L"int"));
 }
 
 TEST_F(ParserTest, ParserHandlesFnParamRedefinition) {

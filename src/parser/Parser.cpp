@@ -128,23 +128,14 @@ std::optional<Program> Parser::parseProgram() {
 
   auto definition = parseDefinition();
   while (definition != nullptr) {
-    // Redefinition
-    if (definitions.find(definition->name) != definitions.end()) {
-      m_errorHandler(ErrorType::REDEFINITION, definition->position);
-      return std::nullopt;
+    for (const auto& it : definitions) {
+      if (it->name == definition->name) {
+        m_errorHandler(ErrorType::REDEFINITION, m_token.position);
+        return std::nullopt;
+      }
     }
-    // Success, add to map
-    else {
-      auto entry = std::make_pair(definition->name, std::move(definition));
-      definitions.insert(std::move(entry));
-    }
-
+    definitions.push_back(std::move(definition));
     definition = parseDefinition();
-  }
-
-  if (definitions.find(L"main") == definitions.end()) {
-    m_errorHandler(ErrorType::EXPECTED_MAIN_FUNCTION_DEF, position);
-    return std::nullopt;
   }
 
   return Program{std::move(position), std::move(definitions)};
@@ -403,17 +394,19 @@ std::optional<FnDef::Params> Parser::parseFnParams() {
 
   auto param = parseFnParam();
   if (param == nullptr) return params;
-  params.insert(std::make_pair(param->name, std::move(*param)));
+  params.push_back(std::move(*param));
 
   while (m_token.type == TokenType::COMMA) {
     consumeToken();
     param = parseFnParam();
     if (param == nullptr) return params;
-    if (params.find(param->name) != params.end()) {
-      m_errorHandler(ErrorType::FNPARAM_REDEFINITION, m_token.position);
-      return std::nullopt;
+    for (const auto& it : params) {
+      if (it.name == param->name) {
+        m_errorHandler(ErrorType::FNPARAM_REDEFINITION, m_token.position);
+        return std::nullopt;
+      }
     }
-    params.insert(std::make_pair(param->name, std::move(*param)));
+    params.push_back(std::move(*param));
   }
 
   return params;

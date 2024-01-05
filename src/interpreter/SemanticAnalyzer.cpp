@@ -24,7 +24,7 @@ SemanticAnalyzer::SemanticAnalyzer(Environment& environment, ::ErrorHandler& err
     : m_env{environment}, m_error{error} {}
 
 void SemanticAnalyzer::visit(::Program& program) {
-  for (auto& [name, definition] : program.definitions) {
+  for (auto& definition : program.definitions) {
     definition->accept(*this);
   }
 }
@@ -101,19 +101,19 @@ void SemanticAnalyzer::visit(::FnDef& def) {
   expect(m_env.typeIsDefined(def.returnType), ErrorType::UNDEFINED_TYPE, def.position);
 
   std::vector<Function::Param> params;
-  for (auto& [name, param] : def.parameters) {
+  for (auto& param : def.parameters) {
     param.accept(*this);
-    params.emplace_back(name, m_env.getType(param.type).value(), param.isConst);
+    params.emplace_back(param.name, m_env.getType(param.type).value(), param.isConst);
   }
 
   Function fn{std::move(params), m_env.getType(def.returnType).value(), def.body};
   m_env.defineFn(def.name, std::move(fn));
 
   m_env.pushStackFrame(def.name);
-  for (auto& [name, param] : def.parameters) {
+  for (auto& param : def.parameters) {
     std::set<Modifier> modifiers =
         param.isConst ? std::set<Modifier>{Modifier::CONST} : std::set<Modifier>();
-    m_env.declareVar(name, m_env.getType(param.type).value());
+    m_env.declareVar(param.name, m_env.getType(param.type).value());
   }
 
   def.body.accept(*this);

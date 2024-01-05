@@ -32,7 +32,7 @@ class SemanticAnalyzer : public ::ASTVisitor {
   void visit(::FnDef& def) override;
   void visit(::FnParam& param) override;
 
-  //   void visit(::BinaryExpression& expr) override;
+  // void visit(::BinaryExpression& expr) override;
   // void visit(::UnaryExpression& expr) override;
   // void visit(::FunctionalExpression& expr) override;
   // void visit(::MemberAccessPostfix& postfix) override;

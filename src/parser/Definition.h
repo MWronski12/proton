@@ -136,7 +136,7 @@ struct FnParam : public ASTNode, public VisitableNode {
  *    = "fn", identifier, "(", { FnParam }, ")", "->", typeIdentifier, BlockStmt;
  */
 struct FnDef : public Definition {
-  using Params = std::unordered_map<Identifier, FnParam>;
+  using Params = std::vector<FnParam>;
 
   FnDef(Position&& position, Identifier&& fnName, Params&& fnParams, TypeIdentifier&& fnReturnType,
         BlockStmt&& fnBody)
