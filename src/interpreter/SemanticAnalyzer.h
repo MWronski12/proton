@@ -1,57 +1,75 @@
 #pragma once
 
-// #include "ASTVisitor.h"
+#include <string>
 
-// class SymbolTable;
+// Todo remove
+#include <iostream>
 
-// class SemanticAnalyzer : public ASTVisitor {
-//  public:
-//   SemanticAnalyzer(SymbolTable& symbolTable) : m_symbolTable{symbolTable} {};
+#include "ASTNode.h"
+#include "ASTVisitor.h"
+#include "Definition.h"
+#include "Environment.h"
+#include "ErrorHandler.h"
+#include "Expression.h"
+#include "Program.h"
+#include "Statement.h"
 
-//   virtual void visit(Program& program);
+namespace Interpreter {
 
-//   virtual void visit(VarDef& def);
-//   virtual void visit(ConstDef& def);
-//   virtual void visit(StructDef& def);
-//   virtual void visit(StructMember& member);
-//   virtual void visit(VariantDef& def);
-//   virtual void visit(FnDef& def);
-//   virtual void visit(FnParam& param);
+class SemanticAnalyzer : public ::ASTVisitor {
+  void expect(bool condition, ErrorType error, Position position);
 
-//   virtual void visit(BinaryExpression& expr);
-//   virtual void visit(UnaryExpression& expr);
-//   virtual void visit(FunctionalExpression& expr);
-//   virtual void visit(MemberAccessPostfix& postfix);
-//   virtual void visit(VariantAccessPostfix& postfix);
-//   virtual void visit(FnCallPostfix& postfix);
-//   virtual void visit(IdentifierExpr& expr);
-//   virtual void visit(Literal<int>& expr);
-//   virtual void visit(Literal<float>& expr);
-//   virtual void visit(Literal<bool>& expr);
-//   virtual void visit(Literal<wchar_t>& expr);
-//   virtual void visit(Literal<std::wstring>& expr);
-//   virtual void visit(Object& expr);
-//   virtual void visit(ObjectMember& expr);
-//   virtual void visit(ParenExpr& expr);
-//   virtual void visit(CastExpr& expr);
+ public:
+  SemanticAnalyzer(Environment& environment, ::ErrorHandler& error);
 
-//   virtual void visit(BlockStmt& stmt);
-//   virtual void visit(ExpressionStmt& stmt);
-//   virtual void visit(AssignmentStmt& stmt);
-//   virtual void visit(StdinExtractionStmt& stmt);
-//   virtual void visit(StdoutInsertionStmt& stmt);
-//   virtual void visit(VariantMatchStmt& stmt);
-//   virtual void visit(VariantMatchCase& stmt);
-//   virtual void visit(IfStmt& stmt);
-//   virtual void visit(Else& stmt);
-//   virtual void visit(Elif& stmt);
-//   virtual void visit(ForStmt& stmt);
-//   virtual void visit(Range& stmt);
-//   virtual void visit(WhileStmt& stmt);
-//   virtual void visit(ContinueStmt& stmt);
-//   virtual void visit(BreakStmt& stmt);
-//   virtual void visit(ReturnStmt& stmt);
+  void visit(::Program& program) override;
 
-//  private:
-//   SymbolTable& m_symbolTable;
-// };
+  void visit(::VarDef& var) override;
+  void visit(::ConstDef& constant) override;
+  void visit(::StructDef& structure) override;
+  void visit(::StructMember& member) override;
+  void visit(::VariantDef& variant) override;
+  void visit(::FnDef& def) override;
+  void visit(::FnParam& param) override;
+
+  //   void visit(::BinaryExpression& expr) override;
+  // void visit(::UnaryExpression& expr) override;
+  // void visit(::FunctionalExpression& expr) override;
+  // void visit(::MemberAccessPostfix& postfix) override;
+  // void visit(::VariantAccessPostfix& postfix) override;
+  // void visit(::FnCallPostfix& postfix) override;
+  // void visit(::IdentifierExpr& expr) override;
+  void visit(::Literal<int>& expr) override;
+  void visit(::Literal<float>& expr) override;
+  void visit(::Literal<bool>& expr) override;
+  void visit(::Literal<wchar_t>& expr) override;
+  void visit(::Literal<std::wstring>& expr) override;
+  // void visit(::Object& expr) override;
+  // void visit(::ObjectMember& expr) override;
+  // void visit(::ParenExpr& expr) override;
+  // void visit(::CastExpr& expr) override;
+
+  void visit(::BlockStmt& stmt) override;
+
+  // void visit(::ExpressionStmt& stmt) override;
+  // void visit(::AssignmentStmt& stmt) override;
+  // void visit(::StdinExtractionStmt& stmt) override;
+  // void visit(::StdoutInsertionStmt& stmt) override;
+  // void visit(::VariantMatchStmt& stmt) override;
+  // void visit(::VariantMatchCase& stmt) override;
+  // void visit(::IfStmt& stmt) override;
+  // void visit(::Else& stmt) override;
+  // void visit(::Elif& stmt) override;
+  // void visit(::ForStmt& stmt) override;
+  // void visit(::Range& stmt) override;
+  // void visit(::WhileStmt& stmt) override;
+  // void visit(::ContinueStmt& stmt) override;
+  // void visit(::BreakStmt& stmt) override;
+  // void visit(::ReturnStmt& stmt) override;
+
+ private:
+  Environment& m_env;
+  ErrorHandler& m_error;
+};
+
+}  // namespace Interpreter

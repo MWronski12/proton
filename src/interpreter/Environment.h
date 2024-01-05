@@ -17,8 +17,7 @@ enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
 struct Environment {
  public:
-  using FunctionTableEntry = std::pair<FnSignature, std::optional<Function>>;
-  using FunctionTable = std::map<Identifier, FunctionTableEntry>;
+  using FunctionTable = std::map<Identifier, std::pair<FnSignature, Function>>;
 
   Environment();
 
@@ -29,47 +28,44 @@ struct Environment {
   bool varIsDeclared(const Identifier& name) const noexcept;
   bool varIsDefined(const Identifier& name) const noexcept;
   std::pair<Scope::VariableTable::iterator, bool> declareVar(const Identifier& name,
-                                                             const TypeIdentifier& type,
+                                                             const TypeRef& type,
                                                              std::set<Modifier>&& modifiers = {});
-  std::pair<Scope::VariableTable::iterator, bool> defineVar(const Identifier& name,
-                                                            const TypeIdentifier& type,
-                                                            const Value& value,
-                                                            std::set<Modifier>&& modifiers = {});
+  std::pair<Scope::VariableTable::iterator, bool> defineVar(const Identifier& name, Variable&& var);
   void assignVar(const Identifier& name, const Value& value) noexcept;
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 
   /* ------------------------------ Type methods ------------------------------ */
 
-  bool typeIsDeclared(const TypeIdentifier& name) const noexcept;
   bool typeIsDefined(const TypeIdentifier& name) const noexcept;
-  std::pair<Scope::TypeTable::iterator, bool> declareType(const TypeIdentifier& name);
   std::pair<Scope::TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type);
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
   /* ---------------------------- Function methods ---------------------------- */
 
-  bool fnIsDeclared(const Identifier& name) const noexcept;
   bool fnIsDefined(const Identifier& name) const noexcept;
-  std::pair<FunctionTable::iterator, bool> declareFn(
-      const Identifier& name, const TypeRef& returnType,
-      std::vector<FnSignature::Arg>&& args = {}) noexcept;
-  std::pair<FunctionTable::iterator, bool> defineFn(
-      const Identifier& name, const TypeRef& returnType, const Function::BodyRef& body,
-      std::vector<Function::Param>&& params = {}) noexcept;
+  std::pair<FunctionTable::iterator, bool> defineFn(const Identifier& name,
+                                                    Function&& func) noexcept;
   std::optional<Type> getFnSignature(const Identifier& name) const noexcept;
   std::optional<Value> getFunction(const Identifier& name) const noexcept;
 
   /* -------------------------- Flow control methods -------------------------- */
 
-  void pushStackFrame(const Identifier& name, std::vector<Value>&& args = {});
+  void pushStackFrame(const Identifier& name);
   void popStackFrame();
   void enterScope();
   void exitScope();
 
-  std::optional<Value> getLastReturn();
-  void setLastReturn(const Value& value);
-  std::optional<Value> getLastResult();
-  void setLastResult(const Value& value);
+  bool bindArguments(const std::vector<Value>& args);
+  std::optional<TypeRef> getCurrentFnReturnType() const;
+
+  std::optional<Value> getLastReturnValue();
+  void setLastReturnValue(const Value& value);
+
+  std::optional<Value> getLastExpressionValue();
+  void setLastExpressionValue(const Value& value);
+
+  std::optional<TypeRef> getLastExpressionType();
+  void setLastExpressionType(const TypeRef& value);
 
   FlowControlStatus& flowControlStatus();
   int& loopDepth();
@@ -77,8 +73,9 @@ struct Environment {
  private:
   void initGlobalScope();
 
-  std::optional<Value> m_lastReturn;
-  std::optional<Value> m_lastResult;
+  std::optional<Value> m_lastReturnValue;
+  std::optional<Value> m_lastExpressionValue;
+  std::optional<TypeRef> m_lastExpressionType;
 
   FlowControlStatus m_flowControlStatus = FlowControlStatus::NORMAL;
   int m_loopDepth = 0;

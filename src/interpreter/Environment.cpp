@@ -24,20 +24,19 @@ bool Environment::varIsDefined(const Identifier& name) const noexcept {
 }
 
 std::pair<Scope::VariableTable::iterator, bool> Environment::declareVar(
-    const Identifier& name, const TypeIdentifier& type, std::set<Modifier>&& modifiers) {
+    const Identifier& name, const TypeRef& type, std::set<Modifier>&& modifiers) {
   if (m_stack.empty()) {
     return m_globalScope.declareVar(name, type, std::move(modifiers));
   }
   return m_stack.top().declareVar(name, type, std::move(modifiers));
 }
 
-std::pair<Scope::VariableTable::iterator, bool> Environment::defineVar(
-    const Identifier& name, const TypeIdentifier& type, const Value& value,
-    std::set<Modifier>&& modifiers) {
+std::pair<Scope::VariableTable::iterator, bool> Environment::defineVar(const Identifier& name,
+                                                                       Variable&& var) {
   if (m_stack.empty()) {
-    return m_globalScope.defineVar(name, type, value, std::move(modifiers));
+    return m_globalScope.defineVar(name, std::move(var));
   }
-  return m_stack.top().defineVar(name, type, value, std::move(modifiers));
+  return m_stack.top().defineVar(name, std::move(var));
 }
 
 void Environment::assignVar(const Identifier& name, const Value& value) noexcept {
@@ -50,29 +49,17 @@ void Environment::assignVar(const Identifier& name, const Value& value) noexcept
 
 std::optional<std::reference_wrapper<Variable>> Environment::getVar(
     const Identifier& name) noexcept {
-  if (m_stack.empty()) {
-    return m_globalScope.getVar(name);
+  if (!m_stack.empty() && m_stack.top().varIsDeclared(name)) {
+    return m_stack.top().getVar(name);
   }
-  return m_stack.top().getVar(name);
+  return m_globalScope.getVar(name);
 }
 
 /* ------------------------------ Type methods ------------------------------ */
 
-bool Environment::typeIsDeclared(const TypeIdentifier& name) const noexcept {
-  if (m_stack.empty()) return m_globalScope.typeIsDeclared(name);
-  return m_stack.top().typeIsDeclared(name) || m_globalScope.typeIsDeclared(name);
-}
-
 bool Environment::typeIsDefined(const TypeIdentifier& name) const noexcept {
   if (m_stack.empty()) return m_globalScope.typeIsDefined(name);
   return m_stack.top().typeIsDefined(name) || m_globalScope.typeIsDefined(name);
-}
-
-std::pair<Scope::TypeTable::iterator, bool> Environment::declareType(const TypeIdentifier& name) {
-  if (m_stack.empty()) {
-    return m_globalScope.declareType(name);
-  }
-  return m_stack.top().declareType(name);
 }
 
 std::pair<Scope::TypeTable::iterator, bool> Environment::defineType(const TypeIdentifier& name,
@@ -84,49 +71,26 @@ std::pair<Scope::TypeTable::iterator, bool> Environment::defineType(const TypeId
 }
 
 std::optional<TypeRef> Environment::getType(const TypeIdentifier& name) const noexcept {
-  if (m_stack.empty()) {
-    return m_globalScope.getType(name);
+  if (!m_stack.empty() && m_stack.top().typeIsDefined(name)) {
+    return m_stack.top().getType(name);
   }
-  return m_stack.top().getType(name);
+  return m_globalScope.getType(name);
 }
 
 /* ---------------------------- Function methods ---------------------------- */
 
-bool Environment::fnIsDeclared(const Identifier& name) const noexcept {
+bool Environment::fnIsDefined(const Identifier& name) const noexcept {
   return m_functions.contains(name);
 }
 
-bool Environment::fnIsDefined(const Identifier& name) const noexcept {
-  return m_functions.contains(name) && m_functions.at(name).second != std::nullopt;
-}
-
-std::pair<Environment::FunctionTable::iterator, bool> Environment::declareFn(
-    const Identifier& name, const TypeRef& returnType,
-    std::vector<FnSignature::Arg>&& arg) noexcept {
-  if (fnIsDeclared(name)) return {m_functions.end(), false};
-  FnSignature fn{returnType, std::move(arg)};
-  return m_functions.emplace(name, std::make_pair(std::move(fn), std::nullopt));
-}
-
 std::pair<Environment::FunctionTable::iterator, bool> Environment::defineFn(
-    const Identifier& name, const TypeRef& returnType, const Function::BodyRef& body,
-    std::vector<Function::Param>&& params) noexcept {
-  if (fnIsDefined(name)) return {m_functions.end(), false};
-  if (!fnIsDeclared(name)) {
-    std::vector<FnSignature::Arg> args;
-    for (const auto& param : params) {
-      args.emplace_back(FnSignature::Arg{param.type, param.modifiers});
-    }
-    bool successfullyDeclared = declareFn(name, returnType, std::move(args)).second;
-    if (!successfullyDeclared) return {m_functions.end(), false};
-  }
-  Function fn{std::move(params), returnType, body};
-  m_functions.at(name).second.emplace(std::move(fn));
-  return {m_functions.find(name), true};
+    const Identifier& name, Function&& func) noexcept {
+  if (nameConflict(name) || fnIsDefined(name)) return {m_functions.end(), false};
+  return m_functions.emplace(name, std::make_pair(fnToFnSignature(func), std::move(func)));
 }
 
 std::optional<Type> Environment::getFnSignature(const Identifier& fnName) const noexcept {
-  if (fnIsDeclared(fnName)) {
+  if (m_functions.contains(fnName)) {
     auto fnSignature = m_functions.at(fnName).first;
     return Type(std::move(fnSignature));
   }
@@ -135,35 +99,19 @@ std::optional<Type> Environment::getFnSignature(const Identifier& fnName) const 
 
 std::optional<Value> Environment::getFunction(const Identifier& fnName) const noexcept {
   if (fnIsDefined(fnName)) {
-    auto fn = m_functions.at(fnName).second.value();
+    auto fn = m_functions.at(fnName).second;
     return Value(fn);
   }
   return std::nullopt;
 }
 
-// void Environment::bindFunctionArgs(const Identifier& name, std::vector<Value>&& args) {}
-
 /* -------------------------- Flow control methods -------------------------- */
 
-void Environment::pushStackFrame(const Identifier& name, std::vector<Value>&& argValues) {
+void Environment::pushStackFrame(const Identifier& name) {
   if (++m_fnCallDepth > RECURSION_LIMIT) {
     throw std::logic_error("Recursion limit exceeded!");
   }
-
-  m_stack.emplace();
-  auto value = getFunction(name);
-
-  if (value != std::nullopt) {
-    auto func = std::get<Function>(value->value);
-    for (size_t i = 0; i < func.params.size(); ++i) {
-      auto param = func.params[i];
-      auto argValue = argValues[i];
-      // m_stack.top().defineVar(param.name, param.type, argValue, param.modifiers);
-    }
-    return;
-  }
-
-  throw std::logic_error("Function not found!");
+  m_stack.emplace(name);
 }
 
 void Environment::popStackFrame() {
@@ -174,25 +122,76 @@ void Environment::popStackFrame() {
   --m_fnCallDepth;
 }
 
-void Environment::enterScope() {}
+void Environment::enterScope() {
+  if (m_stack.empty()) {
+    throw std::logic_error("Stack is empty!");
+  }
+  m_stack.top().enterScope();
+}
 
-void Environment::exitScope() {}
+void Environment::exitScope() {
+  if (m_stack.empty()) {
+    throw std::logic_error("Stack is empty!");
+  }
+  m_stack.top().exitScope();
+}
 
-std::optional<Value> Environment::getLastReturn() {
-  auto value = std::move(m_lastReturn);
-  m_lastReturn.reset();
+bool Environment::bindArguments(const std::vector<Value>& args) {
+  if (m_stack.empty()) {
+    throw std::logic_error("Stack is empty!");
+  }
+
+  const auto& fnName = m_stack.top().getFnName();
+  auto fn = m_functions.at(fnName).second;
+
+  if (fn.params.size() != args.size()) return false;
+
+  for (size_t i = 0; i < fn.params.size(); i++) {
+    auto& param = fn.params[i];
+    auto& arg = args[i];
+
+    if (!valueTypeMatch(arg, param.type)) return false;
+
+    m_stack.top().defineVar(param.name, Variable(param.name, param.type, param.modifiers, arg));
+  }
+
+  return true;
+}
+
+std::optional<TypeRef> Environment::getCurrentFnReturnType() const {
+  if (m_stack.empty()) {
+    throw std::logic_error("Stack is empty!");
+  }
+  auto fnName = m_stack.top().getFnName();
+  if (m_functions.contains(fnName)) {
+    return m_functions.at(fnName).second.returnType;
+  }
+  return std::nullopt;
+}
+
+std::optional<TypeRef> Environment::getLastExpressionType() {
+  auto type = std::move(m_lastExpressionType);
+  m_lastExpressionType.reset();
+  return type;
+}
+
+void Environment::setLastExpressionType(const TypeRef& type) { m_lastExpressionType = type; }
+
+std::optional<Value> Environment::getLastExpressionValue() {
+  auto value = std::move(m_lastExpressionValue);
+  m_lastExpressionValue.reset();
   return value;
 }
 
-void Environment::setLastReturn(const Value& value) { m_lastReturn = value; }
+void Environment::setLastExpressionValue(const Value& value) { m_lastExpressionValue = value; }
 
-std::optional<Value> Environment::getLastResult() {
-  auto value = std::move(m_lastResult);
-  m_lastResult.reset();
+std::optional<Value> Environment::getLastReturnValue() {
+  auto value = std::move(m_lastReturnValue);
+  m_lastReturnValue.reset();
   return value;
 }
 
-void Environment::setLastResult(const Value& value) { m_lastResult = value; }
+void Environment::setLastReturnValue(const Value& value) { m_lastReturnValue = value; }
 
 FlowControlStatus& Environment::flowControlStatus() { return m_flowControlStatus; }
 

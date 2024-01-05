@@ -16,7 +16,7 @@ namespace Interpreter {
 class Scope {
  public:
   using VariableTable = std::map<Identifier, Variable>;
-  using TypeTable = std::map<TypeIdentifier, std::optional<const Type>>;
+  using TypeTable = std::map<TypeIdentifier, const Type>;
 
   Scope() = default;
 
@@ -24,18 +24,18 @@ class Scope {
 
   bool varIsDeclared(const Identifier& name) const noexcept;
   bool varIsDefined(const Identifier& name) const noexcept;
+
   std::pair<VariableTable::iterator, bool> declareVar(
-      const Identifier& name, const TypeIdentifier& type,
+      const Identifier& name, const TypeRef& type,
       const std::set<Modifier>& modifiers = {}) noexcept;
-  std::pair<VariableTable::iterator, bool> defineVar(
-      const Identifier& name, const TypeIdentifier& type, const Value& value,
-      const std::set<Modifier>& modifiers = {}) noexcept;
+
+  std::pair<VariableTable::iterator, bool> defineVar(const Identifier& name,
+                                                     Variable&& variable) noexcept;
   bool assignVar(const Identifier& name, const Value& value) noexcept;
+
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 
-  bool typeIsDeclared(const TypeIdentifier& name) const noexcept;
   bool typeIsDefined(const TypeIdentifier& name) const noexcept;
-  std::pair<TypeTable::iterator, bool> declareType(const TypeIdentifier& name) noexcept;
   std::pair<TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type) noexcept;
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 

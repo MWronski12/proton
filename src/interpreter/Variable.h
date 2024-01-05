@@ -5,6 +5,7 @@
 
 #include "Type.h"
 #include "Value.h"
+#include "interpreter_utils.h"
 
 namespace Interpreter {
 
@@ -12,18 +13,19 @@ namespace Interpreter {
  * @brief Data structure representing a variable - its name, type and optional value.
  */
 struct Variable {
-  Variable(const Identifier& name, const TypeIdentifier& type,
-           const std::optional<Value>& value = std::nullopt,
-           const std::set<Modifier>& modifiers = {}) noexcept
-      : name{name}, type{type}, modifiers{modifiers}, value{value} {}
+  Variable(const Identifier& name, const TypeRef& type, const std::set<Modifier>& modifiers = {},
+           const Value& value = Value{std::monostate{}}) noexcept
+      : name{name}, type{type}, modifiers{modifiers}, value{value} {
+    // Todo: prevent mismatch between type and value
+  }
 
   bool isConst() const noexcept { return modifiers.contains(Modifier::CONST); }
-  bool isDefined() const noexcept { return value != std::nullopt; }
+  bool isDefined() const noexcept { return std::holds_alternative<std::monostate>(value.value); }
 
   const Identifier name;
-  const TypeIdentifier type;
+  const TypeRef type;
   const std::set<Modifier> modifiers;
-  std::optional<Value> value;
+  Value value;
 };
 
 }  // namespace Interpreter

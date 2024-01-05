@@ -1,10 +1,9 @@
-// #include "Interpreter.h"
-// #include "StringCharReader.h"
-
 #include <iostream>
 
 #include "Environment.h"
+#include "Interpreter.h"
 #include "Statement.h"
+#include "StringCharReader.h"
 #include "interpreter_utils.h"
 
 using namespace Interpreter;
@@ -30,8 +29,8 @@ int main() {
   std::vector<Function::Param> fnParams;
   fnParams.push_back({std::wstring(L"x"), *env.getType(INT), {}});
   fnParams.push_back({std::wstring(L"y"), *env.getType(FLOAT), {}});
-  env.defineFn(L"foo", *env.getType(STRING), *(new ::BlockStmt(Position(), {})),
-               std::move(fnParams));
+  Function fn{std::move(fnParams), *env.getType(STRING), *(new ::BlockStmt(Position(), {}))};
+  env.defineFn(L"foo", std::move(fn));
 
   // Using valueTypeMatch
   std::wcout << "------------------------ valueTypeMatch -------------------------\n";
@@ -113,6 +112,15 @@ int main() {
     std::wcout << type << std::endl;
   }
   std::wcout << "----------------------------------------------------------------\n";
+
+  StringCharReader reader(
+      L"variant Number { int, float };"
+      L"struct Point { x: Number; y: Number; };"
+      // L"var x: Number = 1;"
+      // L"var y: Number = 1;"
+      L"fn main() -> void {}");
+  Interpreter::Interpreter interpreter(reader);
+  interpreter.run();
 
   return 0;
 }

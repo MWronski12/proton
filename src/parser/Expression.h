@@ -22,6 +22,8 @@ enum class Operator { Add, Sub, Mul, Div, Mod, And, Or, Not, Eq, Neq, Lt, Gt, Le
 struct Expression : public ASTNode {
   virtual ~Expression() = default;
 
+  virtual void accept(ASTVisitor& visitor) = 0;
+
  protected:
   Expression(Position&& position) : ASTNode{std::move(position)} {}
 };

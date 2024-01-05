@@ -10,26 +10,15 @@ void expect(bool condition, const std::exception& exception) {
 
 namespace Interpreter {
 
-// StackFrame::StackFrame(const Identifier& fnName, const Function& function)
-    // : m_fnName(fnName), m_function(function) {
-  // // Declare arguments
-  // m_scopes.emplace_back();
-  // for (const auto& param : m_function.params) {
-  //   m_scopes.back().declareVar(param.name, param.type, param.modifiers);
-  // }
-// }
+StackFrame::StackFrame(const Identifier& fnName) : m_fnName(fnName) { m_scopes.emplace_back(); }
 
 bool StackFrame::nameConflict(const Identifier& name) const noexcept {
-  if (!m_scopes.empty()) {
-    return m_scopes.back().nameConflict(name);
-  }
-  return false;
+  return m_scopes.back().nameConflict(name);
 }
 
 void StackFrame::enterScope() noexcept { m_scopes.emplace_back(); }
 
 void StackFrame::exitScope() {
-  // First scope is argument scope, which lives as long as the frame itself
   expect(m_scopes.size() > 1, std::logic_error("Cannot exit scope, stack empty"));
   m_scopes.pop_back();
 }
@@ -51,16 +40,15 @@ bool StackFrame::varIsDefined(const Identifier& name) const noexcept {
 }
 
 std::pair<Scope::VariableTable::iterator, bool> StackFrame::declareVar(
-    const Identifier& name, const TypeIdentifier& type, std::set<Modifier>&& modifiers) {
+    const Identifier& name, const TypeRef& type, std::set<Modifier>&& modifiers) {
   expect(!m_scopes.empty(), std::logic_error("Cannot declare variable, stack empty"));
   return m_scopes.back().declareVar(name, type, std::move(modifiers));
 }
 
-std::pair<Scope::VariableTable::iterator, bool> StackFrame::defineVar(
-    const Identifier& name, const TypeIdentifier& type, const Value& value,
-    std::set<Modifier>&& modifiers) {
+std::pair<Scope::VariableTable::iterator, bool> StackFrame::defineVar(const Identifier& name,
+                                                                      Variable&& var) {
   expect(!m_scopes.empty(), std::logic_error("Cannot define variable, stack empty"));
-  return m_scopes.back().defineVar(name, type, value, std::move(modifiers));
+  return m_scopes.back().defineVar(name, std::move(var));
 }
 
 bool StackFrame::assignVar(const Identifier& name, const Value& value) noexcept {
@@ -82,23 +70,11 @@ std::optional<std::reference_wrapper<Variable>> StackFrame::getVar(
 
 /* ------------------------------ Type methods ------------------------------ */
 
-bool StackFrame::typeIsDeclared(const TypeIdentifier& name) const noexcept {
-  for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
-    if (it->typeIsDeclared(name)) return true;
-  }
-  return false;
-}
-
 bool StackFrame::typeIsDefined(const TypeIdentifier& name) const noexcept {
   for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
     if (it->typeIsDefined(name)) return true;
   }
   return false;
-}
-
-std::pair<Scope::TypeTable::iterator, bool> StackFrame::declareType(const TypeIdentifier& name) {
-  expect(!m_scopes.empty(), std::logic_error("Cannot declare type, stack empty"));
-  return m_scopes.back().declareType(name);
 }
 
 std::pair<Scope::TypeTable::iterator, bool> StackFrame::defineType(const TypeIdentifier& name,

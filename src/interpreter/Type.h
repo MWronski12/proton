@@ -98,9 +98,6 @@ struct FnSignature {
     std::set<Modifier> modifiers;
   };
 
-  FnSignature(const TypeRef& returnType, std::vector<Arg>&& args = {})
-      : returnType{returnType}, args{std::move(args)} {}
-
   TypeRef returnType;
   std::vector<Arg> args;
 };

@@ -1,5 +1,4 @@
 add_library(interpreterlib STATIC
-    ScopeAnalyzer.cpp
     SemanticAnalyzer.cpp
     Interpreter.cpp
     Environment.cpp

@@ -45,6 +45,9 @@ struct Function {
   using BodyRef = std::reference_wrapper<::BlockStmt>;
 
   struct Param {
+    Param(const Identifier& name, const TypeRef& type, bool isConst) : name{name}, type{type} {
+      if (isConst) modifiers.emplace(Modifier::CONST);
+    }
     Identifier name;
     TypeRef type;
     std::set<Modifier> modifiers;

@@ -2,9 +2,9 @@
 
 #include "interpreter_utils.h"
 
-namespace {
+namespace Interpreter {
 
-using namespace Interpreter;
+bool operator==(const TypeRef& lhs, const TypeRef& rhs) { return &lhs.get() == &rhs.get(); }
 
 bool valueVariantTypeMatch(const Value& value, const Variant& variantType) {
   // 1) Value must match at least one of the variant types
@@ -55,9 +55,7 @@ bool valueFunctionTypeMatch(const Value& value, const FnSignature& signature) {
   return true;
 }
 
-}  // namespace
-
-namespace Interpreter {
+/* -------------------------------------------------------------------------- */
 
 bool valueTypeMatch(const Value& value, const Type& type) {
   return std::visit(
@@ -75,6 +73,8 @@ bool valueTypeMatch(const Value& value, const Type& type) {
       },
       type.type);
 }
+
+/* -------------------------------------------------------------------------- */
 
 std::wostream& operator<<(std::wostream& os, const VariantValue& value) {
   return os << L"Variant(" << *value.value << L")";
@@ -179,6 +179,16 @@ std::wostream& operator<<(std::wostream& os, const Type& type) {
              },
              type.type);
   return os;
+}
+
+/* -------------------------------------------------------------------------- */
+
+FnSignature fnToFnSignature(const Function& fn) {
+  FnSignature signature{fn.returnType, {}};
+  for (const auto& param : fn.params) {
+    signature.args.push_back({param.type, param.modifiers});
+  }
+  return signature;
 }
 
 }  // namespace Interpreter

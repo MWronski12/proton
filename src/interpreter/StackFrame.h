@@ -7,21 +7,23 @@
 namespace Interpreter {
 
 /**
- * @brief Data structure that allows for tracking current function context - function name,
- * parameters, stack of local scopes, their variables and types.
+ * @brief Data structure for separating fn call context scopes.
+ *
+ * @note Class guarantees that there is always at least one scope (intended for args if any).
  */
 class StackFrame {
  public:
-  StackFrame(const Identifier& fnName, const Function& function);
+  StackFrame(const Identifier& fnName);
   ~StackFrame() = default;
 
-  StackFrame() = default;
+  StackFrame() = delete;
   StackFrame(const StackFrame&) = delete;
   StackFrame(StackFrame&&) = delete;
   StackFrame& operator=(const StackFrame&) = delete;
   StackFrame& operator=(StackFrame&&) = delete;
 
   bool nameConflict(const Identifier& name) const noexcept;
+  const Identifier& getFnName() const noexcept { return m_fnName; }
 
   void enterScope() noexcept;
   void exitScope();
@@ -29,24 +31,18 @@ class StackFrame {
   bool varIsDeclared(const Identifier& name) const noexcept;
   bool varIsDefined(const Identifier& name) const noexcept;
   std::pair<Scope::VariableTable::iterator, bool> declareVar(const Identifier& name,
-                                                             const TypeIdentifier& type,
+                                                             const TypeRef& type,
                                                              std::set<Modifier>&& modifiers = {});
-  std::pair<Scope::VariableTable::iterator, bool> defineVar(const Identifier& name,
-                                                            const TypeIdentifier& type,
-                                                            const Value& value,
-                                                            std::set<Modifier>&& modifiers = {});
+  std::pair<Scope::VariableTable::iterator, bool> defineVar(const Identifier& name, Variable&& var);
   bool assignVar(const Identifier& name, const Value& value) noexcept;
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 
-  bool typeIsDeclared(const TypeIdentifier& name) const noexcept;
   bool typeIsDefined(const TypeIdentifier& name) const noexcept;
-  std::pair<Scope::TypeTable::iterator, bool> declareType(const TypeIdentifier& name);
   std::pair<Scope::TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type);
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
  private:
   const Identifier m_fnName;
-  // const Function m_function;
 
   std::vector<Scope> m_scopes;
 };
