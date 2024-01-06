@@ -17,7 +17,8 @@ enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
 struct Environment {
  public:
-  using FunctionTable = std::map<Identifier, std::pair<FnSignature, Function>>;
+  using FnSignatureTable = std::map<Identifier, const FnSignature>;
+  using FunctionTable = std::map<Identifier, const Function>;
 
   Environment();
 
@@ -25,57 +26,65 @@ struct Environment {
 
   /* ---------------------------- Variable methods ---------------------------- */
 
-  bool varIsDeclared(const Identifier& name) const noexcept;
-  bool varIsDefined(const Identifier& name) const noexcept;
-  std::pair<Scope::VariableTable::iterator, bool> declareVar(const Identifier& name,
-                                                             const TypeRef& type,
-                                                             std::set<Modifier>&& modifiers = {});
-  std::pair<Scope::VariableTable::iterator, bool> defineVar(const Identifier& name, Variable&& var);
-  void assignVar(const Identifier& name, const Value& value) noexcept;
+  bool containsVar(const Identifier& name) const noexcept;
+  std::pair<Scope::VariableTable::iterator, bool> insertVar(const Identifier& name, Variable&& var);
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 
   /* ------------------------------ Type methods ------------------------------ */
 
-  bool typeIsDefined(const TypeIdentifier& name) const noexcept;
-  std::pair<Scope::TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type);
+  bool containsType(const TypeIdentifier& name) const noexcept;
+  std::pair<Scope::TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type);
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
   /* ---------------------------- Function methods ---------------------------- */
 
-  bool fnIsDefined(const Identifier& name) const noexcept;
-  std::pair<FunctionTable::iterator, bool> defineFn(const Identifier& name,
-                                                    Function&& func) noexcept;
-  std::optional<Type> getFnSignature(const Identifier& name) const noexcept;
-  std::optional<Value> getFunction(const Identifier& name) const noexcept;
+  bool containsFunction(const Identifier& name) const noexcept;
+  std::pair<FunctionTable::iterator, bool> insertFunction(const Identifier& name,
+                                                          Function&& func) noexcept;
+  std::optional<std::reference_wrapper<const Function>> getFunction(
+      const Identifier& name) const noexcept;
+
+  /* --------------------------- FnSignature methods -------------------------- */
+
+  bool containsFnSignature(const Identifier& name) const noexcept;
+  std::pair<FnSignatureTable::iterator, bool> insertFnSignature(const Identifier& name,
+                                                                FnSignature&& signature) noexcept;
+  std::optional<std::reference_wrapper<const FnSignature>> getFnSignature(
+      const Identifier& name) const noexcept;
 
   /* -------------------------- Flow control methods -------------------------- */
 
-  void pushStackFrame(const Identifier& name);
+  void pushStackFrame(const Identifier& fnName);
   void popStackFrame();
   void enterScope();
   void exitScope();
 
-  bool bindArguments(const std::vector<Value>& args);
-  std::optional<TypeRef> getCurrentFnReturnType() const;
+  // Interpretation
 
   std::optional<Value> getLastReturnValue();
-  void setLastReturnValue(const Value& value);
-
   std::optional<Value> getLastExpressionValue();
-  void setLastExpressionValue(const Value& value);
 
-  std::optional<TypeRef> getLastExpressionType();
-  void setLastExpressionType(const TypeRef& value);
+  void setLastReturnValue(const Value& value);
+  void setLastExpressionValue(const Value& value);
 
   FlowControlStatus& flowControlStatus();
   int& loopDepth();
 
+  // Typechecking
+  std::optional<Type> getCurrentFnReturnType() const;
+  std::optional<Type> getLastExpressionType();
+  void setLastExpressionType(const Type& value);
+
  private:
   void initGlobalScope();
+  void initBuiltinTypes();
+  void initBuiltinFunctions();
 
   std::optional<Value> m_lastReturnValue;
   std::optional<Value> m_lastExpressionValue;
-  std::optional<TypeRef> m_lastExpressionType;
+
+  std::optional<Type> m_lastExpressionType;
+  std::optional<Type> m_currentFnReturnType;
 
   FlowControlStatus m_flowControlStatus = FlowControlStatus::NORMAL;
   int m_loopDepth = 0;
@@ -83,7 +92,9 @@ struct Environment {
 
   std::stack<StackFrame> m_stack;  // Holds contexts for each function call
   Scope m_globalScope;             // Holds tables of global variables and types
-  FunctionTable m_functions;       // Table of declared or defined functions
+
+  FnSignatureTable m_fnSignatures;
+  FunctionTable m_functions;
 };
 
 }  // namespace Interpreter

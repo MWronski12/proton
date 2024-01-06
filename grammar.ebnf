@@ -86,7 +86,7 @@ equalityOp                  (* prio 2 l-r *)
 relationalOp                (* prio 3 l-r *)
     = "<" 
     | ">" 
-    | "<=" 
+    | "<="
     | ">=";
 
 additiveOp                  (* prio 4 l-r *)

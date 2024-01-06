@@ -25,67 +25,45 @@ void StackFrame::exitScope() {
 
 /* ---------------------------- Variable methods ---------------------------- */
 
-bool StackFrame::varIsDeclared(const Identifier& name) const noexcept {
+bool StackFrame::containsVar(const Identifier& name) const noexcept {
   for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
-    if (it->varIsDeclared(name)) return true;
+    if (it->containsVar(name)) return true;
   }
   return false;
 }
 
-bool StackFrame::varIsDefined(const Identifier& name) const noexcept {
-  for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
-    if (it->varIsDefined(name)) return true;
-  }
-  return false;
-}
-
-std::pair<Scope::VariableTable::iterator, bool> StackFrame::declareVar(
-    const Identifier& name, const TypeRef& type, std::set<Modifier>&& modifiers) {
-  expect(!m_scopes.empty(), std::logic_error("Cannot declare variable, stack empty"));
-  return m_scopes.back().declareVar(name, type, std::move(modifiers));
-}
-
-std::pair<Scope::VariableTable::iterator, bool> StackFrame::defineVar(const Identifier& name,
+std::pair<Scope::VariableTable::iterator, bool> StackFrame::insertVar(const Identifier& name,
                                                                       Variable&& var) {
   expect(!m_scopes.empty(), std::logic_error("Cannot define variable, stack empty"));
-  return m_scopes.back().defineVar(name, std::move(var));
-}
-
-bool StackFrame::assignVar(const Identifier& name, const Value& value) noexcept {
-  for (auto it = m_scopes.rbegin(); it != m_scopes.rend(); ++it) {
-    if (it->varIsDeclared(name)) {
-      return it->assignVar(name, value);
-    }
-  }
-  return false;
+  return m_scopes.back().insertVar(name, std::move(var));
 }
 
 std::optional<std::reference_wrapper<Variable>> StackFrame::getVar(
     const Identifier& name) noexcept {
   for (auto it = m_scopes.rbegin(); it != m_scopes.rend(); ++it) {
-    if (it->varIsDeclared(name)) return it->getVar(name);
+    if (it->containsVar(name)) return it->getVar(name);
   }
   return std::nullopt;
 }
 
 /* ------------------------------ Type methods ------------------------------ */
 
-bool StackFrame::typeIsDefined(const TypeIdentifier& name) const noexcept {
+bool StackFrame::containsType(const TypeIdentifier& name) const noexcept {
   for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
-    if (it->typeIsDefined(name)) return true;
+    if (it->containsType(name)) return true;
   }
   return false;
 }
 
-std::pair<Scope::TypeTable::iterator, bool> StackFrame::defineType(const TypeIdentifier& name,
+std::pair<Scope::TypeTable::iterator, bool> StackFrame::insertType(const TypeIdentifier& name,
                                                                    Type&& type) {
   expect(!m_scopes.empty(), std::logic_error("Cannot define type, stack empty"));
-  return m_scopes.back().defineType(name, std::move(type));
+  return m_scopes.back().insertType(name, std::move(type));
 }
 
 std::optional<TypeRef> StackFrame::getType(const TypeIdentifier& name) const noexcept {
   for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
-    if (it->typeIsDefined(name)) return it->getType(name);
+    if (it->containsType(name)) return it->getType(name);
   }
   return std::nullopt;
 }

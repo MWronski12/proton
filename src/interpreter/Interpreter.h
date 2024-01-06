@@ -2,6 +2,7 @@
 
 #include "CharReaderBase.h"
 #include "Environment.h"
+#include "FunctionBody.h"
 #include "Lexer.h"
 #include "Parser.h"
 #include "SemanticAnalyzer.h"

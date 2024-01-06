@@ -23,6 +23,8 @@ struct ASTNode {
   ASTNode &operator=(ASTNode &&) = default;
   virtual ~ASTNode() = default;
 
+  virtual void accept(ASTVisitor &visitor) = 0;
+
   ASTNode(Position &&pos) : position{pos} {}
 };
 

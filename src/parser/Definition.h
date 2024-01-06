@@ -17,8 +17,10 @@
  *     | VariantDef
  *     | FnDef;
  */
-struct Definition : public Statement, public VisitableNode {
+struct Definition : public Statement {
   Identifier name;
+
+  virtual void accept(ASTVisitor& visitor) = 0;
 
  protected:
   Definition(Position&& position, Identifier&& defName)

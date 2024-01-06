@@ -11,7 +11,11 @@
 namespace Interpreter {
 
 /**
- * @brief Scope is a table of declared or defined types and variables.
+ * @brief Scope owns variables and types accessible within it.
+ *
+ * @note 1) Scope performs only name conflict checks.
+ * @note 2) Types are const - once inserted, cannot be chaged.
+ * @note 3) Variables are mutable - user has to ensure their integrity.
  */
 class Scope {
  public:
@@ -19,31 +23,25 @@ class Scope {
   using TypeTable = std::map<TypeIdentifier, const Type>;
 
   Scope() = default;
+  ~Scope() = default;
+  Scope(Scope&&) = default;
+  Scope& operator=(Scope&&) = default;
+
+  Scope(const Scope&) = delete;
+  Scope& operator=(const Scope&) = delete;
 
   bool nameConflict(const Identifier& name) const noexcept;
 
-  bool varIsDeclared(const Identifier& name) const noexcept;
-  bool varIsDefined(const Identifier& name) const noexcept;
-
-  std::pair<VariableTable::iterator, bool> declareVar(
-      const Identifier& name, const TypeRef& type,
-      const std::set<Modifier>& modifiers = {}) noexcept;
-
-  std::pair<VariableTable::iterator, bool> defineVar(const Identifier& name,
+  bool containsVar(const Identifier& name) const noexcept;
+  std::pair<VariableTable::iterator, bool> insertVar(const Identifier& name,
                                                      Variable&& variable) noexcept;
-  bool assignVar(const Identifier& name, const Value& value) noexcept;
-
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 
-  bool typeIsDefined(const TypeIdentifier& name) const noexcept;
-  std::pair<TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type) noexcept;
+  bool containsType(const TypeIdentifier& name) const noexcept;
+  std::pair<TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type) noexcept;
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
  private:
-  // Variables are declared by creating Variable object with no value and adding it to the map.
-  // Types are declared by adding <Identifier, nullopt> entry to the map.
-  // Thats because variables are mutable (they can be assigned a new value), but types are not.
-
   VariableTable m_variables;
   TypeTable m_types;
 };

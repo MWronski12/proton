@@ -1,22 +1,24 @@
 #pragma once
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <variant>
 
 #include "Type.h"
 
-struct BlockStmt;
+struct Value;
 
 namespace Interpreter {
 
 struct Value;
+struct FunctionBody;
 
 /**
  * @brief Data structure representing Variant instance value.
  *
- * @note Member 'value' is a unique_ptr but it's copyable like a normal object. That is for allowing
- * default construction of a forward declared struct 'Value'.
+ * @note Member 'value' is a unique_ptr but it's copyable like a normal object. That is for
+ * allowing default construction of a forward declared struct 'Value'.
  */
 struct VariantValue {
   VariantValue(const VariantValue& other) : value{std::make_unique<Value>(*other.value)} {}
@@ -25,8 +27,6 @@ struct VariantValue {
     return *this;
   }
   ~VariantValue() = default;
-
-  VariantValue(std::unique_ptr<Value> value) : value{std::move(value)} {}
 
   std::unique_ptr<Value> value;
 };
@@ -42,20 +42,19 @@ struct ObjectValue {
  * @brief Data structure representing function value.
  */
 struct Function {
-  using BodyRef = std::reference_wrapper<::BlockStmt>;
-
   struct Param {
-    Param(const Identifier& name, const TypeRef& type, bool isConst) : name{name}, type{type} {
+    Param(const Identifier& name, const TypeIdentifier& type, bool isConst)
+        : name{name}, type{type} {
       if (isConst) modifiers.emplace(Modifier::CONST);
     }
     Identifier name;
-    TypeRef type;
+    TypeIdentifier type;  // for prettyprinting only
     std::set<Modifier> modifiers;
   };
 
   std::vector<Param> params;
-  TypeRef returnType;
-  BodyRef body;
+  TypeIdentifier returnType;           // for prettyprinting only
+  std::shared_ptr<FunctionBody> body;  // visitable
 };
 
 /* -------------------------- Value representation -------------------------- */

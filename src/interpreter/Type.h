@@ -14,16 +14,7 @@ struct Type;
 using Identifier = std::wstring;
 using TypeIdentifier = std::wstring;
 
-const TypeIdentifier VOID = L"void";
-const TypeIdentifier INT = L"int";
-const TypeIdentifier FLOAT = L"float";
-const TypeIdentifier BOOL = L"bool";
-const TypeIdentifier CHAR = L"char";
-const TypeIdentifier STRING = L"string";
-
-const TypeIdentifier VARIANT = L"variant";
-const TypeIdentifier STRUCT = L"struct";
-const TypeIdentifier FUNCTION = L"function";
+const TypeIdentifier LEN_FN = L"len";
 
 // Composite types hold references to other types for recursive type checking.
 // All referenced subtypes must outlive the composite type.
@@ -40,32 +31,44 @@ enum class Modifier { CONST };
 /**
  * @brief Data structure representing builtin void type.
  */
-struct Void {};
+struct Void {
+  static const inline TypeIdentifier typeId = L"void";
+};
 
 /**
  * @brief Data structure representing builtin int type.
  */
-struct Int {};
+struct Int {
+  static const inline TypeIdentifier typeId = L"int";
+};
 
 /**
  * @brief Data structure representing builtin float type.
  */
-struct Float {};
+struct Float {
+  static const inline TypeIdentifier typeId = L"float";
+};
 
 /**
  * @brief Data structure representing builtin bool type.
  */
-struct Bool {};
+struct Bool {
+  static const inline TypeIdentifier typeId = L"bool";
+};
 
 /**
  * @brief Data structure representing builtin char type.
  */
-struct Char {};
+struct Char {
+  static const inline TypeIdentifier typeId = L"char";
+};
 
 /**
  * @brief Data structure representing builtin string type.
  */
-struct String {};
+struct String {
+  static const inline TypeIdentifier typeId = L"string";
+};
 
 /* ------------------------------ User types -------------------------------- */
 
@@ -73,6 +76,8 @@ struct String {};
  * @brief Data structure representing variant types.
  */
 struct Variant {
+  static const inline TypeIdentifier typeId = L"variant";
+
   template <typename... Ts>
   Variant(Ts&&... variantTypes) {
     std::set<TypeRef, TypeRefComparator> typesSet{std::forward<Ts>(variantTypes)...};
@@ -86,6 +91,8 @@ struct Variant {
  * @brief Data structure representing struct types.
  */
 struct Struct {
+  static const inline TypeIdentifier typeId = L"struct";
+
   std::map<Identifier, TypeRef> members;
 };
 
@@ -93,13 +100,18 @@ struct Struct {
  * @brief Data structure representing function types.
  */
 struct FnSignature {
-  struct Arg {
+  static const inline TypeIdentifier typeId = L"function";
+
+  struct Param {
+    Param(const TypeRef& type, bool isConst) : type{type} {
+      if (isConst) modifiers.emplace(Modifier::CONST);
+    }
     TypeRef type;
     std::set<Modifier> modifiers;
   };
 
+  std::vector<Param> params;
   TypeRef returnType;
-  std::vector<Arg> args;
 };
 
 /* --------------------------- Type representation -------------------------- */
@@ -115,6 +127,10 @@ struct Type {
                            std::is_same<T, Bool>, std::is_same<T, Char>, std::is_same<T, String>,
                            std::is_same<T, Variant>, std::is_same<T, Struct>,
                            std::is_same<T, FnSignature>>);
+  }
+
+  TypeIdentifier typeId() const {
+    return std::visit([](const auto& type) { return type.typeId; }, type);
   }
 
   const std::variant<Void, Int, Float, Bool, Char, String, Variant, Struct, FnSignature> type;

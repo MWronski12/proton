@@ -28,17 +28,12 @@ class StackFrame {
   void enterScope() noexcept;
   void exitScope();
 
-  bool varIsDeclared(const Identifier& name) const noexcept;
-  bool varIsDefined(const Identifier& name) const noexcept;
-  std::pair<Scope::VariableTable::iterator, bool> declareVar(const Identifier& name,
-                                                             const TypeRef& type,
-                                                             std::set<Modifier>&& modifiers = {});
-  std::pair<Scope::VariableTable::iterator, bool> defineVar(const Identifier& name, Variable&& var);
-  bool assignVar(const Identifier& name, const Value& value) noexcept;
+  bool containsVar(const Identifier& name) const noexcept;
+  std::pair<Scope::VariableTable::iterator, bool> insertVar(const Identifier& name, Variable&& var);
   std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
 
-  bool typeIsDefined(const TypeIdentifier& name) const noexcept;
-  std::pair<Scope::TypeTable::iterator, bool> defineType(const TypeIdentifier& name, Type&& type);
+  bool containsType(const TypeIdentifier& name) const noexcept;
+  std::pair<Scope::TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type);
   std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
 
  private:

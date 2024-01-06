@@ -20,9 +20,7 @@ enum class Operator { Add, Sub, Mul, Div, Mod, And, Or, Not, Eq, Neq, Lt, Gt, Le
  *    | FunctionalExpression;
  */
 struct Expression : public ASTNode {
-  virtual ~Expression() = default;
-
-  virtual void accept(ASTVisitor& visitor) = 0;
+  void accept(ASTVisitor& visitor) = 0;
 
  protected:
   Expression(Position&& position) : ASTNode{std::move(position)} {}
@@ -38,14 +36,14 @@ struct Expression : public ASTNode {
  *    | MultiplicativeExpr;
  */
 struct BinaryExpression : public Expression, public VisitableNode {
-  BinaryExpression(Position&& position, std::unique_ptr<Expression>&& lhs,
-                   std::optional<Operator> op, std::unique_ptr<Expression>&& rhs)
+  BinaryExpression(Position&& position, std::unique_ptr<Expression>&& lhs, Operator op,
+                   std::unique_ptr<Expression>&& rhs)
       : Expression{std::move(position)}, lhs{std::move(lhs)}, op{op}, rhs{std::move(rhs)} {}
 
   void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
   std::unique_ptr<Expression> lhs;
-  std::optional<Operator> op;
+  Operator op;
   std::unique_ptr<Expression> rhs;
 };
 
@@ -54,13 +52,12 @@ struct BinaryExpression : public Expression, public VisitableNode {
  *    = UnaryOpExpr;
  */
 struct UnaryExpression : public Expression, public VisitableNode {
-  UnaryExpression(Position&& position, std::optional<Operator> op,
-                  std::unique_ptr<Expression>&& expr)
+  UnaryExpression(Position&& position, Operator op, std::unique_ptr<Expression>&& expr)
       : Expression{std::move(position)}, op{op}, expr{std::move(expr)} {}
 
   void accept(ASTVisitor& visitor) override { visitor.visit(*this); };
 
-  std::optional<Operator> op;
+  Operator op;
   std::unique_ptr<Expression> expr;
 };
 
@@ -70,6 +67,8 @@ struct UnaryExpression : public Expression, public VisitableNode {
  *    | VariantAccessPostfix;
  */
 struct FunctionalPostfix : public ASTNode {
+  virtual void accept(ASTVisitor& visitor) = 0;
+
  protected:
   FunctionalPostfix(Position&& position) : ASTNode{std::move(position)} {}
 };

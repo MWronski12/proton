@@ -4,7 +4,9 @@
 #include <unordered_map>
 
 enum class ErrorType {
-  // Lexical Errors
+
+  /* ----------------------------- Lexical Errors ----------------------------- */
+
   INVALID_NUMBER_LITERAL = 0,
   INVALID_CHAR_LITERAL,
   MISSING_CLOSING_QUOTE,
@@ -13,23 +15,18 @@ enum class ErrorType {
 
   /* ------------------------------ Syntax Errors ----------------------------- */
 
-  // Variable Definition
   VARDEF_EXPECTED_IDENTIFIER,
   VARDEF_EXPECTED_COLON,
   VARDEF_EXPECTED_TYPE_IDENTIFIER,
   VARDEF_EXPECTED_ASSIGNMENT,
   VARDEF_EXPECTED_EXPRESSION,
   VARDEF_EXPECTED_SEMICOLON,
-
-  // Const Definition
   CONSTDEF_EXPECTED_IDENTIFIER,
   CONSTDEF_EXPECTED_COLON,
   CONSTDEF_EXPECTED_TYPE_IDENTIFIER,
   CONSTDEF_EXPECTED_ASSIGNMENT,
   CONSTDEF_EXPECTED_EXPRESSION,
   CONSTDEF_EXPECTED_SEMICOLON,
-
-  // Struct Definition
   STRUCTDEF_EXPECTED_IDENTIFIER,
   STRUCTDEF_EXPECTED_LBRACE,
   STRUCTDEF_EXPECTED_RBRACE,
@@ -37,14 +34,10 @@ enum class ErrorType {
   STRUCTMEMBER_EXPECTED_COLON,
   STRUCTMEMBER_EXPECTED_TYPE_IDENTIFIER,
   STRUCTMEMBER_EXPECTED_SEMICOLON,
-
-  // Variant Definition
   VARIANTDEF_EXPECTED_IDENTIFIER,
   VARIANTDEF_EXPECTED_LBRACE,
   VARIANTDEF_EXPECTED_RBRACE,
   VARIANTDEF_EXPECTED_SEMICOLON,
-
-  // Fn Definition
   FNDEF_EXPECTED_IDENTIFIER,
   FNDEF_EXPECTED_LPAREN,
   FNDEF_EXPECTED_RPAREN,
@@ -55,63 +48,38 @@ enum class ErrorType {
   FNPARAM_EXPECTED_COLON,
   FNPARAM_EXPECTED_TYPE_IDENTIFIER,
   FNRETURNTYPE_EXPECTED_TYPE_IDENTIFIER,
-
-  // Binary Expression
   BINARYEXPRESSION_EXPECTED_RHS,
-
-  // Unary Expression
   UNARYEXPRESSION_EXPECTED_EXPR,
-
-  // Cast Expression
   CASTEXPR_EXPECTED_LPAREN,
   CASTEXPR_EXPECTED_EXPRESSION,
   CASTEXPR_EXPECTED_RPAREN,
-
-  // Paren Expression
   PARENEXPR_EXPECTED_EXPRESSION,
   PARENEXPR_EXPECTED_RPAREN,
-
-  // Object
   OBJECT_EXPECTED_RBRACE,
   OBJECTMEMBER_EXPECTED_COLON,
   OBJECTMEMBER_EXPECTED_EXPRESSION,
-
-  // Fn Call
   FNCALL_EXPECTED_ARGUMENT,
   FNCALL_EXPECTED_RPAREN,
-
-  // Member Access
   MEMBERACCESS_EXPECTED_IDENTIFIER,
-
-  // Variant Access
   VARIANTACCESS_EXPECTED_TYPE_IDENTIFIER,
-
-  // ExpressionOrAssignmentStmt
   ASSIGNMENTSTMT_EXPECTED_EXPRESSION,
   ASSIGNMENTSTMT_EXPECTED_SEMICOLON,
   EXPRESSIONSTMT_EXPECTED_SEMICOLON,
-
-  // Insertion/Extraction
   STDOUTINSERTION_EXPECTED_EXPRESSION,
   STDOUTINSERTION_EXPECTED_SEMICOLON,
   STDINEXTRACTION_EXPECTED_EXPRESSION,
   STDINEXTRACTION_EXPECTED_SEMICOLON,
-
-  // Variant Match
   VARIANTMATCHCASE_EXPECTED_TYPE,
   VARIANTMATCHCASE_EXPECTED_ARROW,
   VARIANTMATCHCASE_EXPECTED_BLOCK,
   VARIANTMATCH_EXPECTED_EXPRESSION,
   VARIANTMATCH_EXPECTED_LBRACE,
   VARIANTMATCH_EXPECTED_RBRACE,
-
-  // Flow control statements
   ELIF_EXPECTED_CONDITION,
   ELIF_EXPECTED_BLOCK,
   ELSE_EXPECTED_BLOCK,
   IF_EXPECTED_CONDITION,
   IF_EXPECTED_BLOCK,
-
   FORRANGE_EXPECTED_UNTIL,
   FORRANGE_EXPECTED_END_EXPR,
   FOR_EXPECTED_IDENTIFIER,
@@ -124,13 +92,26 @@ enum class ErrorType {
   BREAK_EXPECTED_SEMICOLON,
   RETURN_EXPECTED_SEMICOLON,
 
-  // Semantic Errors
+  /* ----------------------------- Semantic Errors ---------------------------- */
+
   EXPECTED_MAIN_FUNCTION_DEF,
   VARIABLE_REDEFINITION,
   TYPE_REDEFINITION,
   UNDEFINED_VARIABLE,
   UNDEFINED_TYPE,
-  TYPE_MISMATCH,
+  ASSIGNMENT_TYPE_MISMATCH,
+  RETURN_TYPE_MISMATCH,
+  EXPRESSION_TYPE_MISMATCH,
+  INVALID_MEMBER_ACCESS,
+  INVALID_VARIANT_ACCESS,
+  INVALID_FN_CALL,
+  INVALID_CAST,
+  INVALID_ASSIGNMENT,
+  INVALID_VARIANT_MATCH_STMT,
+  CONTINUE_OUTSIDE_LOOP,
+  BREAK_OUTSIDE_LOOP,
+  INVALID_RANGE_EXPR,
+  EXPECTED_BOOL_EXPR,
   REDEFINITION,
   STRUCTMEMBER_REDEFINITION,
   VARIANTTYPE_REDEFINITION,
@@ -138,7 +119,8 @@ enum class ErrorType {
   OBJECTMEMBER_REDEFINITION,
   VARIANTMATCHCASE_REDEFINITION,
 
-  // Internal Errors
+  /* ----------------------------- Internal Errors ---------------------------- */
+
   TOKEN_INVARIANT_VIOLATION,
 };
 
@@ -347,7 +329,26 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
      {SEMANTIC_ERROR, "Type redefinition, identifier with that name already exists!"}},
     {ErrorType::UNDEFINED_VARIABLE, {SEMANTIC_ERROR, "Use of undefined variable!"}},
     {ErrorType::UNDEFINED_TYPE, {SEMANTIC_ERROR, "Use of undefined type!"}},
-    {ErrorType::TYPE_MISMATCH, {SEMANTIC_ERROR, "Type checking failed!"}},
+    {ErrorType::ASSIGNMENT_TYPE_MISMATCH, {SEMANTIC_ERROR, "Assignment type mismatch!"}},
+    {ErrorType::RETURN_TYPE_MISMATCH, {SEMANTIC_ERROR, "Return type mismatch!"}},
+    {ErrorType::EXPRESSION_TYPE_MISMATCH,
+     {SEMANTIC_ERROR,
+      "Operands in expression must be the same type and operator must be valid for that type!"}},
+    {ErrorType::INVALID_MEMBER_ACCESS, {SEMANTIC_ERROR, "Invalid member access!"}},
+    {ErrorType::INVALID_VARIANT_ACCESS, {SEMANTIC_ERROR, "Invalid variant access!"}},
+    {ErrorType::INVALID_FN_CALL, {SEMANTIC_ERROR, "Invalid function call!"}},
+    {ErrorType::INVALID_CAST, {SEMANTIC_ERROR, "Invalid cast!"}},
+    {ErrorType::INVALID_VARIANT_MATCH_STMT,
+     {SEMANTIC_ERROR,
+      "Invalid variant match stmt! Matched expression must be a variant and cases must be "
+      "adequate!"}},
+    {ErrorType::INVALID_ASSIGNMENT,
+     {SEMANTIC_ERROR, "Assignment is valid only for variables and object members!"}},
+    {ErrorType::CONTINUE_OUTSIDE_LOOP, {SEMANTIC_ERROR, "Continue statement outside loop!"}},
+    {ErrorType::BREAK_OUTSIDE_LOOP, {SEMANTIC_ERROR, "Break statement outside loop!"}},
+    {ErrorType::EXPECTED_BOOL_EXPR, {SEMANTIC_ERROR, "Condition expression must be boolean!"}},
+    {ErrorType::INVALID_RANGE_EXPR,
+     {SEMANTIC_ERROR, "Range start and end expressions must be of type int!"}},
     {ErrorType::STRUCTMEMBER_REDEFINITION, {SEMANTIC_ERROR, "Struct member redefinition!"}},
     {ErrorType::VARIANTMATCHCASE_REDEFINITION,
      {SEMANTIC_ERROR, "Variant match case redefinition!"}},

@@ -24,6 +24,8 @@
  *    | ReturnStmt;
  */
 struct Statement : public ASTNode {
+  virtual void accept(ASTVisitor &visitor) = 0;
+
  protected:
   Statement(Position &&position) : ASTNode{std::move(position)} {}
 };
