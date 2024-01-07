@@ -1,15 +1,16 @@
-#include "StringCharReader.h"
-
 #include <gtest/gtest.h>
+
+#include "StringCharReader.h"
 
 TEST(StringCharReader, HandlesEmptyString) {
   StringCharReader reader{L""};
-  EXPECT_EQ(reader.pos().line, 0);
-  EXPECT_EQ(reader.pos().column, 0);
-  EXPECT_EQ(reader.pos().sourceFile, std::string("<custom string>"));
   EXPECT_EQ(reader.last(), NO_CHAR_YET);
-  EXPECT_EQ(reader.peek(), wchar_t(WEOF));
-  EXPECT_EQ(reader.get(), wchar_t(WEOF));
+  auto c = reader.get();
+  EXPECT_EQ(reader.pos().line, FIRST_LINE);
+  EXPECT_EQ(reader.pos().column, FIRST_COL);
+  EXPECT_EQ(reader.pos().sourceFile, std::string("<custom string>"));
+  EXPECT_EQ(c, wchar_t(WEOF));
+  EXPECT_EQ(c, wchar_t(WEOF));
 }
 
 TEST(StringCharReader, HandlesSimpleString) {
@@ -18,12 +19,11 @@ TEST(StringCharReader, HandlesSimpleString) {
 
   for (size_t i = 0; i < str.size(); i++) {
     auto c = str[i];
-    auto pos = reader.pos();
-
     EXPECT_EQ(reader.get(), c);
     EXPECT_EQ(reader.last(), c);
-    EXPECT_EQ(pos.column, i);
-    EXPECT_EQ(pos.line, 0);
+    auto pos = reader.pos();
+    EXPECT_EQ(pos.column, i + 1);
+    EXPECT_EQ(pos.line, FIRST_LINE);
     EXPECT_EQ(reader.pos().sourceFile, std::string("<custom string>"));
   }
 }
@@ -31,7 +31,7 @@ TEST(StringCharReader, HandlesSimpleString) {
 TEST(StringCharReader, HandlesNewLines) {
   std::wstring str = L"\n\n\n";
   StringCharReader reader{str};
-  for (uint i = 0; i <= str.length(); i++) {
+  for (uint i = 1; i <= str.length() + 1; i++) {
     EXPECT_EQ(reader.pos().line, i);
     EXPECT_EQ(reader.pos().sourceFile, std::string("<custom string>"));
     reader.get();

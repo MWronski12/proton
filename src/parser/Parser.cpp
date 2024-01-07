@@ -88,7 +88,13 @@ void Parser::initParserMaps() {
 /*                               Utility Methods                              */
 /* -------------------------------------------------------------------------- */
 
-void Parser::consumeToken() { m_token = m_lexer.getNextToken(); }
+void Parser::consumeToken() {
+  do {
+    m_token = m_lexer.getNextToken();
+  } while ((m_token.type == TokenType::SINGLE_LINE_COMMENT ||
+            m_token.type == TokenType::MULTI_LINE_COMMENT) &&
+           m_token.type != TokenType::ETX);
+}
 
 bool Parser::consumeIf(TokenType expectedType, ErrorType error) {
   if (m_token.type == expectedType) {
@@ -136,6 +142,11 @@ std::optional<Program> Parser::parseProgram() {
     }
     definitions.push_back(std::move(definition));
     definition = parseDefinition();
+  }
+
+  if (m_token.type != TokenType::ETX) {
+    m_errorHandler(ErrorType::EXPECTED_DEFINITION, m_token.position);
+    return std::nullopt;
   }
 
   return Program{std::move(position), std::move(definitions)};

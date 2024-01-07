@@ -1,21 +1,21 @@
 #include <iostream>
 
 #include "ErrorHandler.h"
+#include "FileCharReader.h"
 #include "Lexer.h"
 #include "Parser.h"
 #include "SemanticAnalyzer.h"
-#include "StringCharReader.h"
 
 using namespace Interpreter;
 
-int main() {
-  StringCharReader reader(
-      L"fn main() -> int {\n"
-      L"  var x: int = 1;\n"
-      L"  var y: int = 2;\n"
-      L"  var z: int = x + y;\n"
-      L"  return 1;\n"
-      L"}");
+int main(int argc, char** argv) {
+  if (argc < 2) {
+    std::cerr << "Usage: proton <source file>" << std::endl;
+    return 1;
+  }
+
+  std::string sourceFile = argv[1];
+  FileCharReader reader(sourceFile);
 
   ErrorHandler errorHandler;
   Lexer lexer(reader, errorHandler);

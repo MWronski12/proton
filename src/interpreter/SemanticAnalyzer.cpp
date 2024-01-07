@@ -563,6 +563,11 @@ void SemanticAnalyzer::visit(::ReturnStmt& stmt) {
   // If we cant retrieve it, it means logic failed somewhere and has to be fixed
   assert(returnType != std::nullopt && "Expected fnReturnType to be set");
 
+  if (stmt.expr == nullptr) {
+    expect(returnType->typeId() == Void::typeId, ErrorType::RETURN_TYPE_MISMATCH, stmt.position);
+    return;
+  }
+
   stmt.expr->accept(*this);
   auto exprType = m_env.getLastExpressionType();
   assert(exprType != std::nullopt &&

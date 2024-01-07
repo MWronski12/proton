@@ -1,8 +1,12 @@
-#include "ParserTest.h"
+#include <iostream>
 
+#include "ParserTest.h"
 TEST_F(ParserTest, ParserHandlesVarDef) {
+  std::cout << m_reader.pos().column << std::endl;
   m_reader.load(L"var foo: string = \"bar\";");
+  std::cout << m_reader.pos().column << std::endl;
   consumeToken();
+  std::cout << m_reader.pos().column << std::endl;
 
   auto def = parseVarDef();
   ASSERT_TRUE(def != nullptr);
@@ -12,8 +16,8 @@ TEST_F(ParserTest, ParserHandlesVarDef) {
   EXPECT_TRUE(varDef->name == L"foo");
   EXPECT_TRUE(varDef->type == L"string");
   EXPECT_TRUE(varDef->value != nullptr);
-  EXPECT_TRUE(varDef->position.line == FIRST_LINE);
-  EXPECT_TRUE(varDef->position.column == 1);
+  EXPECT_EQ(varDef->position.line, FIRST_LINE);
+  EXPECT_EQ(varDef->position.column, FIRST_COL);
   EXPECT_TRUE(varDef->position.sourceFile == "<custom string>");
 }
 

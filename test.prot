@@ -1,0 +1,18 @@
+
+fn pow(x: int, n: int) -> int {
+	var result: int = 1;
+	for i in 0 until n {
+		result = result * x;
+	}
+	return result;	
+}
+
+fn main() -> void {
+	const x: int = 3;
+	const n: int = 2;
+                       
+	var result: int = pow(x, n);
+
+	<< x << " to power " << n << " = " << pow(x, n) << "\n";
+	return;
+}

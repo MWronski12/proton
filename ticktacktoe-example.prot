@@ -21,14 +21,14 @@ const X: char = 'X';
 const O: char = 'O';
 const EMPTY: char = ' ';
 
-board: Board = Board{
+var board: Board = Board{
     EMPTY, EMPTY, EMPTY,
     EMPTY, EMPTY, EMPTY,
     EMPTY, EMPTY, EMPTY,
 };
 
 $ whose turn is it? Player X or O, X starts
-player: char = X;
+var player: char = X;
 
 
 $$ SEKCJA DEFINICJI FUNKCJI $$

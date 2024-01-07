@@ -15,6 +15,7 @@ enum class ErrorType {
 
   /* ------------------------------ Syntax Errors ----------------------------- */
 
+  EXPECTED_DEFINITION,
   VARDEF_EXPECTED_IDENTIFIER,
   VARDEF_EXPECTED_COLON,
   VARDEF_EXPECTED_TYPE_IDENTIFIER,
@@ -149,6 +150,8 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     {ErrorType::UNEXPECTED_END_OF_FILE, {LEXICAL_ERROR, "Unexpected end of file reached!"}},
 
     /* ------------------------------ Syntax Errors ----------------------------- */
+
+    {ErrorType::EXPECTED_DEFINITION, {SYNTAX_ERROR, "Expected definition!"}},
 
     // Variable Definition
     {ErrorType::VARDEF_EXPECTED_IDENTIFIER,

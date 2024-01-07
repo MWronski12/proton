@@ -13,7 +13,7 @@ TEST_F(ParserTest, ParserHandlesConstDef) {
   EXPECT_TRUE(varDef->type == L"string");
   EXPECT_TRUE(varDef->value != nullptr);
   EXPECT_TRUE(varDef->position.line == FIRST_LINE);
-  EXPECT_TRUE(varDef->position.column == 1);
+  EXPECT_TRUE(varDef->position.column == FIRST_COL);
   EXPECT_TRUE(varDef->position.sourceFile == "<custom string>");
 }
 
