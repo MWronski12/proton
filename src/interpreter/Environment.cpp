@@ -52,7 +52,7 @@ std::pair<Scope::TypeTable::iterator, bool> Environment::insertType(const TypeId
   return m_stack.top().insertType(name, std::move(type));
 }
 
-std::optional<TypeRef> Environment::getType(const TypeIdentifier& name) const noexcept {
+std::optional<TypePtr> Environment::getType(const TypeIdentifier& name) const noexcept {
   if (!m_stack.empty() && m_stack.top().containsType(name)) {
     return m_stack.top().getType(name);
   }
@@ -132,24 +132,24 @@ void Environment::exitScope() {
   m_stack.top().exitScope();
 }
 
-std::optional<Type> Environment::getCurrentFnReturnType() const {
+std::optional<TypePtr> Environment::getCurrentFnReturnType() const {
   if (m_stack.empty()) {
     throw std::logic_error("Stack is empty!");
   }
   auto fnName = m_stack.top().getFnName();
   if (m_fnSignatures.contains(fnName)) {
-    return m_fnSignatures.at(fnName).returnType.get();
+    return m_fnSignatures.at(fnName).returnType;
   }
   return std::nullopt;
 }
 
-std::optional<Type> Environment::getLastExpressionType() {
+std::optional<TypePtr> Environment::getLastExpressionType() {
   auto type = std::move(m_lastExpressionType);
   m_lastExpressionType.reset();
   return type;
 }
 
-void Environment::setLastExpressionType(const Type& type) { m_lastExpressionType.emplace(type); }
+void Environment::setLastExpressionType(const TypePtr& type) { m_lastExpressionType.emplace(type); }
 
 std::optional<Value> Environment::getLastExpressionValue() {
   auto value = std::move(m_lastExpressionValue);

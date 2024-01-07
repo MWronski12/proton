@@ -21,10 +21,10 @@ const X: char = 'X';
 const O: char = 'O';
 const EMPTY: char = ' ';
 
-var board: Board = Board{
-    EMPTY, EMPTY, EMPTY,
-    EMPTY, EMPTY, EMPTY,
-    EMPTY, EMPTY, EMPTY,
+var board: Board = {
+    leftTop: EMPTY, midTop: EMPTY, rightTop: EMPTY,
+    leftMid: EMPTY, midMid: EMPTY, rightMid: EMPTY,
+    leftBot: EMPTY, midBot: EMPTY, rightBot: EMPTY,
 };
 
 $ whose turn is it? Player X or O, X starts
@@ -33,7 +33,7 @@ var player: char = X;
 
 $$ SEKCJA DEFINICJI FUNKCJI $$
 
-fn printBoard() {
+fn printBoard() -> void {
     << board.leftTop << '|' << board.midTop << '|' << board.rightTop << '\n';
     << board.leftMid << '|' << board.midMid << '|' << board.rightMid << '\n';
     << board.leftBot << '|' << board.midBot << '|' << board.rightBot << '\n';
@@ -41,10 +41,10 @@ fn printBoard() {
 
 fn getPlayerMove() -> bool {
 
-    move: int = 0;
+    var move: int = 0;
 
     while move == 0 {
-        choice: int;
+        var choice: int = 0;
         << "Choose your move (must be an integer from 1 to 9 indexing board fileds from leftTop to rightBot): ";
         >> choice;
 
@@ -59,7 +59,7 @@ fn getPlayerMove() -> bool {
 }
 
 $ Makes a move in a first empty field encoutered
-fn getAIMove() -> {
+fn getAIMove() -> int {
     if board.leftTop == EMPTY { return 1; }
     if board.midTop == EMPTY { return 2; }
     if board.rightTop == EMPTY { return 3; }
@@ -74,20 +74,20 @@ fn getAIMove() -> {
     return 0;
 }
 
-fn makeMove(move: int) {
+fn makeMove(move: int) -> void {
     if move == 1 { board.leftTop = player; }
-    else if move == 2 { board.midTop = player; }
-    else if move == 3 { board.rightTop = player; }
-    else if move == 4 { board.leftMid = player; }
-    else if move == 5 { board.midMid = player; }
-    else if move == 6 { board.rightMid = player; }
-    else if move == 7 { board.leftBot = player; }
-    else if move == 8 { board.midBot = player; }
-    else if move == 9 { board.rightBot = player; }
+    elif move == 2 { board.midTop = player; }
+    elif move == 3 { board.rightTop = player; }
+    elif move == 4 { board.leftMid = player; }
+    elif move == 5 { board.midMid = player; }
+    elif move == 6 { board.rightMid = player; }
+    elif move == 7 { board.leftBot = player; }
+    elif move == 8 { board.midBot = player; }
+    elif move == 9 { board.rightBot = player; }
     else { << "Error: invalid move!"; }
 }
 
-fn nextPlayer() {
+fn nextPlayer() -> void {
     if player == X {
         player = O;
     } else {
@@ -106,9 +106,9 @@ fn isGameOver() -> bool {
            (board.rightTop == board.midMid && board.midMid == board.leftBot && board.rightTop != EMPTY);
 }
 
-fn isDraw() {
+fn isDraw() -> bool {
     $ Copy the board
-    board: Board = board;
+    var board: Board = board;
 
     $ Fill the board with current player's symbol
     if board.leftTop == EMPTY { board.leftTop = player; }
@@ -132,11 +132,11 @@ fn isDraw() {
 
 $$ SEKCJA DEFINICJI FUNKCJI MAIN $$
 
-fn main() {
+fn main() -> void {
     while true {
         printBoard();
 
-        move: int;
+        var move: int = 0;
 
         if player == X {
             move = getPlayerMove();

@@ -1,9 +1,7 @@
 #pragma once
 
+#include <list>
 #include <string>
-
-// Todo remove
-#include <iostream>
 
 #include "ASTNode.h"
 #include "ASTVisitor.h"
@@ -21,16 +19,17 @@ class SemanticAnalyzer : public ::ASTVisitor {
   Environment& m_env;
   ErrorHandler& m_error;
 
-  void expect(bool condition, ErrorType error, Position position) const;
-  bool operatorIsSupported(const Type& type, ::Operator op) const;
-  std::pair<TypeIdentifier, bool> isCastable(const Type& from, ::PrimitiveType to) const;
-  bool exprIsAssignable(const std::unique_ptr<Expression>& expr) const;
+  bool m_fnHasReturnStmt = false;
 
-  std::vector<Type> m_anonymousObjectTypes;
+  void expect(bool condition, ErrorType error, Position position) const;
+
+  bool isAssignable(const TypePtr& objType, const TypePtr& assignedTo) const;
+  bool exprIsAssignable(const std::unique_ptr<::Expression>& expr) const;
 
  public:
   SemanticAnalyzer(Environment& environment, ::ErrorHandler& error);
 
+  // Todo:
   // virtual void visit(Interpreter::BuiltinFunctionBody&) override;
 
   void visit(::Program& program) override;

@@ -34,7 +34,7 @@ class StackFrame {
 
   bool containsType(const TypeIdentifier& name) const noexcept;
   std::pair<Scope::TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type);
-  std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
+  std::optional<TypePtr> getType(const TypeIdentifier& name) const noexcept;
 
  private:
   const Identifier m_fnName;

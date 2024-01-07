@@ -14,13 +14,13 @@ namespace Interpreter {
  * @brief Scope owns variables and types accessible within it.
  *
  * @note 1) Scope performs only name conflict checks.
- * @note 2) Types are const - once inserted, cannot be chaged.
- * @note 3) Variables are mutable - user has to ensure their integrity.
+ * @note 2) Types shoul not be changed once inserted.
+ * @note 3) Variables are mutable, user has to ensure their integrity.
  */
 class Scope {
  public:
   using VariableTable = std::map<Identifier, Variable>;
-  using TypeTable = std::map<TypeIdentifier, const Type>;
+  using TypeTable = std::map<TypeIdentifier, TypePtr>;
 
   Scope() = default;
   ~Scope() = default;
@@ -39,7 +39,7 @@ class Scope {
 
   bool containsType(const TypeIdentifier& name) const noexcept;
   std::pair<TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type) noexcept;
-  std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
+  std::optional<TypePtr> getType(const TypeIdentifier& name) const noexcept;
 
  private:
   VariableTable m_variables;

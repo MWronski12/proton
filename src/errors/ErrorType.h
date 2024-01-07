@@ -106,6 +106,7 @@ enum class ErrorType {
   INVALID_MEMBER_ACCESS,
   INVALID_VARIANT_ACCESS,
   INVALID_FN_CALL,
+  MISSING_RETURN_STMT,
   INVALID_CAST,
   INVALID_ASSIGNMENT,
   INVALID_VARIANT_MATCH_STMT,
@@ -125,14 +126,14 @@ enum class ErrorType {
   TOKEN_INVARIANT_VIOLATION,
 };
 
-const auto LEXICAL_ERROR = std::string("Lexical Error");
-const auto SYNTAX_ERROR = std::string("Syntax Error");
-const auto SEMANTIC_ERROR = std::string("Semantic Error");
-const auto INTERNAL_ERROR = std::string("Internal Error");
+inline static const auto LEXICAL_ERROR = std::string("Lexical Error");
+inline static const auto SYNTAX_ERROR = std::string("Syntax Error");
+inline static const auto SEMANTIC_ERROR = std::string("Semantic Error");
+inline static const auto INTERNAL_ERROR = std::string("Internal Error");
 
 using ErrorInfo = std::pair<std::string, std::string>;  // pairs of <ErrorTypeStr, ErrorMsg>
 
-static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
+inline static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
 
     /* ----------------------------- Internal Errors ---------------------------- */
 
@@ -340,6 +341,8 @@ static const std::unordered_map<ErrorType, ErrorInfo> Errors = {
     {ErrorType::INVALID_MEMBER_ACCESS, {SEMANTIC_ERROR, "Invalid member access!"}},
     {ErrorType::INVALID_VARIANT_ACCESS, {SEMANTIC_ERROR, "Invalid variant access!"}},
     {ErrorType::INVALID_FN_CALL, {SEMANTIC_ERROR, "Invalid function call!"}},
+    {ErrorType::MISSING_RETURN_STMT,
+     {SEMANTIC_ERROR, "Missing return statement in function body!"}},
     {ErrorType::INVALID_CAST, {SEMANTIC_ERROR, "Invalid cast!"}},
     {ErrorType::INVALID_VARIANT_MATCH_STMT,
      {SEMANTIC_ERROR,

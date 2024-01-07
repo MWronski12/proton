@@ -16,13 +16,7 @@ using TypeIdentifier = std::wstring;
 
 const TypeIdentifier LEN_FN = L"len";
 
-// Composite types hold references to other types for recursive type checking.
-// All referenced subtypes must outlive the composite type.
-using TypeRef = std::reference_wrapper<const Type>;
-
-struct TypeRefComparator {
-  bool operator()(const TypeRef& lhs, const TypeRef& rhs) const { return &lhs.get() < &rhs.get(); }
-};
+using TypePtr = std::shared_ptr<Type>;
 
 enum class Modifier { CONST };
 
@@ -78,13 +72,7 @@ struct String {
 struct Variant {
   static const inline TypeIdentifier typeId = L"variant";
 
-  template <typename... Ts>
-  Variant(Ts&&... variantTypes) {
-    std::set<TypeRef, TypeRefComparator> typesSet{std::forward<Ts>(variantTypes)...};
-    types = std::move(typesSet);
-  }
-
-  std::set<TypeRef, TypeRefComparator> types;
+  std::vector<TypePtr> types;
 };
 
 /**
@@ -93,7 +81,7 @@ struct Variant {
 struct Struct {
   static const inline TypeIdentifier typeId = L"struct";
 
-  std::map<Identifier, TypeRef> members;
+  std::map<Identifier, TypePtr> members;
 };
 
 /**
@@ -103,15 +91,15 @@ struct FnSignature {
   static const inline TypeIdentifier typeId = L"function";
 
   struct Param {
-    Param(const TypeRef& type, bool isConst) : type{type} {
-      if (isConst) modifiers.emplace(Modifier::CONST);
+    Param(const TypePtr& type, bool isConst) : type{type} {
+      if (isConst) modifiers.push_back(Modifier::CONST);
     }
-    TypeRef type;
-    std::set<Modifier> modifiers;
+    TypePtr type;
+    std::vector<Modifier> modifiers;
   };
 
   std::vector<Param> params;
-  TypeRef returnType;
+  TypePtr returnType;
 };
 
 /* --------------------------- Type representation -------------------------- */
@@ -120,8 +108,10 @@ struct FnSignature {
  * @brief Data structure representing proton language type.
  */
 struct Type {
+  Type() = delete;
+
   template <typename T>
-  Type(T&& type) : type{std::move(type)} {
+  explicit Type(T&& type) : type{std::move(type)} {
     static_assert(
         std::disjunction_v<std::is_same<T, Void>, std::is_same<T, Int>, std::is_same<T, Float>,
                            std::is_same<T, Bool>, std::is_same<T, Char>, std::is_same<T, String>,

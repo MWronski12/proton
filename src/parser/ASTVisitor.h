@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 struct Program;
+
+#include <string>  // For Literal<std::wstring>
 
 struct VarDef;
 struct ConstDef;

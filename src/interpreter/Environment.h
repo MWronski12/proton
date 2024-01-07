@@ -15,10 +15,13 @@ namespace Interpreter {
 
 enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
+// Todo: If my deduction is correct, SemanticAnalyzer can work only with Types and Interpreter can
+// work only with Values, thus this class can be split into two.
+
 struct Environment {
  public:
-  using FnSignatureTable = std::map<Identifier, const FnSignature>;
-  using FunctionTable = std::map<Identifier, const Function>;
+  using FnSignatureTable = std::map<Identifier, const FnSignature>;  // Type
+  using FunctionTable = std::map<Identifier, const Function>;        // Value
 
   Environment();
 
@@ -34,7 +37,7 @@ struct Environment {
 
   bool containsType(const TypeIdentifier& name) const noexcept;
   std::pair<Scope::TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type);
-  std::optional<TypeRef> getType(const TypeIdentifier& name) const noexcept;
+  std::optional<TypePtr> getType(const TypeIdentifier& name) const noexcept;
 
   /* ---------------------------- Function methods ---------------------------- */
 
@@ -71,9 +74,9 @@ struct Environment {
   int& loopDepth();
 
   // Typechecking
-  std::optional<Type> getCurrentFnReturnType() const;
-  std::optional<Type> getLastExpressionType();
-  void setLastExpressionType(const Type& value);
+  std::optional<TypePtr> getCurrentFnReturnType() const;
+  std::optional<TypePtr> getLastExpressionType();
+  void setLastExpressionType(const TypePtr& value);
 
  private:
   void initGlobalScope();
@@ -83,8 +86,8 @@ struct Environment {
   std::optional<Value> m_lastReturnValue;
   std::optional<Value> m_lastExpressionValue;
 
-  std::optional<Type> m_lastExpressionType;
-  std::optional<Type> m_currentFnReturnType;
+  std::optional<TypePtr> m_lastExpressionType;
+  std::optional<TypePtr> m_currentFnReturnType;
 
   FlowControlStatus m_flowControlStatus = FlowControlStatus::NORMAL;
   int m_loopDepth = 0;

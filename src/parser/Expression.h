@@ -13,6 +13,12 @@
 
 enum class Operator { Add, Sub, Mul, Div, Mod, And, Or, Not, Eq, Neq, Lt, Gt, Leq, Geq };
 
+inline static const std::vector<::Operator> ALL_OPERATORS = {
+    ::Operator::Add, ::Operator::Sub, ::Operator::Mul, ::Operator::Div, ::Operator::Mod,
+    ::Operator::And, ::Operator::Or,  ::Operator::Not, ::Operator::Eq,  ::Operator::Neq,
+    ::Operator::Lt,  ::Operator::Gt,  ::Operator::Leq, ::Operator::Geq,
+};
+
 /*
  * Expression
  *    = BinaryExpression

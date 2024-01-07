@@ -84,7 +84,7 @@ enum class TokenType {
   NO_TOKEN_YET,
 };
 
-static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
+inline static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     // DEFAULT
     L"unexpected",
 
@@ -164,20 +164,20 @@ static const std::vector<std::wstring> TOKEN_TYPE_NAMES = {
     L"etx",
 };
 
-static const int KEYWORDS_OFFSET = (int)TokenType::VAR_KWRD;
-static const std::vector<std::wstring> KEYWORDS = {
+inline static const int KEYWORDS_OFFSET = (int)TokenType::VAR_KWRD;
+inline static const std::vector<std::wstring> KEYWORDS = {
     L"var",     L"const",  L"void",     L"int",   L"float",  L"char",  L"bool", L"string",
     L"variant", L"struct", L"fn",       L"if",    L"elif",   L"else",  L"for",  L"in",
     L"until",   L"while",  L"continue", L"break", L"return", L"match", L"case", L"as",
 };
 
-static const int OPERATORS_OFFSET = (int)TokenType::ASSIGNMENT;
-static const std::vector<std::wstring> OPERATORS = {
+inline static const int OPERATORS_OFFSET = (int)TokenType::ASSIGNMENT;
+inline static const std::vector<std::wstring> OPERATORS = {
     L"=", L"+",  L"-",  L"*",  L"/",  L"%", L"==", L"!=", L"<",
     L">", L"<=", L">=", L"||", L"&&", L"!", L"<<", L">>",
 };
 
-static const int PUNCTUATION_OFFSET = (int)TokenType::DOT;
-static const std::vector<std::wstring> PUNCTUATION = {
+inline static const int PUNCTUATION_OFFSET = (int)TokenType::DOT;
+inline static const std::vector<std::wstring> PUNCTUATION = {
     L".", L",", L":", L";", L"(", L")", L"{", L"}", L"->",
 };

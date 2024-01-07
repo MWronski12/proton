@@ -4,113 +4,73 @@
 
 namespace Interpreter {
 
-bool operator==(const TypeRef& lhs, const TypeRef& rhs) { return &lhs.get() == &rhs.get(); }
+bool operator==(const TypePtr& lhs, const TypePtr& rhs) { return lhs.get() == rhs.get(); }
 
 bool operator==(const Type& lhs, const Type& rhs) { return lhs.type.index() == rhs.type.index(); }
 
-bool isAssignable(const Type& from, const Type& to) {
-  return std::visit(
-      overloaded{
-          // Void type is not assignable to
-          [](const Void&) { return false; },
+// bool valueVariantTypeMatch(const Value& value, const Variant& variantType) {
+//   // 1) Value must match at least one of the variant types
+//   for (const auto& type : variantType.types) {
+//     if (valueTypeMatch(value, type.get())) return true;
+//   }
+//   return false;
+// }
 
-          // For primitive types, type 'from' must be the same type
-          [&from](const Int&) { return std::holds_alternative<Int>(from.type); },
-          [&from](const Float&) { return std::holds_alternative<Float>(from.type); },
-          [&from](const Bool&) { return std::holds_alternative<Bool>(from.type); },
-          [&from](const Char&) { return std::holds_alternative<Char>(from.type); },
-          [&from](const String&) { return std::holds_alternative<String>(from.type); },
+// bool valueStructTypeMatch(const Value& value, const Struct& structType) {
+//   // 1) Value must be an object to match a struct type
+//   if (!std::holds_alternative<ObjectValue>(value.value)) return false;
+//   const auto& object = std::get<ObjectValue>(value.value);
 
-          // For structs all members must match
-          [&from](const Struct& to) {
-            if (!std::holds_alternative<Struct>(from.type)) return false;
-            const auto& fromStructType = std::get<Struct>(from.type);
-            if (fromStructType.members.size() != to.members.size()) return false;
-            for (const auto& [name, type] : to.members) {
-              if (!fromStructType.members.contains(name)) return false;
-              if (!isAssignable(fromStructType.members.at(name).get(), type.get())) return false;
-            }
-            return true;
-          },
+//   // 2) Object must have the same number of members as the struct type
+//   if (object.members.size() != structType.members.size()) return false;
 
-          // For variants, type 'from' must be assignable to one of the 'to' variant types
-          [&from](const Variant& to) {
-            for (const auto& type : to.types) {
-              if (isAssignable(type.get(), from)) return true;
-            }
-            return false;
-          },
+//   // 3) Each object member must have a corresponding struct member
+//   for (const auto& [name, value] : object.members) {
+//     if (!structType.members.contains(name)) return false;
+//   }
 
-          // Functions are not assignable
-          [](const FnSignature&) { return false; },
-          [](const auto&) { throw std::logic_error("Unknown type!"); },
-      },
-      to.type);
-}
+//   // 4) Each object member value must match the corresponding struct member type
+//   for (const auto& [name, type] : structType.members) {
+//     if (!valueTypeMatch(object.members.at(name), type)) return false;
+//   }
 
-bool valueVariantTypeMatch(const Value& value, const Variant& variantType) {
-  // 1) Value must match at least one of the variant types
-  for (const auto& type : variantType.types) {
-    if (valueTypeMatch(value, type.get())) return true;
-  }
-  return false;
-}
+//   return true;
+// }
 
-bool valueStructTypeMatch(const Value& value, const Struct& structType) {
-  // 1) Value must be an object to match a struct type
-  if (!std::holds_alternative<ObjectValue>(value.value)) return false;
-  const auto& object = std::get<ObjectValue>(value.value);
+// bool valueFunctionTypeMatch(const Value& value, const FnSignature& signature) {
+//   // 1) Value must be a function to match a function type
+//   if (!std::holds_alternative<Function>(value.value)) return false;
+//   const auto& function = std::get<Function>(value.value);
 
-  // 2) Object must have the same number of members as the struct type
-  if (object.members.size() != structType.members.size()) return false;
+//   // 2) Function must have the same number of parameters as the function type
+//   if (function.params.size() != signature.params.size()) return false;
 
-  // 3) Each object member must have a corresponding struct member
-  for (const auto& [name, value] : object.members) {
-    if (!structType.members.contains(name)) return false;
-  }
+//   // 3) Function parameter types must match the corresponding function type parameter types
+//   for (uint i = 0; i < function.params.size(); ++i) {
+//     if (function.params[i].modifiers != signature.params[i].modifiers) return false;
+//   }
 
-  // 4) Each object member value must match the corresponding struct member type
-  for (const auto& [name, type] : structType.members) {
-    if (!valueTypeMatch(object.members.at(name), type.get())) return false;
-  }
-
-  return true;
-}
-
-bool valueFunctionTypeMatch(const Value& value, const FnSignature& signature) {
-  // 1) Value must be a function to match a function type
-  if (!std::holds_alternative<Function>(value.value)) return false;
-  const auto& function = std::get<Function>(value.value);
-
-  // 2) Function must have the same number of parameters as the function type
-  if (function.params.size() != signature.params.size()) return false;
-
-  // 3) Function parameter types must match the corresponding function type parameter types
-  for (uint i = 0; i < function.params.size(); ++i) {
-    if (function.params[i].modifiers != signature.params[i].modifiers) return false;
-  }
-
-  return true;
-}
+//   return true;
+// }
 
 /* -------------------------------------------------------------------------- */
 
-bool valueTypeMatch(const Value& value, const Type& type) {
-  return std::visit(
-      overloaded{
-          [&value](const Void&) { return std::holds_alternative<std::monostate>(value.value); },
-          [&value](const Int&) { return std::holds_alternative<int>(value.value); },
-          [&value](const Float&) { return std::holds_alternative<float>(value.value); },
-          [&value](const Bool&) { return std::holds_alternative<bool>(value.value); },
-          [&value](const Char&) { return std::holds_alternative<wchar_t>(value.value); },
-          [&value](const String&) { return std::holds_alternative<std::wstring>(value.value); },
-          [&value](const Variant& type) { return valueVariantTypeMatch(value, type); },
-          [&value](const Struct& type) { return valueStructTypeMatch(value, type); },
-          [&value](const FnSignature& type) { return valueFunctionTypeMatch(value, type); },
-          [](const auto&) { return false; },
-      },
-      type.type);
-}
+// bool valueTypeMatch(const Value& value, const Type& type) {
+//   return std::visit(
+//       overloaded{
+//           [&value](const Void&) { return std::holds_alternative<std::monostate>(value.value); },
+//           [&value](const Int&) { return std::holds_alternative<int>(value.value); },
+//           [&value](const Float&) { return std::holds_alternative<float>(value.value); },
+//           [&value](const Bool&) { return std::holds_alternative<bool>(value.value); },
+//           [&value](const Char&) { return std::holds_alternative<wchar_t>(value.value); },
+//           [&value](const String&) { return std::holds_alternative<std::wstring>(value.value); },
+//           [&value](const Variant& type) { return valueVariantTypeMatch(value, type); },
+//           [&value](const Struct& type) { return valueStructTypeMatch(value, type); },
+//           [&value](const FnSignature& type) { return valueFunctionTypeMatch(value, type); },
+//           [](const auto&) { return false; },
+//       },
+//       type.type);
+// }
 
 /* -------------------------------------------------------------------------- */
 

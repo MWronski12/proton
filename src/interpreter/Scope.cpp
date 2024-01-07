@@ -32,12 +32,13 @@ bool Scope::containsType(const TypeIdentifier& name) const noexcept {
 std::pair<Scope::TypeTable::iterator, bool> Scope::insertType(const TypeIdentifier& name,
                                                               Type&& type) noexcept {
   if (nameConflict(name)) return {m_types.end(), false};
-  return m_types.emplace(name, std::move(type));
+  auto typePtr = std::make_shared<Type>(std::move(type));
+  return m_types.emplace(name, std::move(typePtr));
 }
 
-std::optional<TypeRef> Scope::getType(const TypeIdentifier& name) const noexcept {
+std::optional<TypePtr> Scope::getType(const TypeIdentifier& name) const noexcept {
   if (!containsType(name)) return std::nullopt;
-  return std::ref(m_types.at(name));
+  return m_types.at(name);
 }
 
 }  // namespace Interpreter

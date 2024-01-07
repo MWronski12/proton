@@ -1,7 +1,7 @@
 #pragma once
 
-const int FIRST_COL = 1;
-const int FIRST_LINE = 1;
+inline const int FIRST_COL = 1;
+inline const int FIRST_LINE = 1;
 
 struct Position {
   int line = 1;

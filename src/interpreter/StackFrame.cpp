@@ -61,7 +61,7 @@ std::pair<Scope::TypeTable::iterator, bool> StackFrame::insertType(const TypeIde
   return m_scopes.back().insertType(name, std::move(type));
 }
 
-std::optional<TypeRef> StackFrame::getType(const TypeIdentifier& name) const noexcept {
+std::optional<TypePtr> StackFrame::getType(const TypeIdentifier& name) const noexcept {
   for (auto it = m_scopes.crbegin(); it != m_scopes.crend(); ++it) {
     if (it->containsType(name)) return it->getType(name);
   }

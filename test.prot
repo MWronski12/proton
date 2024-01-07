@@ -1,10 +1,40 @@
+variant Number { int, float };
+
+var age: Number = 5;
+const PI: Number = 3.14;
+
+struct Point {
+	x: Number;
+	y: Number;
+};
+
+const point: Point = { x: 1, y: 2 };
+
+struct Coords {
+	lat: Number;
+	lng: Number;
+};
+
+struct City {
+	name: string;
+	coords: Coords;
+};
+
+const warsaw: City = {
+	name: "Warsaw",
+	coords: { lat: 52.2297, lng: 21.0122 },
+};
+
+const NAME: string = "Mikolaj"; 
+
+var AGE: int = 23;
 
 fn pow(x: int, n: int) -> int {
 	var result: int = 1;
 	for i in 0 until n {
 		result = result * x;
 	}
-	return result;	
+	return result;
 }
 
 fn main() -> void {
@@ -13,6 +43,16 @@ fn main() -> void {
                        
 	var result: int = pow(x, n);
 
+	while true {
+		var input: string = "";
+		>> input;
+		if input == "exit" { break; }
+		elif input == "continue" { continue; }
+
+		<< "Your input: " << input;
+	}
+
 	<< x << " to power " << n << " = " << pow(x, n) << "\n";
+
 	return;
 }
