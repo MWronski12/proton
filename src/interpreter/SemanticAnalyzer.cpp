@@ -11,79 +11,6 @@
 #include "SemanticAnalyzer.h"
 #include "Statement.h"
 
-/* ---------------------------------- Utils --------------------------------- */
-
-namespace {
-
-using namespace Interpreter;
-
-bool operatorIsSupported(const Interpreter::TypePtr& type, const ::Operator op) {
-  static const auto typeToValidOpsMap = std::unordered_map<TypeIdentifier, std::vector<::Operator>>{
-      {Int::typeId, ALL_OPERATORS},
-      {Float::typeId, ALL_OPERATORS},
-      {Bool::typeId,
-       {
-           ::Operator::And,
-           ::Operator::Or,
-           ::Operator::Not,
-           ::Operator::Eq,
-           ::Operator::Neq,
-       }},
-      {String::typeId, {::Operator::Add, ::Operator::Eq, ::Operator::Neq}},
-      {Char::typeId, {::Operator::Eq, ::Operator::Neq}},
-      {Struct::typeId, {}},
-      {Variant::typeId, {}},
-      {FnSignature::typeId, {}},
-      {Void::typeId, {}},
-  };
-
-  auto typeId = type->typeId();
-  const auto typeOps = typeToValidOpsMap.find(typeId);
-  assert(typeOps != typeToValidOpsMap.end() && "Unknown type!");
-
-  return std::find(typeOps->second.begin(), typeOps->second.end(), op) != typeOps->second.end();
-}
-
-TypeIdentifier resultTypeId(const TypePtr& operandsType, const ::Operator op) {
-  static const std::vector<::Operator> BOOL_RESULT_OPERATORS = {
-      ::Operator::And, ::Operator::Or, ::Operator::Not, ::Operator::Eq,  ::Operator::Neq,
-      ::Operator::Lt,  ::Operator::Gt, ::Operator::Leq, ::Operator::Geq,
-  };
-
-  if (std::find(BOOL_RESULT_OPERATORS.begin(), BOOL_RESULT_OPERATORS.end(), op) !=
-      BOOL_RESULT_OPERATORS.end()) {
-    return Bool::typeId;
-  }
-
-  return operandsType->typeId();
-}
-
-// return pair of type identifier and whether the cast is valid
-std::pair<TypeIdentifier, bool> isCastable(const TypePtr& from, const ::PrimitiveType to) {
-  // Todo: For now casting is only valid to int, float, char
-  static const std::unordered_map<TypeIdentifier, std::vector<::PrimitiveType>>
-      typeIdPrimitiveTypeMap{
-          {Int::typeId, {::PrimitiveType::Float, ::PrimitiveType::Char}},
-          {Float::typeId, {::PrimitiveType::Int}},
-          {Char::typeId, {::PrimitiveType::Int}},
-          {Bool::typeId, {}},
-          {String::typeId, {}},
-          {Struct::typeId, {}},
-          {Variant::typeId, {}},
-          {FnSignature::typeId, {}},
-          {Void::typeId, {}},
-      };
-
-  auto typeId = from->typeId();
-  const auto it = typeIdPrimitiveTypeMap.find(typeId);
-  assert(it != typeIdPrimitiveTypeMap.end() && "Unknown type!");
-
-  return std::make_pair(typeId,
-                        std::find(it->second.begin(), it->second.end(), to) != it->second.end());
-}
-
-}  // namespace
-
 namespace Interpreter {
 
 using namespace std::string_literals;
@@ -136,9 +63,11 @@ bool SemanticAnalyzer::isAssignable(const TypePtr& objType, const TypePtr& assig
 }
 
 bool SemanticAnalyzer::exprIsAssignable(const std::unique_ptr<::Expression>& expr) const {
-  // We can only assign values to identifiers
+  // We can only assign values to variables
   if (auto idExpr = dynamic_cast<IdentifierExpr*>(expr.get()); idExpr != nullptr) {
-    expect(m_env.containsVar(idExpr->name), ErrorType::UNDEFINED_VARIABLE, expr->position);
+    auto var = m_env.getVar(idExpr->name);
+    expect(var != std::nullopt, ErrorType::UNDEFINED_VARIABLE, expr->position);
+    expect(!(*var)->isConst(), ErrorType::CONST_ASSIGNMENT, expr->position);
   }
   // or object members
   else if (auto memberAccess = dynamic_cast<MemberAccessPostfix*>(expr.get());
@@ -281,13 +210,14 @@ void SemanticAnalyzer::visit(::BinaryExpression& expr) {
   assert(rhsType != std::nullopt &&
          "Visiting expression should set Environment::lastExpressionType");
 
-  // Typechecking of binary expressions requires asserting that both operands have the same type and
+  // Typechecking of binary expressions requires asserting that both operands have the same type,
   // operator is supported for that type and determining the type of result expression
-  auto isValid = (*lhsType == *rhsType) && operatorIsSupported(*rhsType, expr.op);
+  auto isValid = m_operatorsHandler.operandsMatch(*lhsType, *rhsType) &&
+                 m_operatorsHandler.operatorIsSupported(*rhsType, expr.op);
 
   expect(isValid, ErrorType::EXPRESSION_TYPE_MISMATCH, expr.position);
 
-  auto typeId = resultTypeId(*lhsType, expr.op);
+  auto typeId = m_operatorsHandler.resultTypeId(*lhsType, expr.op);
   auto typePtr = m_env.getType(typeId);
   assert(typePtr != std::nullopt && "Type should be defined");
 
@@ -302,11 +232,11 @@ void SemanticAnalyzer::visit(::UnaryExpression& expr) {
 
   // Typechecking of unary expression requires asserting that operator is supported for the type and
   // determining the type of result expression
-  auto isValid = operatorIsSupported(*exprType, expr.op);
+  auto isValid = m_operatorsHandler.operatorIsSupported(*exprType, expr.op);
 
   expect(isValid, ErrorType::EXPRESSION_TYPE_MISMATCH, expr.position);
 
-  auto typeId = resultTypeId(*exprType, expr.op);
+  auto typeId = m_operatorsHandler.resultTypeId(*exprType, expr.op);
   auto typePtr = m_env.getType(typeId);
   assert(typePtr != std::nullopt && "Type should be defined");
 
@@ -388,8 +318,8 @@ void SemanticAnalyzer::visit(::FnCallPostfix& fnCall) {
 void SemanticAnalyzer::visit(::IdentifierExpr& expr) {
   // is it a variable?
   if (auto var = m_env.getVar(expr.name); var != std::nullopt) {
-    auto varTypePtr = var->get().type;
-    m_env.setLastExpressionType(varTypePtr);
+    assert((*var)->type != nullptr && "Type should not be null");
+    m_env.setLastExpressionType((*var)->type);
   }
   // is it a type?
   else if (auto typePtr = m_env.getType(expr.name); typePtr != std::nullopt) {
@@ -397,8 +327,7 @@ void SemanticAnalyzer::visit(::IdentifierExpr& expr) {
   }
   // is it a function?
   else if (auto fnSignature = m_env.getFnSignature(expr.name); fnSignature != std::nullopt) {
-    auto fnSignatureType = fnSignature->get();  // copy the fnSignature
-    m_env.setLastExpressionType(std::make_shared<Type>(Type(std::move(fnSignatureType))));
+    m_env.setLastExpressionType(*fnSignature);
   }
   // If it's neither then GOD DAMN I MESSED THIS UP
   else {
@@ -479,8 +408,9 @@ void SemanticAnalyzer::visit(::CastExpr& expr) {
 
   // For cast expression to be valid, we need to check if expression can be casted to the
   // specified type
-  auto [typeId, castIsValid] = isCastable(*exprType, expr.type);
-  expect(castIsValid, ErrorType::INVALID_CAST, expr.position);
+  auto typeId = m_castHandler.primitiveTypeToTypeId(expr.type);
+  bool isValid = m_castHandler.isCastable(*exprType, typeId);
+  expect(isValid, ErrorType::INVALID_CAST, expr.position);
 
   auto typePtr = m_env.getType(typeId);
   assert(typePtr != std::nullopt && "Type should be defined");
@@ -514,8 +444,7 @@ void SemanticAnalyzer::visit(::AssignmentStmt& assignment) {
 
   expect(isAssignable(*rhsType, *lhsType), ErrorType::ASSIGNMENT_TYPE_MISMATCH,
          assignment.position);
-
-  // We know types are assignable, but we need to check if we can assign to the lhs
+  expect(exprIsAssignable(assignment.lhs), ErrorType::INVALID_ASSIGNMENT, assignment.position);
 }
 
 void SemanticAnalyzer::visit(::StdinExtractionStmt& inputStmt) {

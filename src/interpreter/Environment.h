@@ -20,8 +20,8 @@ enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
 struct Environment {
  public:
-  using FnSignatureTable = std::map<Identifier, const FnSignature>;  // Type
-  using FunctionTable = std::map<Identifier, const Function>;        // Value
+  using FnSignatureTable = std::map<Identifier, TypePtr>;  // FnSignature
+  using FunctionTable = std::map<Identifier, Function>;    // Function
 
   Environment();
 
@@ -31,7 +31,7 @@ struct Environment {
 
   bool containsVar(const Identifier& name) const noexcept;
   std::pair<Scope::VariableTable::iterator, bool> insertVar(const Identifier& name, Variable&& var);
-  std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
+  std::optional<VariablePtr> getVar(const Identifier& name) noexcept;
 
   /* ------------------------------ Type methods ------------------------------ */
 
@@ -44,16 +44,15 @@ struct Environment {
   bool containsFunction(const Identifier& name) const noexcept;
   std::pair<FunctionTable::iterator, bool> insertFunction(const Identifier& name,
                                                           Function&& func) noexcept;
-  std::optional<std::reference_wrapper<const Function>> getFunction(
-      const Identifier& name) const noexcept;
+  std::optional<std::shared_ptr<Function>> getFunction(
+      const Identifier& name) const noexcept;  // Todo ptr or ref?
 
   /* --------------------------- FnSignature methods -------------------------- */
 
   bool containsFnSignature(const Identifier& name) const noexcept;
   std::pair<FnSignatureTable::iterator, bool> insertFnSignature(const Identifier& name,
                                                                 FnSignature&& signature) noexcept;
-  std::optional<std::reference_wrapper<const FnSignature>> getFnSignature(
-      const Identifier& name) const noexcept;
+  std::optional<TypePtr> getFnSignature(const Identifier& name) const noexcept;
 
   /* -------------------------- Flow control methods -------------------------- */
 

@@ -9,6 +9,9 @@
 
 namespace Interpreter {
 
+struct Variable;
+using VariablePtr = std::shared_ptr<Variable>;
+
 /**
  * @brief Data structure representing a variable - its name, type and optional value.
  */

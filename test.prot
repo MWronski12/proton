@@ -37,6 +37,14 @@ fn pow(x: int, n: int) -> int {
 	return result;
 }
 
+fn stringifyCoords(coords: Coords) -> string {
+	var result: string = "";
+	result = result + string(coords.lat as float);
+	result = result + ", ";
+	result = result + string(coords.lng as float);
+	return result;
+}
+
 fn main() -> void {
 	const x: int = 3;
 	const n: int = 2;

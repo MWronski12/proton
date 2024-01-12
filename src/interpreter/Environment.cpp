@@ -29,8 +29,7 @@ std::pair<Scope::VariableTable::iterator, bool> Environment::insertVar(const Ide
   return m_stack.top().insertVar(name, std::move(var));
 }
 
-std::optional<std::reference_wrapper<Variable>> Environment::getVar(
-    const Identifier& name) noexcept {
+std::optional<VariablePtr> Environment::getVar(const Identifier& name) noexcept {
   if (!m_stack.empty() && m_stack.top().containsVar(name)) {
     return m_stack.top().getVar(name);
   }
@@ -71,11 +70,11 @@ std::pair<Environment::FunctionTable::iterator, bool> Environment::insertFunctio
   return m_functions.emplace(name, std::move(func));
 }
 
-std::optional<std::reference_wrapper<const Function>> Environment::getFunction(
+std::optional<std::shared_ptr<Function>> Environment::getFunction(
     const Identifier& fnName) const noexcept {
   auto it = m_functions.find(fnName);
   if (it != m_functions.end()) {
-    return std::ref(it->second);
+    return std::make_shared<Function>(it->second);
   }
   return std::nullopt;
 }
@@ -89,14 +88,13 @@ bool Environment::containsFnSignature(const Identifier& name) const noexcept {
 std::pair<Environment::FnSignatureTable::iterator, bool> Environment::insertFnSignature(
     const Identifier& name, FnSignature&& signature) noexcept {
   if (nameConflict(name) || containsFnSignature(name)) return {m_fnSignatures.end(), false};
-  return m_fnSignatures.emplace(name, std::move(signature));
+  return m_fnSignatures.emplace(name, std::make_shared<Type>(std::move(signature)));
 }
 
-std::optional<std::reference_wrapper<const FnSignature>> Environment::getFnSignature(
-    const Identifier& fnName) const noexcept {
+std::optional<TypePtr> Environment::getFnSignature(const Identifier& fnName) const noexcept {
   auto it = m_fnSignatures.find(fnName);
   if (it != m_fnSignatures.end()) {
-    return std::ref(it->second);
+    return it->second;
   }
   return std::nullopt;
 }
@@ -138,7 +136,10 @@ std::optional<TypePtr> Environment::getCurrentFnReturnType() const {
   }
   auto fnName = m_stack.top().getFnName();
   if (m_fnSignatures.contains(fnName)) {
-    return m_fnSignatures.at(fnName).returnType;
+    auto fnSignatureTypePtr = m_fnSignatures.at(fnName);
+    assert(std::holds_alternative<FnSignature>(fnSignatureTypePtr->type) &&
+           "Invalid type of function signature!");
+    return std::get<FnSignature>(fnSignatureTypePtr->type).returnType;
   }
   return std::nullopt;
 }
@@ -196,8 +197,8 @@ void Environment::initBuiltinFunctions() {
   std::vector<FnSignature::Param> signatureParams = {
       {*getType(String::typeId), true}};  // string, isConst
   FnSignature lenFnSignature = {std::move(signatureParams),
-                                *getType(Int::typeId)};       // params, returnType
-  m_fnSignatures.emplace(LEN_FN, std::move(lenFnSignature));  // name, signature
+                                *getType(Int::typeId)};  // params, returnType
+  insertFnSignature(LEN_FN, std::move(lenFnSignature));  // name, fnSignature
 
   /* ------------------------ Execution needs Function ------------------------ */
 
@@ -218,7 +219,7 @@ void Environment::initBuiltinFunctions() {
                     std::make_shared<BuiltinFunctionBody>(std::move(lenFnBody))};
 
   // 4) Jump out of the window
-  m_functions.emplace(LEN_FN, std::move(lenFn));
+  insertFunction(LEN_FN, std::move(lenFn));
 }
 
 }  // namespace Interpreter

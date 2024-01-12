@@ -30,7 +30,7 @@ class StackFrame {
 
   bool containsVar(const Identifier& name) const noexcept;
   std::pair<Scope::VariableTable::iterator, bool> insertVar(const Identifier& name, Variable&& var);
-  std::optional<std::reference_wrapper<Variable>> getVar(const Identifier& name) noexcept;
+  std::optional<VariablePtr> getVar(const Identifier& name) noexcept;
 
   bool containsType(const TypeIdentifier& name) const noexcept;
   std::pair<Scope::TypeTable::iterator, bool> insertType(const TypeIdentifier& name, Type&& type);

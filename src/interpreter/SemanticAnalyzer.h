@@ -11,6 +11,8 @@
 #include "Expression.h"
 #include "Program.h"
 #include "Statement.h"
+#include "TypeCastHandler.h"
+#include "TypeOperatorsHandler.h"
 
 namespace Interpreter {
 
@@ -18,6 +20,9 @@ class SemanticAnalyzer : public ::ASTVisitor {
  private:
   Environment& m_env;
   ErrorHandler& m_error;
+
+  TypeCastHandler m_castHandler;
+  TypeOperatorsHandler m_operatorsHandler;
 
   bool m_fnHasReturnStmt = false;
 
@@ -32,49 +37,49 @@ class SemanticAnalyzer : public ::ASTVisitor {
   // Todo:
   // virtual void visit(Interpreter::BuiltinFunctionBody&) override;
 
-  void visit(::Program& program) override;
+  void visit(::Program&) override;
 
-  void visit(::VarDef& var) override;
-  void visit(::ConstDef& constant) override;
-  void visit(::StructDef& structure) override;
-  void visit(::StructMember& member) override;
-  void visit(::VariantDef& variant) override;
-  void visit(::FnDef& def) override;
-  void visit(::FnParam& param) override;
+  void visit(::VarDef&) override;
+  void visit(::ConstDef&) override;
+  void visit(::StructDef&) override;
+  void visit(::StructMember&) override;
+  void visit(::VariantDef&) override;
+  void visit(::FnDef&) override;
+  void visit(::FnParam&) override;
 
-  void visit(::BinaryExpression& expr) override;
-  void visit(::UnaryExpression& expr) override;
-  void visit(::FunctionalExpression& expr) override;
-  void visit(::MemberAccessPostfix& postfix) override;
-  void visit(::VariantAccessPostfix& postfix) override;
-  void visit(::FnCallPostfix& postfix) override;
-  void visit(::IdentifierExpr& expr) override;
+  void visit(::BinaryExpression&) override;
+  void visit(::UnaryExpression&) override;
+  void visit(::FunctionalExpression&) override;
+  void visit(::MemberAccessPostfix&) override;
+  void visit(::VariantAccessPostfix&) override;
+  void visit(::FnCallPostfix&) override;
+  void visit(::IdentifierExpr&) override;
   void visit(::Literal<int>&) override;
   void visit(::Literal<float>&) override;
   void visit(::Literal<bool>&) override;
   void visit(::Literal<wchar_t>&) override;
   void visit(::Literal<std::wstring>&) override;
-  void visit(::Object& expr) override;
-  void visit(::ObjectMember& expr) override;
-  void visit(::ParenExpr& expr) override;
-  void visit(::CastExpr& expr) override;
+  void visit(::Object&) override;
+  void visit(::ObjectMember&) override;
+  void visit(::ParenExpr&) override;
+  void visit(::CastExpr&) override;
 
-  void visit(::BlockStmt& stmt) override;
-  void visit(::ExpressionStmt& stmt) override;
-  void visit(::AssignmentStmt& stmt) override;
-  void visit(::StdinExtractionStmt& stmt) override;
-  void visit(::StdoutInsertionStmt& stmt) override;
-  void visit(::VariantMatchStmt& stmt) override;
-  void visit(::VariantMatchCase& stmt) override;
-  void visit(::IfStmt& stmt) override;
-  void visit(::Else& stmt) override;
-  void visit(::Elif& stmt) override;
-  void visit(::ForStmt& stmt) override;
-  void visit(::Range& stmt) override;
-  void visit(::WhileStmt& stmt) override;
-  void visit(::ContinueStmt& stmt) override;
-  void visit(::BreakStmt& stmt) override;
-  void visit(::ReturnStmt& stmt) override;
+  void visit(::BlockStmt&) override;
+  void visit(::ExpressionStmt&) override;
+  void visit(::AssignmentStmt&) override;
+  void visit(::StdinExtractionStmt&) override;
+  void visit(::StdoutInsertionStmt&) override;
+  void visit(::VariantMatchStmt&) override;
+  void visit(::VariantMatchCase&) override;
+  void visit(::IfStmt&) override;
+  void visit(::Else&) override;
+  void visit(::Elif&) override;
+  void visit(::ForStmt&) override;
+  void visit(::Range&) override;
+  void visit(::WhileStmt&) override;
+  void visit(::ContinueStmt&) override;
+  void visit(::BreakStmt&) override;
+  void visit(::ReturnStmt&) override;
 };
 
 }  // namespace Interpreter

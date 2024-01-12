@@ -15,12 +15,12 @@ bool Scope::containsVar(const Identifier& name) const noexcept {
 std::pair<Scope::VariableTable::iterator, bool> Scope::insertVar(const Identifier& name,
                                                                  Variable&& var) noexcept {
   if (nameConflict(name)) return {m_variables.end(), false};
-  return m_variables.emplace(name, std::move(var));
+  return m_variables.emplace(name, std::make_shared<Variable>(std::move(var)));
 }
 
-std::optional<std::reference_wrapper<Variable>> Scope::getVar(const Identifier& name) noexcept {
+std::optional<VariablePtr> Scope::getVar(const Identifier& name) noexcept {
   if (!m_variables.contains(name)) return std::nullopt;
-  return std::ref(m_variables.at(name));
+  return m_variables.at(name);
 }
 
 /* -------------------------------------------------------------------------- */

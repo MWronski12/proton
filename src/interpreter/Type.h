@@ -111,7 +111,7 @@ struct Type {
   Type() = delete;
 
   template <typename T>
-  explicit Type(T&& type) : type{std::move(type)} {
+  Type(T&& type) : type{std::move(type)} {
     static_assert(
         std::disjunction_v<std::is_same<T, Void>, std::is_same<T, Int>, std::is_same<T, Float>,
                            std::is_same<T, Bool>, std::is_same<T, Char>, std::is_same<T, String>,

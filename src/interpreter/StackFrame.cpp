@@ -38,7 +38,7 @@ std::pair<Scope::VariableTable::iterator, bool> StackFrame::insertVar(const Iden
   return m_scopes.back().insertVar(name, std::move(var));
 }
 
-std::optional<std::reference_wrapper<Variable>> StackFrame::getVar(
+std::optional<VariablePtr> StackFrame::getVar(
     const Identifier& name) noexcept {
   for (auto it = m_scopes.rbegin(); it != m_scopes.rend(); ++it) {
     if (it->containsVar(name)) return it->getVar(name);
