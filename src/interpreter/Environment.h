@@ -15,9 +15,6 @@ namespace Interpreter {
 
 enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
-// Todo: If my deduction is correct, SemanticAnalyzer can work only with Types and Interpreter can
-// work only with Values, thus this class can be split into two.
-
 struct Environment {
  public:
   using FnSignatureTable = std::map<Identifier, TypePtr>;  // FnSignature
@@ -63,11 +60,11 @@ struct Environment {
 
   // Interpretation
 
-  std::optional<Value> getLastReturnValue();
-  std::optional<Value> getLastExpressionValue();
+  std::optional<ValuePtr> getLastReturnValue();
+  std::optional<ValuePtr> getLastExpressionValue();
 
-  void setLastReturnValue(const Value& value);
-  void setLastExpressionValue(const Value& value);
+  void setLastReturnValue(const ValuePtr& value);
+  void setLastExpressionValue(const ValuePtr& value);
 
   FlowControlStatus& flowControlStatus();
   int& loopDepth();
@@ -82,11 +79,10 @@ struct Environment {
   void initBuiltinTypes();
   void initBuiltinFunctions();
 
-  std::optional<Value> m_lastReturnValue;
-  std::optional<Value> m_lastExpressionValue;
+  std::optional<ValuePtr> m_lastReturnValue;
+  std::optional<ValuePtr> m_lastExpressionValue;
 
   std::optional<TypePtr> m_lastExpressionType;
-  std::optional<TypePtr> m_currentFnReturnType;
 
   FlowControlStatus m_flowControlStatus = FlowControlStatus::NORMAL;
   int m_loopDepth = 0;

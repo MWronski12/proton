@@ -152,21 +152,21 @@ std::optional<TypePtr> Environment::getLastExpressionType() {
 
 void Environment::setLastExpressionType(const TypePtr& type) { m_lastExpressionType.emplace(type); }
 
-std::optional<Value> Environment::getLastExpressionValue() {
+std::optional<ValuePtr> Environment::getLastExpressionValue() {
   auto value = std::move(m_lastExpressionValue);
   m_lastExpressionValue.reset();
   return value;
 }
 
-void Environment::setLastExpressionValue(const Value& value) { m_lastExpressionValue = value; }
+void Environment::setLastExpressionValue(const ValuePtr& value) { m_lastExpressionValue = value; }
 
-std::optional<Value> Environment::getLastReturnValue() {
-  auto value = std::move(m_lastReturnValue);
-  m_lastReturnValue.reset();
-  return value;
-}
+// std::optional<Value> Environment::getLastReturnValue() {
+//   auto value = std::move(m_lastReturnValue);
+//   m_lastReturnValue.reset();
+//   return value;
+// }
 
-void Environment::setLastReturnValue(const Value& value) { m_lastReturnValue = value; }
+// void Environment::setLastReturnValue(const Value& value) { m_lastReturnValue = value; }
 
 FlowControlStatus& Environment::flowControlStatus() { return m_flowControlStatus; }
 
@@ -203,10 +203,10 @@ void Environment::initBuiltinFunctions() {
   /* ------------------------ Execution needs Function ------------------------ */
 
   // 1) Build the function body
-  BuiltinFunctionBody lenFnBody;
-  lenFnBody.body = [](const std::vector<Value>& args) -> Value {
+  auto lenFnBody = [](const std::vector<Value>& args) -> Value {
     assert(args.size() == 1 && std::holds_alternative<std::wstring>(args[0].value) &&
            "Invalid arguments bound to builtin 'len' function call!");
+
     auto str = std::get<std::wstring>(args[0].value);
     return Value(int(str.size()));
   };
@@ -214,11 +214,14 @@ void Environment::initBuiltinFunctions() {
   // 2) Build the function params
   std::vector<Function::Param> params = {{L"str", String::typeId, true}};  // name, type, isConst
 
-  // 3) Build the function
-  Function lenFn = {std::move(params), String::typeId,
-                    std::make_shared<BuiltinFunctionBody>(std::move(lenFnBody))};
+  // 3) Create a builtin func
+  BuiltinFunction func({std::wstring(L"str")}, std::move(lenFnBody));
 
-  // 4) Jump out of the window
+  // 4) Build the function
+  Function lenFn = {std::move(params), String::typeId,
+                    std::make_shared<BuiltinFunction>(std::move(func))};
+
+  // 5) Jump out of the window
   insertFunction(LEN_FN, std::move(lenFn));
 }
 

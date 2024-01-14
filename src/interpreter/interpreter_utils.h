@@ -19,7 +19,7 @@ overloaded(Ts...) -> overloaded<Ts...>;
 bool operator==(const TypePtr& lhs, const TypePtr& rhs);
 
 /**
- * @brief Checks if underlying typeId is the same.
+ * @brief Checks if types hold the same variant type.
  */
 bool operator==(const Type& lhs, const Type& rhs);
 

@@ -7,35 +7,28 @@
 
 #include "Type.h"
 
-struct Value;
-
 namespace Interpreter {
+
+const Identifier MAIN = L"main";
 
 struct Value;
 struct FunctionBody;
 
+using ValuePtr = std::shared_ptr<Value>;
+
 /**
  * @brief Data structure representing Variant instance value.
- *
- * @note Member 'value' is a unique_ptr but it's copyable like a normal object. That is for
- * allowing default construction of a forward declared struct 'Value'.
  */
 struct VariantValue {
-  VariantValue(const VariantValue& other) : value{std::make_unique<Value>(*other.value)} {}
-  VariantValue& operator=(const VariantValue& other) {
-    if (this != &other) value = std::make_unique<Value>(*other.value);
-    return *this;
-  }
-  ~VariantValue() = default;
-
-  std::unique_ptr<Value> value;
+  TypeIdentifier currentType;
+  ValuePtr value;
 };
 
 /**
  * @brief Data structure representing Struct instance value.
  */
 struct ObjectValue {
-  std::map<Identifier, Value> members;
+  std::map<Identifier, ValuePtr> members;
 };
 
 /**
@@ -48,13 +41,13 @@ struct Function {
       if (isConst) modifiers.emplace(Modifier::CONST);
     }
     Identifier name;
-    TypeIdentifier type;  // for prettyprinting only
+    TypeIdentifier type;
     std::set<Modifier> modifiers;
   };
 
   std::vector<Param> params;
-  TypeIdentifier returnType;           // for prettyprinting only
-  std::shared_ptr<FunctionBody> body;  // visitable
+  TypeIdentifier returnType;
+  std::shared_ptr<FunctionBody> body;
 };
 
 /* -------------------------- Value representation -------------------------- */
@@ -75,6 +68,31 @@ struct Value {
   std::variant<std::monostate, int, float, bool, wchar_t, std::wstring, VariantValue, ObjectValue,
                Function>
       value;
+
+  Value clone() const noexcept {
+    return std::visit(
+        [](auto&& arg) -> Value {
+          using T = std::decay_t<decltype(arg)>;
+          // To clone the variant we need to clone its embedded value
+          if constexpr (std::is_same_v<T, std::shared_ptr<VariantValue>>) {
+            return Value(std::make_shared<VariantValue>(
+                VariantValue{arg->currentType, arg->value->clone()}));
+          }
+          // To clone the object we need to clone its members values
+          else if constexpr (std::is_same_v<T, std::shared_ptr<ObjectValue>>) {
+            ObjectValue obj;
+            for (const auto& [name, value] : arg->members) {
+              obj.members.emplace(name, value->clone());
+            }
+            return Value(std::make_shared<ObjectValue>(std::move(obj)));
+          }
+          // Rest can be trivially copied, because they are not pointers
+          else {
+            return Value{arg};
+          }
+        },
+        value);
+  }
 };
 
 }  // namespace Interpreter

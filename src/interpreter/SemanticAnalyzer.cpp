@@ -15,6 +15,60 @@ namespace Interpreter {
 
 using namespace std::string_literals;
 
+/* --------------------------- TypeChecking Utils --------------------------- */
+
+bool isAssignable(const TypePtr& objType, const TypePtr& assignedTo);
+
+bool variantIsAssignable(const TypePtr& objType, const TypePtr& assignedTo) {
+  assert(objType != nullptr && assignedTo != nullptr && "Types should not be null!");
+  assert(std::holds_alternative<Variant>(assignedTo->type) && "Helper function only for variants");
+
+  // Variant is assignable to itself
+  if (objType == assignedTo) return true;
+
+  // Variant is assignable to any of its types
+  auto variantType = std::get<Variant>(assignedTo->type);
+  for (const auto& type : variantType.types) {
+    if (objType == type) return true;
+  }
+  return false;
+}
+
+bool structIsAssignable(const TypePtr& objType, const TypePtr& assignedTo) {
+  assert(objType != nullptr && assignedTo != nullptr && "Types should not be null!");
+  assert(std::holds_alternative<Struct>(assignedTo->type) && "Helper function only for structs");
+
+  // Struct is assignable to itself
+  if (objType == assignedTo) return true;
+
+  // Struct is assignable to any struct with a subset of its members
+  if (!std::holds_alternative<Struct>(objType->type)) return false;
+  const auto& assignedStruct = std::get<Struct>(objType->type);
+  const auto& assignedToStruct = std::get<Struct>(assignedTo->type);
+
+  for (const auto& [name, assignedToMember] : assignedToStruct.members) {
+    if (!assignedStruct.members.contains(name)) return false;
+    if (!isAssignable(assignedStruct.members.at(name), assignedToMember)) return false;
+  }
+  return true;
+}
+
+bool isAssignable(const TypePtr& objType, const TypePtr& assignedTo) {
+  return std::visit(
+      overloaded{// Void and FnSignature are not assignable
+                 [](const Void&) { return false; }, [](const FnSignature&) { return false; },
+                 // Struct and Variant are handled separately
+                 [&objType, &assignedTo](const Struct&) {
+                   return structIsAssignable(objType, assignedTo);
+                 },
+                 [&objType, &assignedTo](const Variant&) {
+                   return variantIsAssignable(objType, assignedTo);
+                 },
+                 // Primitive types simply have to be the same
+                 [&objType, &assignedTo](const auto&) { return objType == assignedTo; }},
+      assignedTo->type);
+}
+
 /* ----------------------------- Helper methods ----------------------------- */
 
 void SemanticAnalyzer::expect(bool condition, ErrorType error, Position position) const {
@@ -23,46 +77,7 @@ void SemanticAnalyzer::expect(bool condition, ErrorType error, Position position
   }
 }
 
-bool SemanticAnalyzer::isAssignable(const TypePtr& objType, const TypePtr& assignedTo) const {
-  return std::visit(
-      overloaded{
-          [](const auto&) { throw std::logic_error("Unknown objType!"); },
-
-          // Are not assignable
-          [](const Void&) { return false; },
-          [](const FnSignature&) { return false; },
-
-          // Simply has to be the same type
-          [&objType](const Int&) { return std::holds_alternative<Int>(objType->type); },
-          [&objType](const Float&) { return std::holds_alternative<Float>(objType->type); },
-          [&objType](const Bool&) { return std::holds_alternative<Bool>(objType->type); },
-          [&objType](const Char&) { return std::holds_alternative<Char>(objType->type); },
-          [&objType](const String&) { return std::holds_alternative<String>(objType->type); },
-
-          // For structs each member must be assignable
-          [this, &objType](const Struct& assignedTo) {
-            if (!std::holds_alternative<Struct>(objType->type)) return false;
-            const auto& embeddedType = std::get<Struct>(objType->type);
-            if (embeddedType.members.size() != assignedTo.members.size()) return false;
-            for (const auto& [name, assignedToMember] : assignedTo.members) {
-              if (!embeddedType.members.contains(name)) return false;
-              if (!isAssignable(embeddedType.members.at(name), assignedToMember)) return false;
-            }
-            return true;
-          },
-
-          // For variants at least one of the variant types must be assignable
-          [this, &objType](const Variant& assignedTo) {
-            for (const auto& variantType : assignedTo.types) {
-              if (isAssignable(objType, variantType)) return true;
-            }
-            return false;
-          },
-      },
-      assignedTo->type);
-}
-
-bool SemanticAnalyzer::exprIsAssignable(const std::unique_ptr<::Expression>& expr) const {
+bool SemanticAnalyzer::exprIsAssignable(const std::unique_ptr<::Expression>& expr) {
   // We can only assign values to variables
   if (auto idExpr = dynamic_cast<IdentifierExpr*>(expr.get()); idExpr != nullptr) {
     auto var = m_env.getVar(idExpr->name);
@@ -82,10 +97,11 @@ bool SemanticAnalyzer::exprIsAssignable(const std::unique_ptr<::Expression>& exp
   return true;
 }
 
-/* ------------------------------ Constructors ------------------------------ */
+/* -------------------------------------------------------------------------- */
+/*                              SemanticAnalyzer                              */
+/* -------------------------------------------------------------------------- */
 
-SemanticAnalyzer::SemanticAnalyzer(Environment& environment, ::ErrorHandler& error)
-    : m_env{environment}, m_error{error} {}
+SemanticAnalyzer::SemanticAnalyzer(::ErrorHandler& error) : m_error{error} {}
 
 /* --------------------------- Visitation methods --------------------------- */
 
@@ -175,8 +191,9 @@ void SemanticAnalyzer::visit(::FnDef& def) {
   }
 
   // Insert function type into environment
-  FnSignature fn{std::move(params), *m_env.getType(def.returnType)};
+  FnSignature fn{params, *m_env.getType(def.returnType)};
   m_env.insertFnSignature(def.name, std::move(fn));
+  assert(m_env.getType(def.returnType) != std::nullopt);
 
   // Push stackframe and declare parameters
   m_env.pushStackFrame(def.name);
@@ -189,8 +206,11 @@ void SemanticAnalyzer::visit(::FnDef& def) {
   // Visit function body
   def.body.accept(*this);
 
+  // Pop stackframe
+  m_env.popStackFrame();
+
   // Check for return statement and reset the flag
-  expect(def.returnType != Void::typeId || m_fnHasReturnStmt, ErrorType::MISSING_RETURN_STMT,
+  expect(def.returnType == Void::typeId || m_fnHasReturnStmt, ErrorType::MISSING_RETURN_STMT,
          def.position);
   m_fnHasReturnStmt = false;
 }
@@ -329,9 +349,9 @@ void SemanticAnalyzer::visit(::IdentifierExpr& expr) {
   else if (auto fnSignature = m_env.getFnSignature(expr.name); fnSignature != std::nullopt) {
     m_env.setLastExpressionType(*fnSignature);
   }
-  // If it's neither then GOD DAMN I MESSED THIS UP
+  // if its none of the above, its a reference to undefined identifier
   else {
-    throw std::logic_error("Identifier should be either variable, type or function");
+    m_error(ErrorType::UNDEFINED_IDENTIFIER, expr.position);
   }
 }
 

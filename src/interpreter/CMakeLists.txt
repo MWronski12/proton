@@ -1,12 +1,12 @@
 add_library(interpreterlib STATIC
-    # Interpreter.cpp
+    Interpreter.cpp
     SemanticAnalyzer.cpp
     Environment.cpp
     StackFrame.cpp
     Scope.cpp
     interpreter_utils.cpp
-    TypeCastHandler.cpp
-    TypeOperatorsHandler.cpp
+    CastHandler.cpp
+    OperatorsHandler.cpp
 )
 
 target_link_libraries(interpreterlib PUBLIC

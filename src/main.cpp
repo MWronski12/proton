@@ -23,8 +23,7 @@ int main(int argc, char** argv) {
 
   auto program = parser.parseProgram();
 
-  Environment env;
-  SemanticAnalyzer analyzer(env, errorHandler);
+  SemanticAnalyzer analyzer(errorHandler);
   program->accept(analyzer);
 }
 

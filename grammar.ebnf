@@ -102,7 +102,7 @@ unaryOp                     (* prio 6 r-l *)
     = "!"
     | "-";
 
-funcExprPostfix           (* prio 7 l-r *)
+funcExprPostfix             (* prio 7 l-r *)
     = fnCallPostfix
     | memberAccessPostfix 
     | variantAccessPostfix;

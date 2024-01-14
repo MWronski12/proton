@@ -1,0 +1,61 @@
+$ We need to know which types are variants
+$ We need to wrap values in VariantValue when we define a variable of a variant type
+variant Number { int, float };
+
+var number: Number = 1.0;
+
+fn getNumber() -> Number {
+    match number {
+        case int -> {
+            << number as int;
+        }
+        case float -> {
+            << number as float;
+        }
+    }
+    return 1.0;
+}
+
+$ Visiting fnCall we need to know which type it returns, so we can wrap it in VariantValue if necessary
+var n: float = getNumber() as float;
+
+
+$ Is the same for embedded variants
+
+variant Wrapper { int, float, Number };
+var wrappedNumber: Wrapper = number;
+
+
+$ For structs we need to know their typeids, we cannot assign structs to variants on the fly
+
+struct TimeStamp { epoch: int; };
+struct DateTime { date: string; };
+
+variant Time { TimeStamp, DateTime };
+
+const timestamp: TimeStamp = { epoch: 1234 };
+const datetime: DateTime = { date: "2019-01-01" };
+
+
+fn test() -> Time {
+    var t: Time = timestamp;
+    match t {
+        case TimeStamp -> {
+            << "TimeStamp";
+            return timestamp;
+        }
+        case DateTime -> {
+            << "DateTime";
+            return datetime;
+        }
+    }
+    return timestamp;
+}
+
+
+$ For variant type struct members we cannot define variant member on the fly, it has to be assigned an already existing variant value
+$ Then we dont have to care about it, but I am not sure how to enforce this in semantic analysis
+
+struct X { x: Number; };
+
+var variantMember: X = { x: number };

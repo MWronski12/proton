@@ -16,22 +16,28 @@ using VariablePtr = std::shared_ptr<Variable>;
  * @brief Data structure representing a variable - its name, type and optional value.
  */
 struct Variable {
-  Variable(const Identifier& name, const TypePtr& type, bool isConst = false,
-           const std::optional<Value>& value = std::nullopt) noexcept
+  // For semantic analysis
+  Variable(const Identifier& name, const TypePtr& type, bool isConst = false) noexcept
       : name{name},
         type{type},
         modifiers(isConst ? std::vector<Modifier>{Modifier::CONST} : std::vector<Modifier>{}),
-        value{value} {}
+        value{nullptr} {}
+
+  // For interpretation
+  Variable(const Identifier& name, ValuePtr&& value,
+           const std::vector<Modifier>& modifiers = {}) noexcept
+      : name{name}, type{nullptr}, modifiers(modifiers), value{std::move(value)} {}
 
   bool isConst() const noexcept {
     return std::find(modifiers.cbegin(), modifiers.cend(), Modifier::CONST) != modifiers.cend();
   }
-  bool isDefined() const noexcept { return value != std::nullopt; }
+
+  bool isDefined() const noexcept { return value != nullptr; }
 
   const Identifier name;
   const TypePtr type;
   const std::vector<Modifier> modifiers;
-  std::optional<Value> value;
+  ValuePtr value;
 };
 
 }  // namespace Interpreter

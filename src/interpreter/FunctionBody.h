@@ -5,25 +5,33 @@
 
 #include "ASTVisitor.h"
 
-struct Value;
 struct BlockStmt;
 
 namespace Interpreter {
+
+struct Value;
 
 struct FunctionBody {
   virtual void accept(::ASTVisitor& visitor) = 0;
 };
 
-struct UserDefinedFunctionBody : public FunctionBody {
-  void accept(::ASTVisitor& visitor) override { visitor.visit(*body); }
+struct UserFunction : public FunctionBody {
+  UserFunction(::BlockStmt& body) : body{body} {}
 
-  ::BlockStmt* body;
+  void accept(::ASTVisitor& visitor) override { visitor.visit(body); }
+
+  ::BlockStmt& body;
 };
 
-struct BuiltinFunctionBody : public FunctionBody {
+struct BuiltinFunction : public FunctionBody {
   void accept(::ASTVisitor& visitor) override { visitor.visit(*this); }
 
-  std::function<Value(const std::vector<Value>&)> body;
+  BuiltinFunction(std::vector<std::wstring>&& args,
+                  std::function<Value(std::vector<Value>&)>&& body)
+      : argNames{std::move(args)}, body{std::move(body)} {}
+
+  std::vector<std::wstring> argNames;
+  std::function<Value(std::vector<Value>&)> body;
 };
 
 }  // namespace Interpreter

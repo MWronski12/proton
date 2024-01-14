@@ -1,7 +1,35 @@
+$ Variant tests
+
 variant Number { int, float };
 
-var age: Number = 5;
 const PI: Number = 3.14;
+var age: Number = PI;
+
+var x: float = age as float;
+
+variant Wrapper { string, Number };
+
+fn stringifyNumber(wrapper: Wrapper) -> string {
+	match wrapper {
+		case string -> { return wrapper as string; }
+		case Number -> {
+			match wrapper as Number {
+				case int -> {
+					var num: Number = wrapper as Number;
+					var integer: int = num as int;
+					return string(integer); 
+				}
+				case float -> { 
+					var num: Number = wrapper as Number;
+					var floating: float = num as float;
+					return string(floating); 
+				}
+			}
+		}
+	}
+}
+
+$ Struct tests
 
 struct Point {
 	x: Number;
@@ -25,23 +53,22 @@ const warsaw: City = {
 	coords: { lat: 52.2297, lng: 21.0122 },
 };
 
-const NAME: string = "Mikolaj"; 
+fn stringifyCoords(coords: Coords) -> string {
+	var result: string = "";
 
-var AGE: int = 23;
+	result = result + string(coords.lat as float);
+	result = result + ", ";
+	result = result + string(coords.lng as float);
+	return result;
+}
+
+$ Function tests
 
 fn pow(x: int, n: int) -> int {
 	var result: int = 1;
 	for i in 0 until n {
 		result = result * x;
 	}
-	return result;
-}
-
-fn stringifyCoords(coords: Coords) -> string {
-	var result: string = "";
-	result = result + string(coords.lat as float);
-	result = result + ", ";
-	result = result + string(coords.lng as float);
 	return result;
 }
 

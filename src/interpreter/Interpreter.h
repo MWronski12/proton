@@ -1,28 +1,39 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "ASTVisitor.h"
+#include "CastHandler.h"
 #include "Environment.h"
 #include "ErrorHandler.h"
+#include "OperatorsHandler.h"
 
 namespace Interpreter {
 
 class Interpreter : ASTVisitor {
  private:
-  Environment& m_env;
   ErrorHandler& m_error;
 
+  Environment m_env;
+  OperatorsHandler m_operatorsHandler;
+  CastHandler m_castHandler;
+
+  std::unordered_set<TypeIdentifier> m_variantTypes;
+
+  bool isVariant(const TypeIdentifier& type) const noexcept;
+  void expect(bool condition, ErrorType error, Position position) const;
+
  public:
-  Interpreter(Environment& environment, ::ErrorHandler& error);
+  Interpreter(::ErrorHandler& error);
+
+  void visit(BuiltinFunction& func) override;
 
   void visit(::Program&) override;
 
   void visit(::VarDef&) override;
   void visit(::ConstDef&) override;
-  void visit(::StructDef&) override;
-  void visit(::StructMember&) override;
   void visit(::VariantDef&) override;
   void visit(::FnDef&) override;
-  void visit(::FnParam&) override;
 
   void visit(::BinaryExpression&) override;
   void visit(::UnaryExpression&) override;

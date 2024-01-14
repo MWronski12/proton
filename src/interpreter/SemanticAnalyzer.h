@@ -1,41 +1,30 @@
 #pragma once
 
-#include <list>
 #include <string>
 
-#include "ASTNode.h"
 #include "ASTVisitor.h"
-#include "Definition.h"
+#include "CastHandler.h"
 #include "Environment.h"
 #include "ErrorHandler.h"
-#include "Expression.h"
-#include "Program.h"
-#include "Statement.h"
-#include "TypeCastHandler.h"
-#include "TypeOperatorsHandler.h"
+#include "OperatorsHandler.h"
 
 namespace Interpreter {
 
 class SemanticAnalyzer : public ::ASTVisitor {
  private:
-  Environment& m_env;
   ErrorHandler& m_error;
 
-  TypeCastHandler m_castHandler;
-  TypeOperatorsHandler m_operatorsHandler;
+  Environment m_env;
+  CastHandler m_castHandler;
+  OperatorsHandler m_operatorsHandler;
 
   bool m_fnHasReturnStmt = false;
 
   void expect(bool condition, ErrorType error, Position position) const;
-
-  bool isAssignable(const TypePtr& objType, const TypePtr& assignedTo) const;
-  bool exprIsAssignable(const std::unique_ptr<::Expression>& expr) const;
+  bool exprIsAssignable(const std::unique_ptr<::Expression>& expr);
 
  public:
-  SemanticAnalyzer(Environment& environment, ::ErrorHandler& error);
-
-  // Todo:
-  // virtual void visit(Interpreter::BuiltinFunctionBody&) override;
+  SemanticAnalyzer(::ErrorHandler& error);
 
   void visit(::Program&) override;
 

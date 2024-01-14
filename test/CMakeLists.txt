@@ -39,6 +39,7 @@ target_link_libraries(test PUBLIC
   inputlib
   lexerlib
   parserlib
+  interpreterlib
 )
 
 include(GoogleTest)

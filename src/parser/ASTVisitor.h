@@ -44,12 +44,12 @@ struct BreakStmt;
 struct ReturnStmt;
 
 namespace Interpreter {
-struct BuiltinFunctionBody;
+struct BuiltinFunction;
 }
 
 class ASTVisitor {
  public:
-  virtual void visit(Interpreter::BuiltinFunctionBody&) {}
+  virtual void visit(Interpreter::BuiltinFunction&) {}
 
   virtual void visit(Program&) {}
 
