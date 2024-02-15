@@ -1,8 +1,8 @@
 $ We need to know which types are variants
 $ We need to wrap values in VariantValue when we define a variable of a variant type
 variant Number { int, float };
-
-var number: Number = 1.0;
+var x: int;
+var number: Number = x;
 
 fn getNumber() -> Number {
     match number {

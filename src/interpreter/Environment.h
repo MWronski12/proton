@@ -17,6 +17,7 @@ enum class FlowControlStatus { NORMAL, CONTINUE, BREAK, RETURN };
 
 struct Environment {
  public:
+  using Result = std::pair<TypeIdentifier, ValuePtr>;
   using FnSignatureTable = std::map<Identifier, TypePtr>;  // FnSignature
   using FunctionTable = std::map<Identifier, Function>;    // Function
 
@@ -59,12 +60,8 @@ struct Environment {
   void exitScope();
 
   // Interpretation
-
-  std::optional<ValuePtr> getLastReturnValue();
-  std::optional<ValuePtr> getLastExpressionValue();
-
-  void setLastReturnValue(const ValuePtr& value);
-  void setLastExpressionValue(const ValuePtr& value);
+  std::optional<Environment::Result> getLastResult();
+  void setLastResult(const TypeIdentifier& typeId, ValuePtr&& value);
 
   FlowControlStatus& flowControlStatus();
   int& loopDepth();
@@ -79,8 +76,7 @@ struct Environment {
   void initBuiltinTypes();
   void initBuiltinFunctions();
 
-  std::optional<ValuePtr> m_lastReturnValue;
-  std::optional<ValuePtr> m_lastExpressionValue;
+  std::optional<Result> m_lastResult;
 
   std::optional<TypePtr> m_lastExpressionType;
 

@@ -1,5 +1,4 @@
 add_library(interpreterlib STATIC
-    Interpreter.cpp
     SemanticAnalyzer.cpp
     Environment.cpp
     StackFrame.cpp

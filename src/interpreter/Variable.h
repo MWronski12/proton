@@ -10,6 +10,7 @@
 namespace Interpreter {
 
 struct Variable;
+
 using VariablePtr = std::shared_ptr<Variable>;
 
 /**
@@ -21,12 +22,13 @@ struct Variable {
       : name{name},
         type{type},
         modifiers(isConst ? std::vector<Modifier>{Modifier::CONST} : std::vector<Modifier>{}),
-        value{nullptr} {}
+        value{nullptr},
+        typeId{L""} {}
 
   // For interpretation
-  Variable(const Identifier& name, ValuePtr&& value,
+  Variable(const Identifier& name, const TypeIdentifier& typeId, ValuePtr&& value,
            const std::vector<Modifier>& modifiers = {}) noexcept
-      : name{name}, type{nullptr}, modifiers(modifiers), value{std::move(value)} {}
+      : name{name}, type{nullptr}, modifiers(modifiers), value{std::move(value)}, typeId{typeId} {}
 
   bool isConst() const noexcept {
     return std::find(modifiers.cbegin(), modifiers.cend(), Modifier::CONST) != modifiers.cend();
@@ -38,6 +40,7 @@ struct Variable {
   const TypePtr type;
   const std::vector<Modifier> modifiers;
   ValuePtr value;
+  TypeIdentifier typeId;
 };
 
 }  // namespace Interpreter

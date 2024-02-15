@@ -48,60 +48,32 @@ void Interpreter::visit(::Program& program) {
 
 void Interpreter::visit(::VarDef& varDef) {
   varDef.value->accept(*this);
-  auto exprValue = m_env.getLastExpressionValue();
-  assert(exprValue != std::nullopt && *exprValue != nullptr &&
+  auto lastResult = m_env.getLastResult();
+  assert(lastResult != std::nullopt &&
          "Visiting expression should set Environment::lastExpressionValue");
 
-  // We're creating a new variable, so we need to clone the value first
-  auto value = std::make_shared<Value>((*exprValue)->clone());
+  auto [typeId, value] = std::move(*lastResult);
 
-  // if (isVariant(varDef.type)) {
-  //   // if value we're trying to assign is a VariantValue, we need to unpack it and wrap its value
-  //   // again
-  //   // variant Number { int, float };
-  //   // var x: Number = 5;
-  //   // var y: Number = 5.0;
-  //   // var z: Number = x;
+  if (isVariant(varDef.type)) {
+    value = std::make_shared<Value>(VariantValue{typeId, std::move(value)});
+  }
 
-  //   value =
-  //       std::visit(overloaded{
-  //                      [](int val) -> ValuePtr {},
-  //                      [](float val) -> ValuePtr {},
-  //                      [](bool val) -> ValuePtr {},
-  //                      [](wchar_t val) -> ValuePtr {},
-  //                      [](std::wstring val) -> ValuePtr {},
-  //                      [](VariantValue val) -> ValuePtr { return std::move(val.value); },
-  //                      [](ObjectValue val) -> ValuePtr {},
-  //                      [](Function val) -> ValuePtr { throw std::logic_error("Not implemented"); },
-  //                  },
-  //                  value->value);
-
-  //   if (auto variantValuePtr = std::get_if<VariantValue>(&value->value);
-  //       variantValuePtr != nullptr) {
-  //     auto embeddedValuePtr = std::move(variantValuePtr->value);
-  //     auto wrapped = VariantValue{variantValuePtr->currentType, std::move(embeddedValuePtr)};
-  //     value = std::make_shared<Value>(std::move(wrapped));
-  //   } else {
-  //     auto wrapped = VariantValue{varDef.type, std::move(value)};
-  //     value = std::make_shared<Value>(std::move(wrapped));
-  //   }
-  // }
-
-  m_env.insertVar(varDef.name, Variable{varDef.name, std::move(value)});
+  m_env.insertVar(varDef.name, Variable{varDef.name, typeId, std::move(value)});
 }
 
 void Interpreter::visit(::ConstDef& constDef) {
   constDef.value->accept(*this);
-  auto value = m_env.getLastExpressionValue();
-  assert(value != std::nullopt &&
+  auto lastResult = m_env.getLastResult();
+  assert(lastResult != std::nullopt &&
          "Visiting expression should set Environment::lastExpressionValue");
 
-  // If variable is a variant, we need to wrap its value in VariantValue
+  auto [typeId, value] = std::move(*lastResult);
+
   if (isVariant(constDef.type)) {
-    value = std::make_shared<Value>(VariantValue{constDef.type, std::move(*value)});
+    value = std::make_shared<Value>(VariantValue{typeId, std::move(value)});
   }
 
-  m_env.insertVar(constDef.name, Variable{constDef.name, std::move(*value)});
+  m_env.insertVar(constDef.name, Variable{constDef.name, typeId, std::move(value)});
 }
 
 void Interpreter::visit(::FnDef& fnDef) {
@@ -218,15 +190,15 @@ void Interpreter::visit(::FnDef& fnDef) {
 //   func.body(args);
 // }
 
-// void Interpreter::visit(::IdentifierExpr& expr) {
-//   auto var = m_env.getVar(expr.name);
-//   assert(var != std::nullopt && "Variable should be defined");
+void Interpreter::visit(::IdentifierExpr& expr) {
+  auto var = m_env.getVar(expr.name);
+  assert(var != std::nullopt && var "Variable should be defined");
 
-//   auto value = (*var)->value;
-//   assert(value != nullptr && "Variable should have a value");
+  auto value = (*var)->value;
+  assert(value != nullptr && "Variable should have a value");
 
-//   m_env.setLastExpressionValue(std::move(*value));
-// }
+  m_env.setLastExpressionValue(std::move(*value));
+}
 
 // void Interpreter::visit(::Literal<int>& expr) { m_env.setLastExpressionValue(Value(expr.value));
 // }

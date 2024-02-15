@@ -152,21 +152,15 @@ std::optional<TypePtr> Environment::getLastExpressionType() {
 
 void Environment::setLastExpressionType(const TypePtr& type) { m_lastExpressionType.emplace(type); }
 
-std::optional<ValuePtr> Environment::getLastExpressionValue() {
-  auto value = std::move(m_lastExpressionValue);
-  m_lastExpressionValue.reset();
-  return value;
+std::optional<Environment::Result> Environment::getLastResult() {
+  auto result = std::move(m_lastResult);
+  m_lastResult.reset();
+  return result;
 }
 
-void Environment::setLastExpressionValue(const ValuePtr& value) { m_lastExpressionValue = value; }
-
-// std::optional<Value> Environment::getLastReturnValue() {
-//   auto value = std::move(m_lastReturnValue);
-//   m_lastReturnValue.reset();
-//   return value;
-// }
-
-// void Environment::setLastReturnValue(const Value& value) { m_lastReturnValue = value; }
+void Environment::setLastResult(const TypeIdentifier& typeId, ValuePtr&& value) {
+  m_lastResult.emplace(typeId, std::move(value));
+}
 
 FlowControlStatus& Environment::flowControlStatus() { return m_flowControlStatus; }
 
