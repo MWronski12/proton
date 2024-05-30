@@ -1,0 +1,6 @@
+$ Should we leave this functionality for sure? It breaks the rules of static langs
+
+fn main() -> int {
+
+}
+
